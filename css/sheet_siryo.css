@@ -1,0 +1,56 @@
+.box-title{
+    font-family: "arial black", sans-serif;
+}
+
+.h-title{   
+    font-weight: bold;
+    color: black;
+    /* -webkit-text-stroke-width: 2px; */
+    /* -webkit-text-stroke-color: #1e90ff; */
+    /* -webkit-text-fill-color: white; */
+    /* text-shadow: 5px 3px 0 #1e90ff; */
+}
+
+.box-siryo{
+    width: 80%;
+    padding: 25px;
+    margin: 0 auto;
+    background-color: white;
+}
+
+.tb-siryo{
+    display: inline-block;
+    text-align: left;
+}
+
+th{
+    padding: 3px 10px;
+    text-align: center;
+}
+
+.td-theme{
+    padding: 3px 10px;
+}
+
+.td-siryo{
+    padding: 3px 10px;
+}
+
+.td-sub{
+    padding: 3px 10px;
+}
+
+.tb-siryo a:visited{
+    color: blue;
+}
+
+.tb-siryo a:hover{
+    /* border-bottom: 1px solid; */
+    text-decoration: underline;
+}
+
+footer{
+    height: 50px;
+    width: 100%;
+    background-color: #1e90ff;
+}
