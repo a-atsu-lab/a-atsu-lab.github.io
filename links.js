@@ -58,7 +58,7 @@ const APPS = [
   },
   {
     title: "センサロボ・チャレンジ",
-    url: "https://a-atsu-lab.github.io/sonsor-robo.html",
+    url: "https://a-atsu-lab.github.io/sensor-robo.html",
     description: "ビジュアルプログラミングのアプリです。",
     category: "情報Ⅰ",
     icon: "💻",
