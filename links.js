@@ -73,10 +73,18 @@ const APPS = [
     added: "2026-11-03"
   },
   {
+    title: "自販機ラボ",
+    url: "https://a-atsu-lab.github.io/vending-machine.html",
+    description: "自販機の故障を修理するというストーリーのプログラミング教材です。Pythonモードと共通テスト用言語モードがあります。共通テスト用でやってみてもいいと思います。（※授業では扱っていません）",
+    category: "情報Ⅰ",
+    icon: "💻",
+    added: "2026-11-03"
+  },
+  {
     title: "プロトメーカー",
     url: "https://a-atsu-lab.github.io/protomaker.html",
     description: "アプリの企画・デザインをして、AIへの指示文書を作成できるアプリです。",
-    category: "情報Ⅰ",
+    category: "プログラミング",
     icon: "💻",
     added: "2026-11-03"
   }

@@ -1,0 +1,1310 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>がっこう自販機ラボ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=DotGothic16&family=M+PLUS+1+Code:wght@400;600&family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
+<style>
+/* Layout: 左に「動く自販機ミント号」、右に「ミッションと穴埋めエディタ」。せまい画面では縦に積む */
+:root{
+  --bg:#E6F4FB;          /* 空色の校舎の壁 */
+  --dot:#CDE8F6;
+  --surface:#FFFFFF;
+  --ink:#1D2742;         /* 紺のふち線と文字 */
+  --muted:#5A6A88;
+  --line:#D5DEEC;
+  --vm:#22B8A7;          /* ミント号の本体 */
+  --vm-deep:#138C80;
+  --sun:#FFC83D;         /* 光るランプ・クリア */
+  --coral:#FF6B5E;       /* 売切・エラー */
+  --ok:#21B25B;
+  --ok-soft:#DDF5E6;
+  --ng-soft:#FFE4E1;
+  --sun-soft:#FFF3CF;
+  --led-bg:#16202E;
+  --led:#7CFFB1;
+  --code-bg:#F7F9FD;
+  --hl-kw:#C2185B; --hl-str:#2E7D32; --hl-num:#1565C0; --hl-com:#8A94A8; --hl-fn:#6A3FC4;
+  --shadow:#1D2742;
+  --f-display:"Dela Gothic One","M PLUS Rounded 1c","Hiragino Sans",sans-serif;
+  --f-body:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-code:"M PLUS 1 Code","BIZ UDGothic",ui-monospace,"Menlo","Consolas",monospace;
+  --f-led:"DotGothic16","M PLUS 1 Code",monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121A2C; --dot:#1A2540; --surface:#1C2640; --ink:#EEF3FF; --muted:#A2B1CE; --line:#30405F;
+  --vm:#1FA596; --vm-deep:#127C72; --sun:#FFC83D; --coral:#FF7E73; --ok:#3FD27A; --ok-soft:#173A29; --ng-soft:#43201F; --sun-soft:#3B3216;
+  --led-bg:#0B111B; --led:#7CFFB1; --code-bg:#151E33;
+  --hl-kw:#FF7AB0; --hl-str:#8EE59A; --hl-num:#8CC4FF; --hl-com:#7A88A6; --hl-fn:#C7A8FF; --shadow:#05080F; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121A2C; --dot:#1A2540; --surface:#1C2640; --ink:#EEF3FF; --muted:#A2B1CE; --line:#30405F;
+  --vm:#1FA596; --vm-deep:#127C72; --sun:#FFC83D; --coral:#FF7E73; --ok:#3FD27A; --ok-soft:#173A29; --ng-soft:#43201F; --sun-soft:#3B3216;
+  --led-bg:#0B111B; --led:#7CFFB1; --code-bg:#151E33;
+  --hl-kw:#FF7AB0; --hl-str:#8EE59A; --hl-num:#8CC4FF; --hl-com:#7A88A6; --hl-fn:#C7A8FF; --shadow:#05080F; color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{background:var(--bg)}
+body{color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.7;
+  background-image:radial-gradient(var(--dot) 2px, transparent 2.5px);background-size:22px 22px;}
+.wrap{max-width:1260px;margin:0 auto;padding-inline:16px;padding-block:14px 48px}
+h1,h2,h3{text-wrap:balance;margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+
+/* ヘッダー */
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;justify-content:space-between;margin-bottom:14px}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-mark{width:46px;height:46px;border-radius:12px;background:var(--vm);border:2.5px solid var(--ink);display:grid;place-items:center;box-shadow:3px 3px 0 var(--shadow)}
+.logo h1{font-family:var(--f-display);font-weight:400;font-size:clamp(22px,3.2vw,30px);letter-spacing:.02em;line-height:1.2}
+.logo p{margin:0;color:var(--muted);font-size:13px;font-weight:700}
+.progress{display:flex;align-items:center;gap:10px;font-weight:800}
+.progress .bar{width:150px;height:14px;border-radius:99px;background:var(--surface);border:2px solid var(--ink);overflow:hidden}
+.progress .bar i{display:block;height:100%;width:0;background:var(--sun);transition:width .6s}
+
+.grid{display:grid;grid-template-columns:minmax(330px,410px) minmax(0,1fr);gap:22px;align-items:start}
+@media (max-width:920px){.grid{grid-template-columns:minmax(0,1fr)}}
+.machine-col{display:flex;flex-direction:column;gap:14px;min-width:0}
+.machine-col>*{flex-shrink:0}
+@media (min-width:921px){.machine-col{position:sticky;top:calc(env(safe-area-inset-top,0px) + 10px);max-height:calc(100vh - 20px);overflow-y:auto;overflow-x:hidden;padding:4px 8px 8px 4px;scrollbar-width:thin}}
+
+/* ===== 自販機 ===== */
+.vm{background:var(--vm);border:3px solid var(--ink);border-radius:22px 22px 10px 10px;box-shadow:5px 5px 0 var(--shadow);padding:10px;position:relative}
+.vm-top{display:flex;align-items:center;gap:10px;background:var(--vm-deep);border:2.5px solid var(--ink);border-radius:14px;padding:8px 10px;color:#fff}
+.face{width:52px;height:40px;background:#fff;border:2.5px solid var(--ink);border-radius:12px;position:relative;flex:none}
+.face::before,.face::after{content:"";position:absolute;top:11px;width:7px;height:9px;background:#1D2742;border-radius:50%;transition:height .2s,top .2s}
+.face::before{left:12px}.face::after{right:12px}
+.face i{position:absolute;left:50%;bottom:7px;width:16px;height:7px;margin-left:-8px;border:2.5px solid #1D2742;border-top:0;border-radius:0 0 12px 12px;transition:all .2s}
+.face.happy::before,.face.happy::after{height:4px;top:14px;border-radius:4px 4px 0 0}
+.face.happy i{height:10px;background:#FF8A80}
+.face.sad i{border-top:2.5px solid #1D2742;border-bottom:0;border-radius:12px 12px 0 0;bottom:5px}
+.face.sleep::before,.face.sleep::after{height:2px;top:16px}
+.vm-name{flex:1;min-width:0}
+.vm-name b{display:block;font-family:var(--f-display);font-weight:400;font-size:20px;line-height:1.1;letter-spacing:.06em}
+.vm-name small{font-size:11px;opacity:.85;font-weight:700}
+.open-sign{font-family:var(--f-led);font-size:12px;padding:2px 8px;border-radius:6px;background:#0B111B;color:#4D5A6E;border:2px solid var(--ink)}
+.open-sign.on{color:var(--sun);text-shadow:0 0 6px var(--sun)}
+
+.vm-body{display:grid;grid-template-columns:minmax(0,1fr) 92px;gap:8px;margin-top:8px}
+.showcase{background:#F4FBFF;border:2.5px solid var(--ink);border-radius:10px;padding:6px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px 4px;
+  background-image:linear-gradient(180deg,rgba(255,255,255,.9),rgba(214,240,255,.6))}
+.slot{display:flex;flex-direction:column;align-items:center;gap:3px;position:relative;padding-top:2px}
+.slot svg{width:34px;height:58px;filter:drop-shadow(1px 2px 0 rgba(29,39,66,.25))}
+.slot .dname{font-size:10px;font-weight:800;color:#1D2742;line-height:1.2;text-align:center;min-height:2.4em;display:flex;align-items:center}
+.buy{width:100%;border:2px solid #1D2742;border-radius:8px;background:#E9EEF5;color:#1D2742;font-weight:800;font-size:12px;padding:2px 0 1px;display:flex;align-items:center;justify-content:center;gap:4px;font-variant-numeric:tabular-nums;transition:transform .08s}
+.buy:active{transform:translateY(1px)}
+.buy .lamp{width:9px;height:9px;border-radius:50%;background:#AEB6C4;border:1.5px solid #1D2742}
+.buy.lit{background:#FFF6D6}
+.buy.lit .lamp{background:var(--sun);box-shadow:0 0 0 3px rgba(255,200,61,.45),0 0 10px var(--sun)}
+.buy.soldout{background:#FFE1DE}
+.buy.soldout .lamp{background:var(--coral)}
+.buy.soldout .ptxt::after{content:" 売切";color:#C62828}
+.dno{position:absolute;top:0;left:2px;font-size:10px;font-weight:800;background:#1D2742;color:#fff;border-radius:99px;padding:0 5px;line-height:1.5;font-family:var(--f-code)}
+.stock{position:absolute;top:0;right:2px;font-size:10px;font-weight:800;background:#fff;border:1.5px solid #1D2742;border-radius:99px;padding:0 5px;line-height:1.5;color:#1D2742;font-variant-numeric:tabular-nums}
+.stock.pulse{animation:pulse .6s}
+@keyframes pulse{50%{transform:scale(1.35);background:var(--sun)}}
+.slot.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+
+.vm-side{display:flex;flex-direction:column;gap:8px}
+.led{background:var(--led-bg);border:2.5px solid var(--ink);border-radius:8px;padding:6px 6px 5px;color:var(--led);font-family:var(--f-led);text-shadow:0 0 6px rgba(124,255,177,.6);text-align:right}
+.led small{display:block;font-size:10px;color:#9FE8C0;text-align:left;line-height:1.3}
+.led b{font-weight:400;font-size:22px;line-height:1.2;font-variant-numeric:tabular-nums;display:block}
+.slotbox{background:var(--vm-deep);border:2.5px solid var(--ink);border-radius:8px;padding:6px;display:flex;flex-direction:column;align-items:center;gap:4px;color:#fff;font-size:10px;font-weight:800}
+.coin-slit{width:10px;height:34px;border-radius:5px;background:#0B111B;border:2px solid #E6F4FB;box-shadow:inset 0 0 0 2px #000}
+.bill-slit{width:52px;height:9px;border-radius:4px;background:#0B111B;border:2px solid #E6F4FB}
+.lever{border:2.5px solid var(--ink);border-radius:8px;background:var(--sun);color:#1D2742;font-weight:800;font-size:12px;padding:6px 2px;line-height:1.3;box-shadow:2px 2px 0 var(--shadow)}
+.lever:active{transform:translate(1px,1px);box-shadow:1px 1px 0 var(--shadow)}
+.reader{background:#0B111B;border:2.5px solid var(--ink);border-radius:8px;padding:5px;display:flex;align-items:center;gap:6px;color:#8FA3C0;font-size:10px;font-weight:800;line-height:1.3}
+.reader.on{color:var(--sun)}
+.reader svg{flex:none}
+
+.vm-bottom{display:grid;grid-template-columns:minmax(0,1fr) 92px;gap:8px;margin-top:8px}
+.outlet,.tray{background:#0F1726;border:2.5px solid var(--ink);border-radius:8px;min-height:58px;position:relative;display:flex;align-items:flex-end;justify-content:center;gap:4px;padding:4px 6px;flex-wrap:wrap;overflow:hidden}
+.outlet::before,.tray::before{position:absolute;top:3px;left:7px;font-size:10px;font-weight:800;color:#8FA3C0}
+.outlet::before{content:"取り出し口"}
+.tray::before{content:"おつり口"}
+.outlet .got svg{width:24px;height:42px;transform:rotate(-80deg);margin:0 6px}
+.tray .coin{width:20px;height:20px;font-size:7px}
+.tray .bill{width:30px;height:16px;font-size:7px}
+.take{position:absolute;top:2px;right:4px;font-size:10px;font-weight:800;color:var(--sun);background:none;border:0;padding:0 2px}
+
+/* お金 */
+.coin{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:12px;color:#3A2A10;border:2px solid #1D2742;position:relative;font-variant-numeric:tabular-nums;flex:none}
+.coin.hole::after{content:"";position:absolute;width:22%;height:22%;border-radius:50%;background:var(--surface);border:1.5px solid #1D2742;top:16%;left:39%}
+.bill{width:56px;height:32px;border-radius:5px;display:grid;place-items:center;font-weight:800;font-size:11px;color:#1D2742;border:2px solid #1D2742;flex:none}
+.wallet{background:var(--surface);border:2.5px solid var(--ink);border-radius:14px;padding:10px 12px}
+.wallet h3,.panel h3{font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.wallet h3 small,.panel h3 small{font-weight:700;color:var(--muted);font-size:11px}
+.coins{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;align-items:center}
+.coins button{background:none;border:0;padding:0;border-radius:50%}
+.coins button.billbtn{border-radius:6px}
+.coins button:hover .coin,.coins button:hover .bill{transform:translateY(-2px)}
+.coins .coin,.coins .bill{transition:transform .12s}
+.flying{position:fixed;z-index:50;pointer-events:none;left:0;top:0}
+
+.speech{background:var(--surface);border:2.5px solid var(--ink);border-radius:14px;padding:9px 12px;font-weight:700;font-size:14px;position:relative;min-height:48px;height:auto;line-height:1.6;overflow-wrap:anywhere}
+.speech::before{content:"";position:absolute;top:-11px;left:30px;border:9px solid transparent;border-bottom-color:var(--ink);border-top:0}
+.speech::after{content:"";position:absolute;top:-7px;left:32px;border:7px solid transparent;border-bottom-color:var(--surface);border-top:0}
+.speech.warn{background:var(--ng-soft)}
+.speech.warn::after{border-bottom-color:var(--ng-soft)}
+.speech.good{background:var(--ok-soft)}
+.speech.good::after{border-bottom-color:var(--ok-soft)}
+
+.parts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.part{border:2px dashed var(--line);border-radius:10px;padding:4px 2px;text-align:center;font-size:11px;font-weight:800;color:var(--muted);line-height:1.3;background:var(--surface)}
+.part span{display:block;font-family:var(--f-led);font-size:11px}
+.part.on{border:2px solid var(--ink);background:var(--sun);color:#1D2742}
+
+.panels{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.panel{background:var(--surface);border:2px solid var(--ink);border-radius:12px;padding:8px 10px;min-width:0;font-size:12px;position:relative}
+.panel.wide{grid-column:1 / -1}
+.panel .off{color:var(--muted);font-weight:700;font-size:11px;padding:6px 0}
+.panel .note{color:var(--muted);font-size:11px;line-height:1.5;margin-top:4px}
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.chip{background:var(--ng-soft);border:1.5px solid var(--ink);border-radius:99px;padding:0 8px;font-weight:800;font-size:11px}
+.salestable{width:100%;border-collapse:collapse;margin-top:4px;font-variant-numeric:tabular-nums}
+.salestable th{font-size:10px;color:var(--muted);text-align:left;font-weight:800;border-bottom:1.5px solid var(--line)}
+.salestable td{border-bottom:1px solid var(--line);padding:1px 0}
+.salestable tr.new td{background:var(--sun-soft)}
+.rank{display:grid;grid-template-columns:5.5em minmax(0,1fr) 2em;gap:4px 6px;align-items:center;margin-top:4px}
+.rank .nm{font-weight:800;font-size:11px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.rank .br{height:12px;border-radius:99px;background:var(--vm);border:1.5px solid var(--ink);transition:width .5s;min-width:6px}
+.rank .ct{font-weight:800;text-align:right;font-variant-numeric:tabular-nums}
+.stampcard{display:grid;grid-template-columns:repeat(15,minmax(0,1fr));gap:3px;margin-top:6px}
+.stampcard i{aspect-ratio:1;border-radius:50%;border:1.5px solid var(--ink);background:var(--bg);max-width:100%}
+.stampcard i.on{background:var(--coral)}
+.tickets{margin-top:4px;font-weight:800}
+
+/* ===== ミッション側 ===== */
+.mission-col{min-width:0;display:flex;flex-direction:column;gap:14px}
+.story{background:var(--surface);border:2.5px solid var(--ink);border-radius:16px;padding:12px 16px;box-shadow:4px 4px 0 var(--shadow)}
+.story h2{font-family:var(--f-display);font-weight:400;font-size:18px;letter-spacing:.03em}
+.story p{margin:4px 0 0;max-width:68ch}
+.tabs{display:flex;flex-wrap:wrap;gap:8px}
+.tab{border:2.5px solid var(--ink);background:var(--surface);border-radius:12px;padding:4px 10px 4px 6px;display:flex;align-items:center;gap:7px;font-weight:800;font-size:13px;box-shadow:2px 2px 0 var(--shadow)}
+.tab .no{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--bg);border:2px solid var(--ink);font-family:var(--f-display);font-weight:400;font-size:12px}
+.tab.cur{background:var(--ink);color:var(--surface)}
+.tab.cur .no{background:var(--sun);color:#1D2742}
+.tab.done .no{background:var(--ok);color:#fff}
+.tab.done .no::after{content:"✓"}
+.tab.done .no b{display:none}
+
+.card{background:var(--surface);border:2.5px solid var(--ink);border-radius:18px;box-shadow:5px 5px 0 var(--shadow);overflow:hidden}
+.card-head{padding:14px 18px 12px;border-bottom:2.5px solid var(--ink);background:var(--sun-soft);display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline}
+.card-head .mno{font-family:var(--f-display);font-weight:400;font-size:13px;background:var(--ink);color:var(--surface);border-radius:8px;padding:1px 8px}
+.card-head h2{font-family:var(--f-display);font-weight:400;font-size:clamp(20px,2.6vw,26px);letter-spacing:.02em;line-height:1.3}
+.card-head .meta{display:flex;gap:8px;align-items:center;margin-left:auto;font-size:12px;font-weight:800;color:var(--muted)}
+.stars{color:var(--coral);letter-spacing:1px}
+.concept{background:var(--surface);border:1.5px solid var(--ink);border-radius:99px;padding:0 8px;color:var(--ink)}
+.card-body{padding:14px 18px 18px;display:flex;flex-direction:column;gap:14px}
+.voice{display:flex;gap:10px;align-items:flex-start}
+.voice .face{width:40px;height:32px;border-radius:10px;transform:scale(.9)}
+.voice .face::before,.voice .face::after{top:8px;width:6px;height:7px}
+.voice .face::before{left:9px}.voice .face::after{right:9px}
+.voice .face i{bottom:5px;width:12px;height:5px;margin-left:-6px}
+.voice p{margin:0;background:var(--bg);border-radius:12px;padding:7px 12px;font-weight:700;max-width:68ch}
+.task{margin:0;max-width:72ch}
+.task code,.hint code,.io code{font-family:var(--f-code);background:var(--code-bg);border:1px solid var(--line);border-radius:5px;padding:0 4px;font-size:.92em}
+.io{border-collapse:collapse;font-size:13px;width:100%;max-width:640px}
+.io-wrap{overflow-x:auto}
+.io th,.io td{border:1.5px solid var(--line);padding:4px 8px;text-align:left;vertical-align:top}
+.io th{background:var(--bg);font-weight:800;white-space:nowrap;width:7em}
+.realnote{border:2px dashed var(--vm);border-radius:12px;padding:8px 12px;font-size:13px;max-width:72ch}
+.realnote b{color:var(--vm-deep)}
+:root[data-theme="dark"] .realnote b{color:var(--vm)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .realnote b{color:var(--vm)}}
+
+/* エディタ */
+.editor-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.editor-head b{font-size:13px}
+.editor-head small{color:var(--muted);font-size:12px;font-weight:700}
+.editor{display:flex;border:2.5px solid var(--ink);border-radius:12px;background:var(--code-bg);overflow:hidden}
+.gutter{flex:none;padding:12px 8px 12px 10px;text-align:right;color:var(--hl-com);font-family:var(--f-code);font-size:14.5px;line-height:1.65;user-select:none;border-right:1.5px solid var(--line);font-variant-numeric:tabular-nums;white-space:pre}
+.gutter .errline{color:#fff;background:var(--coral);border-radius:4px;padding:0 3px}
+.code-area{position:relative;flex:1;min-width:0;overflow-x:auto}
+.code-area pre,.code-area textarea{margin:0;padding:12px 14px;font-family:var(--f-code);font-size:14.5px;line-height:1.65;tab-size:4;white-space:pre;letter-spacing:0;font-weight:400;border:0;min-width:100%;width:max-content}
+.code-area pre{pointer-events:none;color:var(--ink)}
+.code-area textarea{position:absolute;inset:0;width:100%;height:100%;resize:none;background:transparent;color:transparent;caret-color:var(--ink);outline:none;overflow:hidden}
+.code-area textarea::selection{background:rgba(255,200,61,.45);color:transparent}
+.hl-kw{color:var(--hl-kw);font-weight:600}.hl-str{color:var(--hl-str)}.hl-num{color:var(--hl-num)}.hl-com{color:var(--hl-com)}.hl-fn{color:var(--hl-fn);font-weight:600}
+.hl-blank{background:var(--sun);color:#1D2742;border-radius:3px;outline:1.5px solid var(--ink)}
+
+.actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.btn{border:2.5px solid var(--ink);border-radius:12px;padding:7px 16px;font-weight:800;background:var(--surface);box-shadow:3px 3px 0 var(--shadow);transition:transform .08s,box-shadow .08s}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--shadow)}
+.btn.run{background:var(--vm);color:#fff;font-size:16px;padding:8px 22px}
+.btn.next{background:var(--sun);color:#1D2742}
+.btn.small{font-size:13px;padding:4px 12px;box-shadow:2px 2px 0 var(--shadow)}
+.btn[disabled]{opacity:.5;cursor:wait}
+.kbd{color:var(--muted);font-size:12px;font-weight:700}
+.confirm{display:inline-flex;gap:6px;align-items:center;font-size:13px;font-weight:800}
+
+.hints{display:flex;flex-direction:column;gap:6px}
+.hint{background:var(--bg);border-radius:10px;padding:7px 12px;font-size:14px;max-width:72ch}
+.hint b{color:var(--vm-deep);margin-right:6px}
+:root[data-theme="dark"] .hint b{color:var(--vm)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .hint b{color:var(--vm)}}
+
+.result{border:2.5px solid var(--ink);border-radius:14px;overflow:hidden}
+.result-head{padding:8px 14px;font-weight:800;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.result-head.pass{background:var(--ok-soft)}
+.result-head.fail{background:var(--ng-soft)}
+.result-head.wait{background:var(--bg)}
+.result-head .big{font-family:var(--f-display);font-weight:400;font-size:18px}
+.tests{list-style:none;margin:0;padding:6px 14px 10px;display:flex;flex-direction:column;gap:4px}
+.tests li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:4px 8px;font-size:13.5px;padding:4px 0;border-bottom:1px dashed var(--line)}
+.tests li:last-child{border-bottom:0}
+.mark{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;font-size:12px;margin-top:2px}
+.mark.ok{background:var(--ok)}.mark.ng{background:var(--coral)}
+.tests .call{font-family:var(--f-code);font-size:12.5px;color:var(--muted);overflow-x:auto;white-space:nowrap}
+.tests .vs{font-family:var(--f-code);font-size:12.5px;overflow-x:auto;white-space:nowrap}
+.tests .vs em{font-style:normal;color:var(--coral);font-weight:600}
+.errbox{margin:8px 14px 12px;background:var(--ng-soft);border:2px solid var(--coral);border-radius:10px;padding:8px 12px;font-size:14px}
+.errbox code{font-family:var(--f-code);font-size:12px;color:var(--muted);display:block;margin-top:2px;overflow-x:auto;white-space:pre}
+.console{margin:0 14px 12px;background:var(--led-bg);color:var(--led);font-family:var(--f-code);font-size:12.5px;border-radius:8px;padding:6px 10px;white-space:pre-wrap;max-height:140px;overflow:auto}
+.console::before{content:"print の出力";display:block;color:#7A88A6;font-size:10px}
+.clear-box{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:10px 14px 12px;border-top:2px dashed var(--line)}
+
+.ai{border:2px solid var(--line);border-radius:12px;padding:8px 12px;font-size:13px}
+.ai summary{cursor:pointer;font-weight:800}
+.ai p{margin:6px 0;max-width:72ch;color:var(--muted)}
+.ai textarea{width:100%;height:150px;font-family:var(--f-code);font-size:12px;border:1.5px solid var(--line);border-radius:8px;padding:8px;background:var(--code-bg);color:var(--ink)}
+
+.finale{background:var(--ink);color:var(--surface);border-radius:16px;padding:14px 18px}
+.finale h3{font-family:var(--f-display);font-weight:400;font-size:18px;color:var(--sun)}
+.finale p{margin:4px 0 0;max-width:72ch}
+.foot{display:flex;justify-content:flex-end;gap:8px;align-items:center;font-size:12px;color:var(--muted)}
+.loading{background:var(--sun-soft);border:2px solid var(--ink);border-radius:10px;padding:6px 12px;font-weight:800;font-size:13px}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--surface);padding:10px 18px;border-radius:14px;font-weight:800;opacity:0;transition:all .3s;z-index:60;max-width:calc(100% - 32px);text-align:center;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.burst{position:fixed;pointer-events:none;z-index:55;width:10px;height:10px;border-radius:2px}
+.langs{display:inline-flex;flex-wrap:wrap;gap:0;border:2.5px solid var(--ink);border-radius:12px;overflow:hidden;align-self:flex-start;max-width:100%}
+.lang{border:0;background:var(--surface);padding:5px 14px;font-weight:800;font-size:13px;border-right:2px solid var(--ink)}
+.lang:last-child{border-right:0}
+.lang.on{background:var(--ink);color:var(--surface)}
+.snips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.snip{border:1.5px solid var(--ink);background:var(--surface);border-radius:8px;padding:1px 9px;font-family:var(--f-code);font-size:12.5px;font-weight:600}
+.snip:hover{background:var(--sun-soft)}
+.hl-bar{color:var(--hl-com)}
+.topright{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
+.modechip{border:2.5px solid var(--ink);background:var(--surface);border-radius:99px;padding:3px 6px 3px 12px;font-weight:800;font-size:13px;display:inline-flex;align-items:center;gap:6px;box-shadow:2px 2px 0 var(--shadow)}
+.modechip span{background:var(--sun);color:#1D2742;border-radius:99px;padding:0 8px;font-size:11px}
+.modeov{position:fixed;inset:0;z-index:80;background:rgba(18,26,44,.62);display:grid;place-items:center;padding:16px;overflow-y:auto}
+.modebox{background:var(--surface);border:3px solid var(--ink);border-radius:20px;box-shadow:6px 6px 0 var(--shadow);padding:20px 20px 16px;max-width:720px;width:100%}
+.modebox h2{font-family:var(--f-display);font-weight:400;font-size:clamp(20px,3vw,26px)}
+.modebox p{margin:6px 0 0}
+.modecards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}
+@media (max-width:560px){.modecards{grid-template-columns:minmax(0,1fr)}}
+.modecard{border:2.5px solid var(--ink);border-radius:16px;background:var(--bg);padding:14px;text-align:left;display:flex;flex-direction:column;gap:8px;box-shadow:3px 3px 0 var(--shadow);transition:transform .1s;min-width:0}
+.modecard:hover{transform:translateY(-2px);background:var(--sun-soft)}
+.modecard b{font-family:var(--f-display);font-weight:400;font-size:22px}
+.modecard code{font-family:var(--f-code);font-size:12px;background:var(--code-bg);border:1.5px solid var(--line);border-radius:8px;padding:6px 8px;overflow-x:auto;white-space:nowrap;display:block}
+.modecard .mtag{align-self:flex-start;background:var(--vm);color:#fff;border-radius:99px;padding:0 10px;font-size:12px;font-weight:800}
+.modecard .mdesc{font-size:13px;color:var(--muted);font-weight:700}
+.modebox .mnote{font-size:12px;color:var(--muted);margin-top:12px}
+.snip.on{background:var(--ink);color:var(--surface)}
+.fc-wrap{overflow-x:auto;border:2.5px solid var(--ink);border-radius:12px;background:var(--code-bg);padding:6px}
+.fc{display:block;margin:0 auto;max-width:none}
+.fc-box{fill:var(--surface);stroke:var(--ink);stroke-width:2}
+.fc-term{fill:var(--bg)}
+.fc-dia{fill:var(--surface)}
+.fc-loop{fill:var(--surface)}
+.fc-blank{fill:var(--sun-soft);stroke:var(--coral)}
+.fc-t{font-family:var(--f-code);font-size:13px;font-weight:600;fill:var(--ink);text-anchor:middle;dominant-baseline:central}
+.fc-line{stroke:var(--ink);stroke-width:2;fill:none}
+.fc-head{fill:var(--ink)}
+.fc-lab{font-family:var(--f-body);font-size:11px;font-weight:800;fill:var(--muted)}
+@media (prefers-reduced-motion: reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="logo">
+      <div class="logo-mark" aria-hidden="true">
+        <svg width="26" height="30" viewBox="0 0 26 30"><rect x="1.5" y="1.5" width="23" height="27" rx="4" fill="#fff" stroke="#1D2742" stroke-width="2.5"/><rect x="5" y="5" width="11" height="13" rx="2" fill="#BFE6FF" stroke="#1D2742" stroke-width="1.8"/><rect x="18.5" y="6" width="3" height="7" rx="1.5" fill="#1D2742"/><rect x="5" y="21" width="16" height="4" rx="1.5" fill="#1D2742"/></svg>
+      </div>
+      <div>
+        <h1>がっこう自販機ラボ</h1>
+        <p>プログラムで自販機の「頭脳」をつくろう</p>
+      </div>
+    </div>
+    <div class="topright"><button class="modechip" type="button" id="modeChip">モード：<b id="modeName">未選択</b><span>変更</span></button><div class="progress"><span id="progTxt">0 / 8 クリア</span><div class="bar"><i id="progBar"></i></div></div></div>
+  </header>
+
+  <div class="grid">
+    <!-- ========== 自販機 ========== -->
+    <aside class="machine-col" id="machineCol">
+      <div class="vm" id="vm">
+        <div class="vm-top">
+          <div class="face sleep" id="face"><i></i></div>
+          <div class="vm-name"><b>ミント号</b><small>購買前の自販機</small></div>
+          <div class="open-sign" id="openSign">準備中</div>
+        </div>
+        <div class="vm-body">
+          <div class="showcase" id="showcase"></div>
+          <div class="vm-side">
+            <div class="led"><small>投入金額</small><b id="credit">¥0</b></div>
+            <div class="slotbox" id="slot"><span>硬貨</span><div class="coin-slit"></div><span>お札</span><div class="bill-slit"></div></div>
+            <button class="lever" id="lever" type="button">おつり<br>レバー</button>
+            <div class="reader" id="reader"><svg width="16" height="24" viewBox="0 0 16 24"><rect x="1.5" y="1.5" width="13" height="21" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="8" cy="18" r="1.6" fill="currentColor"/></svg><span>スタンプ<br>読み取り</span></div>
+          </div>
+        </div>
+        <div class="vm-bottom">
+          <div class="outlet" id="outlet"></div>
+          <div class="tray" id="tray"></div>
+        </div>
+      </div>
+
+      <div class="speech" id="speech">…………。（プログラムが消えて、ミント号は眠ったまま）</div>
+
+      <div class="wallet">
+        <h3>おさいふ <small>クリックで自販機に入れる</small></h3>
+        <div class="coins" id="coins"></div>
+      </div>
+
+      <div>
+        <div class="parts" id="parts"></div>
+      </div>
+
+      <div class="panels">
+        <div class="panel" id="pRefill"><h3>補充お願いリスト</h3><div class="body"></div></div>
+        <div class="panel" id="pStamp"><h3>スタンプカード</h3><div class="body"></div></div>
+        <div class="panel wide" id="pSales"><h3>売上データ <small>売れた商品の番号を記録</small></h3><div class="body"></div></div>
+        <div class="panel wide" id="pRank"><h3>人気ランキング</h3><div class="body"></div></div>
+      </div>
+      <div class="foot"><button class="btn small" type="button" id="refill">補充の人を呼ぶ（全部5本に）</button></div>
+    </aside>
+
+    <!-- ========== ミッション ========== -->
+    <main class="mission-col">
+      <section class="story">
+        <h2>ストーリー</h2>
+        <p>購買の前にある自販機「ミント号」。ある朝、中のコンピュータのプログラムが消えてしまった！ お金も受け付けないし、ボタンも光らない。きみがプログラムを書き直して、ミント号を復活させよう。ミッションをクリアするたびに、左の自販機の機能がひとつずつ動き出すよ。</p>
+      </section>
+      <div id="loading" class="loading">Pythonの実行エンジンを準備しています…</div>
+      <nav class="tabs" id="tabs" aria-label="ミッション一覧"></nav>
+      <article class="card" id="card"></article>
+      <div class="foot">
+        <span id="resetAllWrap"><button class="btn small" type="button" id="resetAll">すべての進み具合を消す</button></span>
+      </div>
+    </main>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<div class="modeov" id="modeOv" hidden>
+  <div class="modebox" role="dialog" aria-modal="true" aria-labelledby="modeTitle">
+    <h2 id="modeTitle">どの書き方でミント号を直す？</h2>
+    <p>はじめに、プログラムを書く言葉を選ぼう。あとから右上の「モード」で切り替えられるよ。</p>
+    <div class="modecards">
+      <button type="button" class="modecard" data-mode="py">
+        <span class="mtag">本物の言語で書く</span>
+        <b>Python</b>
+        <code>def accept_coin(coin):<br>&nbsp;&nbsp;&nbsp;&nbsp;if coin in ok_coins:</code>
+        <span class="mdesc">大学や仕事でも使われているプログラミング言語。作ったプログラムがそのまま動く。</span>
+      </button>
+      <button type="button" class="modecard" data-mode="dncl">
+        <span class="mtag">共通テスト対策</span>
+        <b>共通テスト表記</b>
+        <code>関数 accept_coin(coin) を…<br>│ もし … ならば:</code>
+        <span class="mdesc">大学入学共通テストの「情報Ⅰ」で使われる書き方。試験と同じ形で練習できる。</span>
+      </button>
+    </div>
+    <p class="mnote">どちらを選んでも、8つのミッションの内容は同じです。フローチャートは、選んだ書き方のプログラムから描かれます。</p>
+  </div>
+</div>
+
+<script src="lib/skulpt.min.js"></script>
+<script src="lib/skulpt-stdlib.js"></script>
+<script>
+(function(){
+"use strict";
+/* ================= データ ================= */
+const DRINKS=[
+  {name:"おいしい水",price:100,stock:5,kind:"bottle",body:"#BFE6FF",cap:"#2F80ED",label:"#FFFFFF"},
+  {name:"緑茶",price:130,stock:3,kind:"bottle",body:"#A6D982",cap:"#2E7D32",label:"#F1F7E6"},
+  {name:"スポーツドリンク",price:150,stock:4,kind:"bottle",body:"#D9EEFF",cap:"#1565C0",label:"#2D8CE6"},
+  {name:"ミルクティー",price:140,stock:2,kind:"can",body:"#EAD6B8",cap:"#C9CED6",label:"#8D5A3B"},
+  {name:"オレンジ",price:120,stock:1,kind:"can",body:"#FFA53B",cap:"#C9CED6",label:"#FFF1D6"},
+  {name:"ブラックコーヒー",price:130,stock:0,kind:"can",body:"#3B2A22",cap:"#C9CED6",label:"#C9A27E"}
+];
+const MONEY=[
+  {v:1,c:"#DDE1E7",t:"coin"},{v:5,c:"#E8C65E",t:"coin",hole:1},{v:10,c:"#C98150",t:"coin"},{v:50,c:"#E9ECF1",t:"coin",hole:1},
+  {v:100,c:"#D5DAE2",t:"coin"},{v:500,c:"#E2C86C",t:"coin"},{v:1000,c:"#C9DDF0",t:"bill"},{v:2000,c:"#D8D1EE",t:"bill"}
+];
+const PART_NAMES=["硬貨チェック","ランプ","おつり","在庫","補充リスト","売上合計","ランキング","スタンプ"];
+const NOS=DRINKS.map((d,i)=>`<code>${i}</code> ${d.name}`).join("　");
+
+/* ================= ミッション ================= */
+const MISSIONS=[
+{ key:"accept_coin", fname:"accept_coin", title:"硬貨チェッカー", stars:1, concept:"if と in",
+  voice:"ぼくは何でも飲みこんじゃう…。1円玉も、2000円札も！ 使えるお金かどうか、見分けられるようにして！",
+  task:"入れられたお金 <code>coin</code> が使えるお金なら <code>True</code>、使えないなら <code>False</code> を返す関数を完成させよう。ミント号で使えるのは 10円・50円・100円・500円 と 1000円札。",
+  io:[["受け取る","<code>coin</code> … 入れられたお金（例：<code>100</code>）"],["返す","使えれば <code>True</code>、使えなければ <code>False</code>"]],
+  starter:`def accept_coin(coin):
+    ok_coins = [10, 50, 100, 500, 1000]   # 使えるお金のリスト
+    if ____:
+        return True
+    else:
+        return ____
+`,
+  tests:[
+    {args:[100],expect:true,label:"100円玉は使える"},
+    {args:[10],expect:true,label:"10円玉は使える"},
+    {args:[1000],expect:true,label:"1000円札は使える"},
+    {args:[1],expect:false,label:"1円玉は使えない"},
+    {args:[5],expect:false,label:"5円玉は使えない"},
+    {args:[2000],expect:false,label:"2000円札は使えない"}
+  ],
+  hints:[
+    "知りたいのは「coin が ok_coins の中に入っているか」だね。",
+    "Pythonでは <code>x in リスト</code> と書くと、x がリストに入っていれば True、なければ False になるよ。",
+    "1つ目の穴は <code>coin in ____</code> の形。2つ目の穴は「使えないとき」に返す値。"
+  ],
+  real:null },
+
+{ key:"can_buy", fname:"can_buy", title:"買えるよランプ", stars:1, concept:"比較と and",
+  voice:"お金が入っても、ボタンのランプがつかないんだ。買える飲み物だけ光らせたい！",
+  task:"入っている金額 <code>total</code>、値段 <code>price</code>、在庫の本数 <code>stock</code> を受け取って、<b>お金が足りていて、しかも在庫がある</b>ときだけ <code>True</code> を返そう。ちょうどの金額でも買えるよ。",
+  io:[["受け取る","<code>total</code> 入っている金額／<code>price</code> 値段／<code>stock</code> 在庫の本数"],["返す","買えるなら <code>True</code>、買えないなら <code>False</code>"]],
+  starter:`def can_buy(total, price, stock):
+    # お金が足りている かつ 在庫がある ときだけ True
+    if ____ and ____:
+        return True
+    return False
+`,
+  tests:[
+    {args:[150,130,3],expect:true,label:"150円入っていて130円の飲み物（在庫3）"},
+    {args:[100,130,3],expect:false,label:"100円しかないと130円の飲み物は買えない"},
+    {args:[130,130,3],expect:true,label:"ちょうど130円なら買える"},
+    {args:[500,130,0],expect:false,label:"お金があっても在庫0なら買えない"},
+    {args:[0,100,0],expect:false,label:"お金も在庫もない"}
+  ],
+  hints:[
+    "条件は2つ。「お金が足りている」と「在庫がある」。両方そろったときだけ True だね。",
+    "「足りている」は、total と price をくらべる式。ちょうどのときも買えるから、記号は <code>&gt;</code> と <code>&gt;=</code> のどちらかな？",
+    "「在庫がある」は「stock が 0 より大きい」と言いかえられるよ。"
+  ],
+  real:null },
+
+{ key:"change_coins", fname:"change_coins", title:"おつりマシン", stars:2, concept:"for と while",
+  voice:"おつりレバーを引かれても、どの硬貨を何枚出せばいいか分からない…。枚数がなるべく少なくなるように出したいな。",
+  task:"おつりの金額 <code>amount</code> を受け取って、出す硬貨を並べたリストを返そう。大きい硬貨（500円）から順に、出せるだけ出していけば枚数が一番少なくなるよ。",
+  io:[["受け取る","<code>amount</code> … おつりの金額（例：<code>380</code>）"],["返す","出す硬貨のリスト（例：<code>[100, 100, 100, 50, 10, 10, 10]</code>）"]],
+  starter:`def change_coins(amount):
+    coins = []                       # 出す硬貨を入れるリスト
+    for c in [500, 100, 50, 10]:     # 大きい硬貨から順に調べる
+        while amount >= ____:        # c円玉が出せるあいだ くり返す
+            coins.____(c)            # c円玉を1枚 リストに追加
+            amount = ____            # 出した分だけ 残りを減らす
+    return coins
+`,
+  tests:[
+    {args:[380],expect:[100,100,100,50,10,10,10],label:"380円のおつり"},
+    {args:[660],expect:[500,100,50,10],label:"660円のおつり"},
+    {args:[1000],expect:[500,500],label:"1000円のおつり（硬貨で出す）"},
+    {args:[0],expect:[],label:"おつりなし"}
+  ],
+  hints:[
+    "while の条件は「残りの金額が、いま調べている硬貨 c 以上のあいだ」。",
+    "リストの最後に追加する命令は、夏の課題でも出てきた <code>リスト.append(値)</code>。",
+    "1枚出したら、残りの金額は c 円だけ少なくなる。ここを書き忘れると、くり返しが終わらなくなるよ（無限ループ）。"
+  ],
+  real:null },
+
+{ key:"sell_i", fname:"sell", title:"在庫カウンター", stars:2, concept:"リストと番号",
+  voice:"売れたのに在庫の数が減らないんだ…。これじゃ空っぽなのに「ある」と思っちゃう！",
+  task:"ミント号の飲み物には 0〜5 の<b>商品番号</b>がついていて、在庫は商品番号の順に本数を並べたリスト <code>stock</code> で管理しているよ（例：<code>[5, 3, 4, 2, 1, 0]</code> なら、0番が5本、1番が3本…）。売れた商品の番号 <code>i</code> を受け取って、その商品の在庫を1つ減らしたリストを返そう。",
+  io:[["受け取る","<code>stock</code> … 在庫のリスト（例：<code>[5, 3, 4, 2, 1, 0]</code>）<br><code>i</code> … 売れた商品の番号（例：<code>1</code>）"],["返す","在庫を1減らしたリスト（例：<code>[5, 2, 4, 2, 1, 0]</code>）"],["商品番号",NOS]],
+  starter:`def sell(stock, i):
+    # stock[i] で、i番の商品の在庫の数を取り出せる
+    stock[____] = stock[____] - ____
+    return stock
+`,
+  tests:[
+    {args:[[5,3,4,2,1,0],1],expect:[5,2,4,2,1,0],label:"1番（緑茶）が1本売れた"},
+    {args:[[5,3,4,2,1,0],0],expect:[4,3,4,2,1,0],label:"0番（おいしい水）が1本売れた"},
+    {args:[[5,3,4,2,1,0],4],expect:[5,3,4,2,0,0],label:"4番（オレンジ）の最後の1本が売れた"}
+  ],
+  hints:[
+    "リストの番号は 0 から数えるよ。<code>stock[0]</code> が0番の商品の在庫の数。",
+    "どの番号の在庫を変えたいかは、引数の <code>i</code> が教えてくれる。",
+    "右側で「いまの在庫 − 1」を計算して、左側の同じ場所に入れ直す形。"
+  ],
+  real:null },
+
+{ key:"sold_out", fname:"sold_out_list", title:"補充お願いリスト", stars:2, concept:"for と range",
+  voice:"売り切れた飲み物を、補充してくれる人に知らせたい！ まずは売り切れのリストを作ってほしいな。",
+  task:"商品名のリスト <code>names</code> と在庫のリスト <code>stock</code> を受け取って、在庫が <code>0</code> の商品の名前を集めたリストを返そう。2つのリストは、同じ番号どうしが同じ商品を表しているよ。",
+  io:[["受け取る","<code>names</code> … 商品名のリスト（例：<code>['おいしい水', '緑茶', 'ブラックコーヒー']</code>）<br><code>stock</code> … 在庫のリスト（例：<code>[2, 0, 0]</code>）"],["返す","在庫0の商品名のリスト（例：<code>['緑茶', 'ブラックコーヒー']</code>）"]],
+  starter:`def sold_out_list(names, stock):
+    result = []
+    for i in range(len(stock)):     # i には 0, 1, 2, … と番号が順に入る
+        if ____:                    # i番の在庫が 0 なら
+            result.append(____)     # i番の商品名を追加
+    return result
+`,
+  tests:[
+    {args:[["おいしい水","緑茶","ブラックコーヒー"],[2,0,0]],expect:["緑茶","ブラックコーヒー"],label:"2種類が売り切れ"},
+    {args:[["おいしい水","緑茶"],[1,2]],expect:[],label:"売り切れなし"},
+    {args:[["オレンジ"],[0]],expect:["オレンジ"],label:"1種類だけで売り切れ"}
+  ],
+  hints:[
+    "<code>range(len(stock))</code> は、0 から「リストの長さ − 1」までの番号を順に作るよ。",
+    "i番の商品の在庫の数は <code>stock[i]</code>。0 と等しいかどうかは <code>==</code> で調べる。",
+    "追加したいのは在庫の数ではなく名前。i番の商品名は、もう一方のリストの i番に入っている。"
+  ],
+  real:"<b>本物とつながる話：</b>最近の自販機は、売り切れや売上の情報を<b>ネットワーク</b>で会社に送っています。補充の担当者は、行く前にどの飲み物を何本持っていけばいいか分かるんです。" },
+
+{ key:"total_sales", fname:"total_sales", title:"売上ノート", stars:2, concept:"番号でリストを引く",
+  voice:"何が売れたかは、ちゃんとノートにつけてあるんだ。売れた商品の番号を、売れた順に並べてあるよ。今日の売上の合計を計算して！",
+  task:"売上の記録 <code>log</code> は、売れた商品の番号を売れた順に並べたリストだよ（例：<code>[1, 0, 1]</code> は 緑茶→おいしい水→緑茶 の順に売れた）。商品番号の順に値段を並べたリスト <code>prices</code> を使って、売上の合計金額を返そう。",
+  io:[["受け取る","<code>log</code> … 売れた商品の番号のリスト（例：<code>[1, 0, 1]</code>）<br><code>prices</code> … 値段のリスト（<code>[100, 130, 150, 140, 120, 130]</code>）"],["返す","売上の合計金額（例：<code>360</code>）"],["商品番号",NOS]],
+  starter:`def total_sales(log, prices):
+    total = 0
+    for k in range(len(log)):       # 記録を1件ずつ見ていく
+        no = log[____]              # k件目に売れた商品の番号
+        total = total + ____        # その商品の値段を足す
+    return total
+`,
+  tests:[
+    {args:[[1,0,1],[100,130,150,140,120,130]],expect:360,label:"緑茶・おいしい水・緑茶 で 360円"},
+    {args:[[2,2,5],[100,130,150,140,120,130]],expect:430,label:"スポーツドリンク2本とブラックコーヒー1本"},
+    {args:[[],[100,130,150,140,120,130]],expect:0,label:"まだ何も売れていない"}
+  ],
+  hints:[
+    "k件目の記録は <code>log[k]</code>。そこに入っているのは「商品の番号」だよ。",
+    "その商品の値段は、値段のリストの「商品の番号」の場所に入っている。",
+    "2つ目の穴は <code>prices[____]</code> の形。カッコの中は、1行上で作った変数。"
+  ],
+  real:"<b>本物とつながる話：</b>売上の記録には商品名や値段を書かずに、<b>商品番号</b>だけを書いていますね。名前や値段は商品の表から番号で引けばよいからです。このように表を分けて番号でつなぐのが、<b>リレーショナルデータベース</b>の基本の考え方です（つなぐための番号を「キー」と呼びます）。" },
+
+{ key:"count_no", fname:"count_sold", title:"人気ランキング", stars:2, concept:"数える（カウンタ）",
+  voice:"売上ノートから、それぞれの飲み物が何本売れたか数えたい！ 人気の飲み物を多めに入れておけるからね。",
+  task:"売上の記録 <code>log</code>（売れた商品の番号のリスト）の中に、商品番号 <code>i</code> が何回出てくるか、つまり何本売れたかを数えて返そう。ミント号は、この関数を商品ごとに呼び出してランキングを作るよ。",
+  io:[["受け取る","<code>log</code> … 売れた商品の番号のリスト（例：<code>[1, 0, 1]</code>）<br><code>i</code> … 数えたい商品の番号（例：<code>1</code>）"],["返す","その商品が売れた本数（例：<code>2</code>）"],["商品番号",NOS]],
+  starter:`def count_sold(log, i):
+    count = 0                        # 数えるための変数（はじめは0本）
+    for k in range(len(log)):        # 記録を1件ずつ見ていく
+        if log[k] == ____:           # 数えたい商品の番号なら
+            count = ____             # 1本ふやす
+    return ____                      # 数えた結果を返す
+`,
+  tests:[
+    {args:[[1,0,1],1],expect:2,label:"1番（緑茶）は2本"},
+    {args:[[1,0,1],0],expect:1,label:"0番（おいしい水）は1本"},
+    {args:[[1],4],expect:0,label:"4番（オレンジ）は0本"},
+    {args:[[],1],expect:0,label:"まだ何も売れていない"}
+  ],
+  hints:[
+    "<code>log[k]</code> は k件目に売れた商品の番号。それが数えたい番号と同じなら数える。",
+    "数えたい商品の番号は、引数のどれかな？",
+    "1本ふやすには、いまの count に 1 を足した <code>count + 1</code> を、もう一度 count に入れる。最後に返すのは、数えた結果が入っている変数。"
+  ],
+  real:"<b>本物とつながる話：</b>データベースでは、こういう数え方を SQL という言葉で頼みます。たとえば <code>SELECT COUNT(*) FROM 売上 WHERE 商品番号 = 1</code> は「売上の表から、商品番号が1の行を数えて」という意味。いま書いたプログラムが、その中身にあたります。" },
+
+{ key:"add_stamp", fname:"add_stamp", title:"スマホでスタンプ", stars:2, concept:"代入と if",
+  voice:"スマホをかざすとスタンプがたまるサービスを始めるよ！ 15個たまったら1本無料！",
+  task:"いまのスタンプの数 <code>stamps</code> を受け取って、1つ増やした数を返そう。ただし、増やした結果が <code>15</code> になったらカードがいっぱいなので <code>0</code> に戻す（そのとき無料チケットがもらえる）。",
+  io:[["受け取る","<code>stamps</code> … いまのスタンプの数"],["返す","1本買った後のスタンプの数（15になったら 0）"]],
+  starter:`def add_stamp(stamps):
+    stamps = ____          # スタンプを1つ増やす
+    if stamps == ____:     # カードがいっぱいになったら
+        stamps = 0         # 0 に戻す（無料チケットがもらえる）
+    return stamps
+`,
+  tests:[
+    {args:[0],expect:1,label:"0個 → 1個"},
+    {args:[7],expect:8,label:"7個 → 8個"},
+    {args:[14],expect:0,label:"14個 → いっぱいになって 0個"}
+  ],
+  hints:[
+    "「stamps を1増やす」は、いまの stamps に 1 を足して、stamps に入れ直すこと。",
+    "カードは何個でいっぱいになるかな？ 問題文を読み直そう。",
+    "1つ目の穴は <code>stamps + ____</code> の形だよ。"
+  ],
+  real:"<b>本物とつながる話：</b>本物のスタンプサービスでは、スタンプの数はスマホの中ではなく、<b>ネットワーク</b>の先にある会社のサーバーの<b>データベース</b>に記録されています。だから、スマホを買いかえてもスタンプは消えないんです。" }
+];
+
+/* ================= 共通テスト表記（DNCL） ================= */
+/* DNCL-BEGIN */
+const DNCL={
+accept_coin:{ conv:"_r == 1",
+  dtask:"関数 <code>accept_coin</code> を作ろう。入れられたお金 <code>coin</code> を受け取り、配列 <code>OkCoins</code> の中に coin と同じ値があれば、使えるお金なので <code>kekka</code> を 1 にして返す（はじめは 0 にしてある）。",
+  starter:`関数 accept_coin(coin) を次のように定義する:
+│ OkCoins = [10, 50, 100, 500, 1000]
+│ kekka = 0
+│ i を 0 から 要素数(OkCoins) - 1 まで 1 ずつ増やしながら繰り返す:
+│ │ もし ____ ならば:
+│ └ └ kekka = ____
+└ kekka を返す
+`,
+  dhints:["<code>OkCoins[i]</code> には、i番目の「使えるお金」が入っているよ。","「i番目の使えるお金」と「入れられたお金 coin」が等しいかを <code>==</code> で調べよう。","同じものが見つかったら、「使える」という意味で kekka を 1 にする。"] },
+can_buy:{ conv:"_r == 1",
+  dtask:"関数 <code>can_buy</code> を作ろう。入っている金額 <code>total</code>、値段 <code>price</code>、在庫の本数 <code>stock</code> を受け取り、お金が足りていて、しかも在庫があるときだけ <code>kekka</code> を 1 にして返す。ちょうどの金額でも買えるよ。",
+  starter:`関数 can_buy(total, price, stock) を次のように定義する:
+│ もし ____ and ____ ならば:
+│ │ kekka = 1
+│ そうでなければ:
+│ └ kekka = 0
+└ kekka を返す
+`,
+  dhints:["条件は2つ。「お金が足りている」と「在庫がある」。両方そろったときだけ kekka = 1 だね。","「足りている」は total と price をくらべる式。ちょうどのときも買えるから、記号は <code>&gt;</code> と <code>&gt;=</code> のどちらかな？","「在庫がある」は「stock が 0 より大きい」と言いかえられるよ。"] },
+change_coins:{ conv:"[c for c, n in zip([500, 100, 50, 10], _r) for _ in range(n)]",
+  dtask:"関数 <code>change_coins</code> を作ろう。おつりの金額 <code>amount</code> を受け取り、配列 <code>Kouka</code> と同じ順番で、それぞれの硬貨を何枚出すかを数えた配列 <code>Maisu</code> を返す。大きい硬貨から出せるだけ出すよ（例：380円なら Maisu は [0, 3, 1, 3]）。",
+  starter:`関数 change_coins(amount) を次のように定義する:
+│ Kouka = [500, 100, 50, 10]
+│ Maisu = [0, 0, 0, 0]
+│ i を 0 から 要素数(Kouka) - 1 まで 1 ずつ増やしながら繰り返す:
+│ │ amount >= ____ の間繰り返す:
+│ │ │ Maisu[i] = ____
+│ └ └ amount = ____
+└ Maisu を返す
+`,
+  dhints:["いま調べている硬貨の金額は <code>Kouka[i]</code>。","1枚出すたびに、i番の硬貨の枚数 <code>Maisu[i]</code> を1増やす。","出した分だけ amount を減らす。ここを書き忘れると、くり返しが終わらなくなるよ（無限ループ）。"] },
+sell_i:{ conv:"_r",
+  dtask:"関数 <code>sell</code> を作ろう。在庫の配列 <code>Stock</code> と、売れた商品の番号 <code>i</code> を受け取り、その商品の在庫を1つ減らした配列を返す。",
+  starter:`関数 sell(Stock, i) を次のように定義する:
+│ Stock[____] = Stock[____] - ____
+└ Stock を返す
+`,
+  dhints:["配列の番号は 0 から数えるよ。<code>Stock[0]</code> が0番の商品の在庫の数。","どの番号の在庫を変えたいかは、引数 <code>i</code> が教えてくれる。","右側で「いまの在庫 − 1」を計算して、左側の同じ場所に入れ直す形。"] },
+sold_out:{ conv:"list(_out)",
+  dtask:"関数 <code>sold_out_list</code> を作ろう。商品名の配列 <code>Names</code> と在庫の配列 <code>Stock</code>（同じ番号どうしが同じ商品）を受け取り、在庫が 0 の商品の名前を <code>表示する</code> で表示する（表示された名前が補充お願いリストになる）。",
+  starter:`関数 sold_out_list(Names, Stock) を次のように定義する:
+│ i を 0 から 要素数(Stock) - 1 まで 1 ずつ増やしながら繰り返す:
+│ │ もし ____ ならば:
+└ └ └ 表示する(____)
+`,
+  dhints:["i番の商品の在庫の数は <code>Stock[i]</code>。","0 と等しいかどうかは <code>==</code> で調べる。","表示したいのは在庫の数ではなく名前。i番の商品名は <code>Names</code> の i番に入っている。"] },
+total_sales:{ conv:"_r",
+  dtask:"関数 <code>total_sales</code> を作ろう。売れた商品の番号を売れた順に並べた配列 <code>Log</code> と、商品番号の順に値段を並べた配列 <code>Prices</code> を受け取り、売上の合計金額 <code>goukei</code> を返す。",
+  starter:`関数 total_sales(Log, Prices) を次のように定義する:
+│ goukei = 0
+│ k を 0 から 要素数(Log) - 1 まで 1 ずつ増やしながら繰り返す:
+│ │ no = Log[____]
+│ └ goukei = goukei + ____
+└ goukei を返す
+`,
+  dhints:["k件目の記録は <code>Log[k]</code>。そこに入っているのは「商品の番号」だよ。","その商品の値段は、配列 Prices の「商品の番号」の場所に入っている。","2つ目の穴は <code>Prices[____]</code> の形。カッコの中は、1行上で作った変数。"] },
+count_no:{ conv:"_r",
+  dtask:"関数 <code>count_sold</code> を作ろう。売れた商品の番号の配列 <code>Log</code> と商品番号 <code>i</code> を受け取り、i が何回出てくるか（何本売れたか）を数えた <code>kazu</code> を返す。",
+  starter:`関数 count_sold(Log, i) を次のように定義する:
+│ kazu = 0
+│ k を 0 から 要素数(Log) - 1 まで 1 ずつ増やしながら繰り返す:
+│ │ もし Log[k] == ____ ならば:
+│ └ └ kazu = ____
+└ ____ を返す
+`,
+  dhints:["<code>Log[k]</code> は k件目に売れた商品の番号。それが数えたい番号と同じなら数える。","数えたい商品の番号は、どの引数に入っているかな？","1本ふやすには <code>kazu + 1</code> を、もう一度 kazu に入れる。最後に返すのは、数えた結果が入っている変数。"] },
+add_stamp:{ conv:"_r",
+  dtask:"関数 <code>add_stamp</code> を作ろう。いまのスタンプの数 <code>stamps</code> を受け取り、1つ増やして返す。15個になったら 0 に戻す。",
+  starter:`関数 add_stamp(stamps) を次のように定義する:
+│ stamps = ____
+│ もし stamps == ____ ならば:
+│ └ stamps = 0
+└ stamps を返す
+`,
+  dhints:["「stamps を1増やす」は、いまの stamps に 1 を足して、stamps に入れ直すこと。","カードは何個でいっぱいになるかな？ 問題文を読み直そう。","1つ目の穴は <code>stamps + ____</code> の形だよ。"] }
+};
+MISSIONS.forEach(m=>{ const d=DNCL[m.key]; m.dncl=d; m.dtask=d.dtask; m.dhints=d.dhints; });
+
+const BAR_RE=/[│└|┃┗]/g;
+function dnclLines(src){
+  return src.replace(/\r/g,"").split("\n").map(raw=>{
+    const pre=(raw.match(/^[ \t　│└|┃┗]*/)||[""])[0];
+    let d=(pre.match(BAR_RE)||[]).length;
+    if(!d) d=Math.floor(pre.replace(/　/g,"  ").replace(/\t/g,"    ").length/4);
+    return {d, s:raw.slice(pre.length).trim().replace(/：\s*$/,":")};
+  });
+}
+function dnclExpr(e){
+  return e.replace(/要素数\s*\(/g,"len(").replace(/表示する\s*\(/g,"_show(").replace(/整数\s*\(/g,"int(")
+    .replace(/÷/g,"//").replace(/≠/g,"!=").replace(/≧/g,">=").replace(/≦/g,"<=").replace(/×/g,"*");
+}
+const RE_IF=/^もし\s*(.+?)\s*ならば\s*:?$/, RE_ELIF=/^そうでなくもし\s*(.+?)\s*ならば\s*:?$/, RE_ELSE=/^そうでなければ\s*:?$/,
+      RE_WHILE=/^(.+?)\s*の間繰り返す\s*:?$/, RE_FOR=/^([A-Za-z_]\w*)\s*を\s*(.+?)\s*から\s*(.+?)\s*まで\s*(.+?)\s*ずつ(増やし|減らし)ながら繰り返す\s*:?$/,
+      RE_DEF=/^関数\s*([A-Za-z_]\w*)\s*\((.*?)\)\s*を\s*(?:次のように)?\s*定義する\s*:?$/, RE_RET=/^(.+?)\s*を返す$/;
+function dnclToPy(src){
+  return dnclLines(src).map(({d,s})=>{
+    if(!s) return "";
+    let m, py;
+    if((m=s.match(RE_DEF))) py=`def _dncl_${m[1]}(${m[2]}):`;
+    else if((m=s.match(RE_ELIF))) py=`elif ${dnclExpr(m[1])}:`;
+    else if((m=s.match(RE_IF))) py=`if ${dnclExpr(m[1])}:`;
+    else if(RE_ELSE.test(s)) py="else:";
+    else if((m=s.match(RE_FOR))) py= m[5]==="増やし" ? `for ${m[1]} in range(${dnclExpr(m[2])}, (${dnclExpr(m[3])}) + 1, ${dnclExpr(m[4])}):` : `for ${m[1]} in range(${dnclExpr(m[2])}, (${dnclExpr(m[3])}) - 1, -(${dnclExpr(m[4])})):`;
+    else if((m=s.match(RE_WHILE))) py=`while ${dnclExpr(m[1])}:`;
+    else if((m=s.match(RE_RET))) py=`return ${dnclExpr(m[1])}`;
+    else py=dnclExpr(s);
+    return "    ".repeat(d)+py;
+  });
+}
+function buildDncl(m,body){
+  const head=["_out = []","def _show(*a):",`    _out.append(a[0] if len(a) == 1 else "".join([str(x) for x in a]))`,"    print(*a)"];
+  const tail=["",`def ${m.fname}(*args):`,"    del _out[:]",`    _r = _dncl_${m.fname}(*args)`,`    return ${m.dncl.conv}`];
+  return {code:head.concat(body,tail).join("\n")+"\n", offset:head.length};
+}
+
+/* ---- フローチャート（Python・共通テスト表記の両方から） ---- */
+function pyLines(src){
+  return src.replace(/\r/g,"").split("\n").map(raw=>{
+    const pre=(raw.match(/^[ \t]*/)||[""])[0];
+    const d=Math.floor(pre.replace(/\t/g,"    ").length/4);
+    let s=raw.slice(pre.length).replace(/\s+#.*$/,"").replace(/^#.*$/,"").trim();
+    return {d,s};
+  });
+}
+function classify(lang,s){
+  let m;
+  if(lang==="py"){
+    if((m=s.match(/^def\s+(\w+)\s*\((.*)\)\s*:$/))) return {k:"def",a:`${m[1]}(${m[2]})`};
+    if((m=s.match(/^elif\s+(.+):$/))) return {k:"elif",a:m[1]};
+    if((m=s.match(/^if\s+(.+):$/))) return {k:"if",a:m[1]};
+    if(/^else\s*:$/.test(s)) return {k:"else"};
+    if((m=s.match(/^while\s+(.+):$/))) return {k:"loop",a:`${m[1]} の間`};
+    if((m=s.match(/^for\s+(\w+)\s+in\s+range\(\s*len\((.+)\)\s*\)\s*:$/))) return {k:"loop",a:`${m[1]} を 0 から len(${m[2]}) - 1 まで 1 ずつ増やす`};
+    if((m=s.match(/^for\s+(\w+)\s+in\s+(.+):$/))) return {k:"loop",a:`${m[2]} から 1つずつ ${m[1]} に入れる`};
+    if((m=s.match(/^return\s*(.*)$/))) return {k:"stmt",a:`${m[1]} を返す`};
+    return {k:"stmt",a:s};
+  }
+  if((m=s.match(RE_DEF))) return {k:"def",a:`${m[1]}(${m[2]})`};
+  if((m=s.match(RE_ELIF))) return {k:"elif",a:m[1]};
+  if((m=s.match(RE_IF))) return {k:"if",a:m[1]};
+  if(RE_ELSE.test(s)) return {k:"else"};
+  if((m=s.match(RE_FOR))) return {k:"loop",a:`${m[1]} を ${m[2]} から ${m[3]} まで ${m[4]} ずつ${m[5]==="増やし"?"増やす":"減らす"}`};
+  if((m=s.match(RE_WHILE))) return {k:"loop",a:`${m[1]} の間`};
+  return {k:"stmt",a:s};
+}
+function codeParse(src,lang){
+  const L=(lang==="py"?pyLines(src):dnclLines(src)).filter(l=>l.s&&!l.s.startsWith("#")).map(l=>Object.assign(l,classify(lang,l.s)));
+  let i=0;
+  function block(depth){
+    const items=[];
+    while(i<L.length&&L[i].d>=depth){
+      const c=L[i];
+      if(c.d>depth||c.k==="elif"||c.k==="else"){ i++; if(c.d>depth) items.push({t:"stmt",text:c.a||c.s}); continue; }
+      i++;
+      if(c.k==="if"){ const node={t:"if",cond:c.a,then:block(depth+1),elifs:[],els:null};
+        while(i<L.length&&L[i].d===depth){
+          if(L[i].k==="elif"){ const cc=L[i].a; i++; node.elifs.push({cond:cc,body:block(depth+1)}); }
+          else if(L[i].k==="else"){ i++; node.els=block(depth+1); break; }
+          else break; }
+        items.push(node); }
+      else if(c.k==="loop") items.push({t:"loop",head:c.a,body:block(depth+1)});
+      else if(c.k==="def") items.push({t:"def",name:c.a,body:block(depth+1)});
+      else items.push({t:"stmt",text:c.a});
+    }
+    return items;
+  }
+  return block(0);
+}
+function fcW(t){ let w=0; for(const ch of t) w+=ch.charCodeAt(0)>255?13.5:8; return w; }
+function fcTxt(t){ return esc(t.replace(/_{2,}/g,"［　］")); }
+function fcCls(t){ return /_{2,}/.test(t)?" fc-blank":""; }
+function fcLine(x1,y1,x2,y2,arr){ return `<line class="fc-line" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"${arr?' marker-end="url(#fcArr)"':""}/>`; }
+function fcSeq(items){
+  const G=24; if(!items.length) return {L:0,R:0,h:0,empty:true,draw:()=>""};
+  let Lx=0,Rx=0,h=0; items.forEach((it,k)=>{ Lx=Math.max(Lx,it.L); Rx=Math.max(Rx,it.R); h+=it.h+(k?G:0); });
+  return {L:Lx,R:Rx,h,draw:(cx,y)=>{ let s="",yy=y; items.forEach((it,k)=>{ if(k){ s+=fcLine(cx,yy,cx,yy+G,true); yy+=G; } s+=it.draw(cx,yy); yy+=it.h; }); return s; }};
+}
+function fcStmt(text){
+  const w=Math.max(96,fcW(text)+30), h=34;
+  return {L:w/2,R:w/2,h,draw:(cx,y)=>`<rect class="fc-box${fcCls(text)}" x="${cx-w/2}" y="${y}" width="${w}" height="${h}" rx="3"/><text class="fc-t" x="${cx}" y="${y+h/2}">${fcTxt(text)}</text>`};
+}
+function fcTerm(text){
+  const w=Math.max(96,fcW(text)+40), h=34;
+  return {L:w/2,R:w/2,h,draw:(cx,y)=>`<rect class="fc-box fc-term" x="${cx-w/2}" y="${y}" width="${w}" height="${h}" rx="17"/><text class="fc-t" x="${cx}" y="${y+h/2}">${esc(text)}</text>`};
+}
+function fcLoop(head,body,no){
+  const ht=`ループ${no}  ${head}`, et=`ループ${no}`;
+  const hw=Math.max(120,fcW(ht)+40), ew=Math.max(120,fcW(et)+40), H=34, G=24, c=10;
+  const Lx=Math.max(hw/2,ew/2,body.L), Rx=Math.max(hw/2,ew/2,body.R);
+  const h=H+G+(body.empty?0:body.h+G)+H;
+  return {L:Lx,R:Rx,h,draw:(cx,y)=>{
+    let s=`<polygon class="fc-box fc-loop${fcCls(head)}" points="${cx-hw/2+c},${y} ${cx+hw/2-c},${y} ${cx+hw/2},${y+c} ${cx+hw/2},${y+H} ${cx-hw/2},${y+H} ${cx-hw/2},${y+c}"/><text class="fc-t" x="${cx}" y="${y+H/2+1}">${fcTxt(ht)}</text>`;
+    let yy=y+H; s+=fcLine(cx,yy,cx,yy+G,true); yy+=G;
+    if(!body.empty){ s+=body.draw(cx,yy); yy+=body.h; s+=fcLine(cx,yy,cx,yy+G,true); yy+=G; }
+    s+=`<polygon class="fc-box fc-loop" points="${cx-ew/2},${yy} ${cx+ew/2},${yy} ${cx+ew/2},${yy+H-c} ${cx+ew/2-c},${yy+H} ${cx-ew/2+c},${yy+H} ${cx-ew/2},${yy+H-c}"/><text class="fc-t" x="${cx}" y="${yy+H/2-1}">${esc(et)}</text>`;
+    return s; }};
+}
+function fcIf(cond,th,el){
+  const dw=Math.max(130,fcW(cond)+70), dh=54, G=22;
+  const off=Math.max(dw/2+26, th.R+30)+(el.empty?0:el.L);
+  const Lx=Math.max(dw/2,th.L), Rx=Math.max(dw/2,off+(el.empty?0:el.R));
+  const bh=Math.max(th.empty?0:th.h, el.empty?0:el.h);
+  const h=dh+G+bh+G;
+  return {L:Lx,R:Rx,h,draw:(cx,y)=>{
+    let s=`<polygon class="fc-box fc-dia${fcCls(cond)}" points="${cx},${y} ${cx+dw/2},${y+dh/2} ${cx},${y+dh} ${cx-dw/2},${y+dh/2}"/><text class="fc-t" x="${cx}" y="${y+dh/2}">${fcTxt(cond)}</text>`;
+    const yb=y+dh+G, ex=cx+off;
+    if(!th.empty){ s+=fcLine(cx,y+dh,cx,yb,true)+th.draw(cx,yb)+fcLine(cx,yb+th.h,cx,y+h); } else s+=fcLine(cx,y+dh,cx,y+h);
+    s+=`<text class="fc-lab" x="${cx+9}" y="${y+dh+14}">はい</text>`;
+    s+=fcLine(cx+dw/2,y+dh/2,ex,y+dh/2)+`<text class="fc-lab" x="${cx+dw/2+6}" y="${y+dh/2-6}">いいえ</text>`;
+    if(!el.empty){ s+=fcLine(ex,y+dh/2,ex,yb,true)+el.draw(ex,yb)+fcLine(ex,yb+el.h,ex,y+h); } else s+=fcLine(ex,y+dh/2,ex,y+h);
+    s+=fcLine(ex,y+h,cx+1,y+h,true);
+    return s; }};
+}
+function fcNode(n,ctx){
+  if(n.t==="stmt") return fcStmt(n.text);
+  if(n.t==="def") return fcSeq([fcStmt("関数 "+n.name),...n.body.map(x=>fcNode(x,ctx))]);
+  if(n.t==="loop"){ const no=++ctx.loop; return fcLoop(n.head,fcSeq(n.body.map(x=>fcNode(x,ctx))),no); }
+  const th=fcSeq(n.then.map(x=>fcNode(x,ctx)));
+  let el=n.els?fcSeq(n.els.map(x=>fcNode(x,ctx))):fcSeq([]);
+  for(let k=n.elifs.length-1;k>=0;k--) el=fcSeq([fcIf(n.elifs[k].cond,fcSeq(n.elifs[k].body.map(x=>fcNode(x,ctx))),el)]);
+  return fcIf(n.cond,th,el);
+}
+function flowSVG(src,lang){
+  const ctx={loop:0}; let nodes=codeParse(src,lang||"dncl"), start="はじめ";
+  const di=nodes.findIndex(n=>n.t==="def"); if(di>=0){ start=nodes[di].name; nodes=nodes[di].body; }
+  const seq=fcSeq([fcTerm(start),...nodes.map(n=>fcNode(n,ctx)),fcTerm("おわり")]);
+  const pad=18, W=Math.ceil(seq.L+seq.R+pad*2), H=Math.ceil(seq.h+pad*2);
+  return `<svg class="fc" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="フローチャート"><defs><marker id="fcArr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="fc-head"/></marker></defs>${seq.draw(pad+seq.L,pad)}</svg>`;
+}
+/* DNCL-END */
+
+/* ================= 状態 ================= */
+const STORE="vmlab-v1";
+const st={codes:{},dcodes:{},passed:{},plang:{},hintOpen:{},cur:0,lang:"py",flowSrc:"py",mode:null};
+const mods={};        // 合格したミッションの Python モジュール
+const vm={credit:0,stock:DRINKS.map(d=>d.stock),log:[],times:[],stamps:0,tickets:0,lastLog:-1};
+let engineReady=false, outBuf="", busy=false, lastResult={};
+
+try{const s=JSON.parse(localStorage.getItem(STORE)||"null"); if(s){Object.assign(st.codes,s.codes||{});Object.assign(st.dcodes,s.dcodes||{});Object.assign(st.passed,s.passed||{});Object.assign(st.plang,s.plang||{});st.cur=s.cur||0;if(["py","dncl"].includes(s.flowSrc))st.flowSrc=s.flowSrc;if(["py","dncl"].includes(s.mode))st.mode=s.mode;for(const k in st.dcodes){ if(!/^\s*関数/.test(st.dcodes[k])) delete st.dcodes[k]; }if(["py","dncl","flow"].includes(s.lang))st.lang=s.lang;}}catch(e){}
+function save(){try{localStorage.setItem(STORE,JSON.stringify({codes:st.codes,dcodes:st.dcodes,passed:st.passed,plang:st.plang,cur:st.cur,lang:st.lang,flowSrc:st.flowSrc,mode:st.mode}))}catch(e){}}
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const RM=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+const wait=ms=>new Promise(r=>setTimeout(r,RM?Math.min(ms,60):ms));
+const has=k=>!!(st.passed[k]&&mods[k]);
+const clone=o=>JSON.parse(JSON.stringify(o));
+
+/* ================= Python エンジン ================= */
+function initEngine(){
+  if(typeof Sk==="undefined"){ $("#loading").textContent="Pythonの実行エンジンを読み込めませんでした。ページを再読み込みしてください。"; return false; }
+  Sk.configure({output:s=>{outBuf+=s}, read:f=>{ if(Sk.builtinFiles&&Sk.builtinFiles.files[f]) return Sk.builtinFiles.files[f]; throw new Sk.builtin.ImportError("この教材では import は使えません") }, __future__:Sk.python3, execLimit:1500});
+  return true;
+}
+function reprOf(r){ try{const p=Sk.misceval.objectRepr(r); return typeof p==="string"?p:(p&&p.v!==undefined?p.v:String(p));}catch(e){return "?"} }
+function explainError(e,off,lang){
+  const name=(e&&e.tp$name)||(e&&e.constructor&&e.constructor.name)||"Error";
+  let raw=String(e&&e.toString?e.toString():e);
+  let line=(e&&e.traceback&&e.traceback.length)?e.traceback[0].lineno:null;
+  if(!line){const m=raw.match(/on line (\d+)/); if(m) line=+m[1];}
+  if(off&&line!=null){ line=line-off; if(line<1) line=null; }
+  raw=raw.replace(/ on line \d+\s*$/,"");
+  const D=lang==="dncl";
+  let msg;
+  if(name==="NameError"&&raw.includes("____")) msg="まだ穴（ ____ ）が残っています。黄色いところを埋めよう。";
+  else if(name==="NameError"){const m=raw.match(/name '(.+?)'/); msg=`「${m?m[1]:"?"}」という名前が見つかりません。つづりや、使う前に作っているかを確かめよう。${D?"配列の名前は大文字で始まるよ（例：Stock）。":""}`;}
+  else if(/SyntaxError|IndentationError|TokenError|ParseError/.test(name)) msg=D?"共通テスト表記の書き方に合っていないところがあります。「もし 〜 ならば:」「〜 の間繰り返す:」「i を 0 から 〜 まで 1 ずつ増やしながら繰り返す:」の形、行の先頭の │ の数、かっこの閉じ忘れを確かめよう。":"Pythonの書き方のルールに合っていないところがあります。コロン「:」の付け忘れ、かっこの閉じ忘れ、字下げ（インデント）のずれ、全角の文字がないか確かめよう。";
+  else if(name==="TimeLimitError") msg="プログラムが終わりません。くり返しが止まらなくなっている（無限ループ）かも。くり返しの条件に使う変数が、くり返しの中でちゃんと変わっているかな？";
+  else if(name==="KeyError") msg=`辞書にないキー ${raw.replace(/^KeyError:\s*/,"")} を使おうとしています。`;
+  else if(name==="TypeError") msg="データの種類が合っていない使い方をしています。数と文字を足していないか、必要な値の数が合っているか確かめよう。";
+  else if(name==="AttributeError") msg="「.」のあとに書いた命令の名前を確かめよう（リストに追加する命令は append）。";
+  else if(name==="IndexError") msg=D?"配列の番号（添字）が範囲の外です。番号は 0 から 要素数 − 1 までだよ。":"リストの番号が範囲の外です。番号は 0 から 長さ − 1 までだよ。";
+  else if(name==="ZeroDivisionError") msg="0で割り算をしています。";
+  else if(name==="ImportError") msg="この教材では import は使わずに書いてみよう。";
+  else msg="エラーが起きました。";
+  return {name,line,msg,raw};
+}
+function zenkakuCheck(code){
+  const lines=code.split("\n");
+  for(let i=0;i<lines.length;i++){
+    const s=lines[i].replace(/"[^"]*"|'[^']*'/g,"").replace(/#.*$/,"");
+    const m=s.match(/[　：（）＝＋－，＜＞［］｛｝＿]/);
+    if(m) return {name:"全角文字",line:i+1,msg:`${i+1}行目に全角の「${m[0]==="　"?"スペース":m[0]}」があります。プログラムの記号やスペースは半角で書こう。`,raw:""};
+  }
+  return null;
+}
+function loadModule(code){ outBuf=""; Sk.execStart=Date.now(); return Sk.importMainWithBody("<stdin>",false,code,false); }
+function deepEq(a,b){
+  if(a===b) return true;
+  if(a==null||b==null) return false;
+  if(typeof a!==typeof b) return false;
+  if(Array.isArray(a)){ if(!Array.isArray(b)||a.length!==b.length) return false; return a.every((x,i)=>deepEq(x,b[i])); }
+  if(typeof a==="object"){ if(Array.isArray(b)) return false; const ka=Object.keys(a),kb=Object.keys(b); if(ka.length!==kb.length) return false; return ka.every(k=>Object.prototype.hasOwnProperty.call(b,k)&&deepEq(a[k],b[k])); }
+  return false;
+}
+function sameSet(a,b){ return Array.isArray(a)&&Array.isArray(b)&&a.length===b.length&&[...a].sort().join("\u0001")===[...b].sort().join("\u0001"); }
+function pyLit(v){
+  if(v===true) return "True"; if(v===false) return "False"; if(v==null) return "None";
+  if(typeof v==="string") return "'"+v+"'"; if(typeof v==="number") return String(v);
+  if(Array.isArray(v)) return "["+v.map(pyLit).join(", ")+"]";
+  return "{"+Object.keys(v).map(k=>pyLit(k)+": "+pyLit(v[k])).join(", ")+"}";
+}
+function runMission(m,code,lang){
+  lang=lang||"py";
+  const res={tests:[],out:"",error:null,pass:false,lang};
+  let src=code, off=0;
+  if(lang==="dncl"){
+    const body=dnclToPy(code);
+    const z=zenkakuCheck(body.join("\n")); if(z){res.error=z;return res;}
+    const b=buildDncl(m,body); src=b.code; off=b.offset;
+  } else { const z=zenkakuCheck(code); if(z){res.error=z;return res;} }
+  let mod;
+  try{ mod=loadModule(src); }catch(e){ res.error=explainError(e,off,lang); res.out=outBuf; return res; }
+  if(lang==="dncl"&&!mod.$d["_dncl_"+m.fname]){ res.error={name:"関数がない",line:null,msg:`1行目の「関数 ${m.fname}(…) を次のように定義する:」が見つかりません。関数の名前や、この行の書き方を変えていないか確かめよう。`,raw:""}; res.out=outBuf; return res; }
+  const fn=mod.$d[m.fname];
+  if(!fn){ res.error={name:"関数がない",line:null,msg:`関数「${m.fname}」が見つかりません。def の行の名前を変えていないか確かめよう。`,raw:""}; res.out=outBuf; return res; }
+  for(const t of m.tests){
+    try{
+      Sk.execStart=Date.now();
+      const r=Sk.misceval.callsimArray(fn,clone(t.args).map(a=>Sk.ffi.remapToPy(a)));
+      const js=Sk.ffi.remapToJs(r);
+      const ok=t.unordered?sameSet(js,t.expect):deepEq(js,t.expect);
+      res.tests.push({t,ok,repr:reprOf(r),js});
+    }catch(e){ res.tests.push({t,ok:false,err:explainError(e,off,lang)}); }
+  }
+  res.out=outBuf; res.pass=res.tests.every(x=>x.ok); if(res.pass) res.mod=mod; return res;
+}
+// 自販機から生徒の関数を呼ぶ
+function call(key,args){
+  const m=MISSIONS.find(x=>x.key===key), mod=mods[key];
+  try{ outBuf=""; Sk.execStart=Date.now(); const r=Sk.misceval.callsimArray(mod.$d[m.fname],clone(args).map(a=>Sk.ffi.remapToPy(a))); return {ok:true,value:Sk.ffi.remapToJs(r)}; }
+  catch(e){ const x=explainError(e); say(`エラー！ ${m.title}のプログラムで「${x.name}」が起きたよ。${x.msg}`,"sad"); return {ok:false}; }
+}
+
+/* ================= 自販機の描画 ================= */
+function drinkSVG(d,w){
+  w=w||34;
+  if(d.kind==="can") return `<svg viewBox="0 0 40 70" width="${w}" aria-hidden="true"><rect x="9" y="5" width="22" height="6" rx="2" fill="${d.cap}" stroke="#1D2742" stroke-width="1.6"/><rect x="7" y="9" width="26" height="56" rx="6" fill="${d.body}" stroke="#1D2742" stroke-width="2"/><rect x="7" y="27" width="26" height="17" fill="${d.label}" stroke="#1D2742" stroke-width="1.4"/></svg>`;
+  return `<svg viewBox="0 0 40 70" width="${w}" aria-hidden="true"><rect x="14.5" y="2" width="11" height="7" rx="2" fill="${d.cap}" stroke="#1D2742" stroke-width="1.6"/><path d="M15 9h10v5c0 3 8 5 8 11v35a6 6 0 0 1-6 6H13a6 6 0 0 1-6-6V25c0-6 8-8 8-11z" fill="${d.body}" stroke="#1D2742" stroke-width="2"/><rect x="7" y="33" width="26" height="15" fill="${d.label}" stroke="#1D2742" stroke-width="1.4"/></svg>`;
+}
+function moneyEl(mn,small){
+  if(mn.t==="bill") return `<span class="bill" style="background:${mn.c}">${mn.v}</span>`;
+  return `<span class="coin${mn.hole?" hole":""}" style="background:${mn.c}">${mn.v}</span>`;
+}
+function buildMachine(){
+  $("#showcase").innerHTML=DRINKS.map((d,i)=>`<div class="slot" id="slot${i}">${drinkSVG(d)}<span class="dno">${i}</span><span class="stock" id="stk${i}">${vm.stock[i]}</span><span class="dname">${d.name}</span><button class="buy" type="button" data-i="${i}" id="buy${i}" aria-label="${d.name} ${d.price}円"><span class="lamp"></span><span class="ptxt">${d.price}</span></button></div>`).join("");
+  $("#coins").innerHTML=MONEY.map((mn,i)=>`<button type="button" class="${mn.t==="bill"?"billbtn":""}" data-m="${i}" aria-label="${mn.v}円を入れる">${moneyEl(mn)}</button>`).join("");
+  $("#parts").innerHTML=PART_NAMES.map((n,i)=>`<div class="part" id="part${i}"><span>M${i+1}</span>${n}</div>`).join("");
+  $("#showcase").addEventListener("click",e=>{const b=e.target.closest(".buy"); if(b) act(()=>pressBuy(+b.dataset.i));});
+  $("#coins").addEventListener("click",e=>{const b=e.target.closest("button"); if(b) act(()=>insertMoney(+b.dataset.m,b));});
+  $("#lever").addEventListener("click",()=>act(pullLever));
+  $("#refill").addEventListener("click",()=>{ const low=DRINKS.filter((d,i)=>vm.stock[i]<5).map(d=>d.name); vm.stock=vm.stock.map(()=>5); refresh(); say(low.length?`補充の人が来て、${low.join("・")}を補充してくれたよ。全部5本になった！`:"もう全部5本そろっているよ。","happy"); });
+  $("#outlet").addEventListener("click",e=>{if(e.target.closest(".take")) $("#outlet").innerHTML="";});
+  $("#tray").addEventListener("click",e=>{if(e.target.closest(".take")) $("#tray").innerHTML="";});
+}
+function say(t,mood){
+  const s=$("#speech"); s.textContent=t; s.className="speech"+(mood==="sad"?" warn":mood==="happy"?" good":"");
+  const f=$("#face"); f.className="face "+(mood||"");
+}
+function refresh(){
+  const n=MISSIONS.filter(m=>st.passed[m.key]).length;
+  $("#credit").textContent="¥"+vm.credit.toLocaleString();
+  DRINKS.forEach((d,i)=>{
+    $("#stk"+i).textContent=vm.stock[i];
+    const b=$("#buy"+i); b.classList.remove("lit","soldout");
+    if(has("can_buy")){
+      if(vm.stock[i]<=0) b.classList.add("soldout");
+      else { const r=call("can_buy",[vm.credit,d.price,vm.stock[i]]); if((r.ok&&r.value===true)||vm.tickets>0) b.classList.add("lit"); }
+    }
+  });
+  PART_NAMES.forEach((_,i)=>$("#part"+i).classList.toggle("on",!!st.passed[MISSIONS[i].key]));
+  const os=$("#openSign"); os.textContent=n===8?"営業中":n>0?"調整中":"準備中"; os.classList.toggle("on",n>0);
+  $("#reader").classList.toggle("on",has("add_stamp"));
+  $("#progTxt").textContent=`${n} / 8 クリア`; $("#progBar").style.width=(n/8*100)+"%";
+  renderPanels();
+}
+function renderPanels(){
+  // 補充リスト
+  const pr=$("#pRefill .body");
+  if(!has("sold_out")) pr.innerHTML=`<div class="off">ミッション5で動き出す</div>`;
+  else { const r=call("sold_out",[DRINKS.map(d=>d.name),vm.stock]); const list=(r.ok&&Array.isArray(r.value))?r.value:[]; pr.innerHTML=list.length?`<div class="chips">${list.map(x=>`<span class="chip">${esc(x)}</span>`).join("")}</div><div class="note">ネットワークで補充担当へ送信</div>`:`<div class="note">売り切れはありません</div>`; }
+  // スタンプ
+  const ps=$("#pStamp .body");
+  if(!has("add_stamp")) ps.innerHTML=`<div class="off">ミッション8で動き出す</div>`;
+  else ps.innerHTML=`<div class="stampcard">${Array.from({length:15},(_,i)=>`<i class="${i<vm.stamps?"on":""}"></i>`).join("")}</div><div class="tickets">${vm.stamps} / 15個　無料チケット ${vm.tickets}枚</div>`;
+  // 売上データ
+  const pl=$("#pSales .body");
+  if(!vm.log.length) pl.innerHTML=`<div class="note">まだ記録はありません。飲み物を買うと、売れた商品の番号が1つずつ記録されるよ。</div>`;
+  else { const rows=vm.log.slice(-5); const off=vm.log.length-rows.length; const shown=vm.log.length>12?"…, "+vm.log.slice(-12).join(", "):vm.log.join(", ");
+    let tot=`<div class="note">合計金額はミッション6で計算できるようになる</div>`;
+    if(has("total_sales")){ const r=call("total_sales",[vm.log,DRINKS.map(d=>d.price)]); if(r.ok) tot=`<div class="tickets">売上の合計：${esc(r.value)}円</div>`; }
+    pl.innerHTML=`<div class="call" style="font-family:var(--f-code);font-size:12px;overflow-x:auto;white-space:nowrap;margin-top:2px">log = [${esc(shown)}]</div><div style="overflow-x:auto"><table class="salestable"><thead><tr><th>何件目</th><th>時刻</th><th>商品番号</th><th>（商品表で引くと）</th></tr></thead><tbody>${rows.map((n,k)=>`<tr class="${off+k===vm.log.length-1&&vm.lastLog===vm.log.length?"new":""}"><td>${off+k}</td><td>${esc(vm.times[off+k]||"")}</td><td>${esc(n)}</td><td>${esc(DRINKS[n].name)} ${DRINKS[n].price}円</td></tr>`).join("")}</tbody></table></div>${tot}`; }
+  // ランキング
+  const pk=$("#pRank .body");
+  if(!has("count_no")) pk.innerHTML=`<div class="off">ミッション7で動き出す</div>`;
+  else { const ent=[]; for(const [di,d] of DRINKS.entries()){ const r=call("count_no",[vm.log,di]); if(!r.ok) break; if(typeof r.value==="number"&&r.value>0) ent.push([d.name,r.value]); } ent.sort((a,b)=>b[1]-a[1]); const mx=Math.max(1,...ent.map(e=>e[1]));
+    pk.innerHTML=ent.length?`<div class="rank">${ent.map(([k,v])=>`<span class="nm">${esc(k)}</span><span><i class="br" style="display:block;width:${v/mx*100}%"></i></span><span class="ct">${esc(v)}</span>`).join("")}</div>`:`<div class="note">まだ売れていません</div>`; }
+}
+
+/* ================= 自販機の動き ================= */
+function act(fn){ if(busy||!engineReady) return; busy=true; Promise.resolve(fn()).catch(e=>console.error(e)).finally(()=>{busy=false;}); }
+async function fly(fromEl,toEl,html,dur){
+  const a=fromEl.getBoundingClientRect(), b=toEl.getBoundingClientRect();
+  const el=document.createElement("div"); el.className="flying"; el.innerHTML=html; document.body.appendChild(el);
+  const w=el.offsetWidth,h=el.offsetHeight;
+  const x0=a.left+a.width/2-w/2,y0=a.top+a.height/2-h/2,x1=b.left+b.width/2-w/2,y1=b.top+b.height/2-h/2;
+  const anim=el.animate([{transform:`translate(${x0}px,${y0}px) scale(1)`},{transform:`translate(${(x0+x1)/2}px,${Math.min(y0,y1)-60}px) scale(1.05)`,offset:.5},{transform:`translate(${x1}px,${y1}px) scale(.6)`,opacity:.9}],{duration:RM?1:(dur||520),easing:"ease-in-out"});
+  await anim.finished.catch(()=>{}); el.remove();
+}
+function addToTray(mn){
+  const t=$("#tray"); if(!t.querySelector(".take")) t.insertAdjacentHTML("beforeend",`<button class="take" type="button">取る</button>`);
+  t.insertAdjacentHTML("beforeend",moneyEl(mn,true));
+  const items=t.querySelectorAll(".coin,.bill"); if(items.length>14) items[0].remove();
+}
+async function insertMoney(i,btn,silent){
+  const mn=MONEY[i]; const from=btn||$("#coins"); const slot=$("#slot");
+  await fly(from,slot,moneyEl(mn));
+  if(!has("accept_coin")){ addToTray(mn); say(`${mn.v}円が おつり口に出てきちゃった！ お金を見分けるプログラム（ミッション1）がまだだよ。`,"sad"); return false; }
+  const r=call("accept_coin",[mn.v]); if(!r.ok){addToTray(mn);return false;}
+  if(r.value===true){ vm.credit+=mn.v; refresh(); if(!silent) say(`${mn.v}円を受け付けたよ。いま ${vm.credit}円。`,"happy"); return true; }
+  await wait(250); addToTray(mn);
+  if(!silent) say(`${mn.v}円は使えないお金なので、おつり口に返したよ。`,""); return false;
+}
+async function pressBuy(i,opt){
+  opt=opt||{}; const d=DRINKS[i], slot=$("#slot"+i), stock=vm.stock[i];
+  const useTicket=has("add_stamp")&&vm.tickets>0&&stock>0;
+  let ok;
+  if(has("can_buy")){ const r=call("can_buy",[vm.credit,d.price,stock]); if(!r.ok) return; ok=r.value===true||useTicket; }
+  else if(opt.force){ ok=stock>0&&(vm.credit>=d.price||useTicket); }
+  else { slot.classList.remove("shake"); void slot.offsetWidth; slot.classList.add("shake"); say("ボタンを押しても反応しない…。買えるかどうか判断するプログラム（ミッション2）がまだだ！","sad"); return; }
+  if(!ok){ slot.classList.remove("shake"); void slot.offsetWidth; slot.classList.add("shake");
+    say(stock<=0?`${d.name}は売り切れです。`:`${d.name}は ${d.price}円。あと ${d.price-vm.credit}円 たりないよ。`,"sad"); return; }
+  if(useTicket&&!opt.noTicket){ vm.tickets--; } else { vm.credit-=d.price; }
+  const msgs=[];
+  // 在庫
+  if(has("sell_i")){ const r=call("sell_i",[vm.stock,i]); if(r.ok&&Array.isArray(r.value)&&r.value.length===DRINKS.length){ vm.stock=r.value.map(Number); const s=$("#stk"+i); s.classList.remove("pulse"); void s.offsetWidth; s.classList.add("pulse"); } else if(r.ok) msgs.push("sell が在庫のリストを返していないみたい"); }
+  else msgs.push("あれ？在庫の数が減っていない…（ミッション4）");
+  // 取り出し口
+  await fly(slot,$("#outlet"),drinkSVG(d,24),600);
+  const o=$("#outlet"); if(!o.querySelector(".take")) o.insertAdjacentHTML("beforeend",`<button class="take" type="button">取る</button>`);
+  o.insertAdjacentHTML("beforeend",`<span class="got">${drinkSVG(d,24)}</span>`); const g=o.querySelectorAll(".got"); if(g.length>4) g[0].remove();
+  // 売上記録
+  { const now=new Date(); vm.log.push(i); vm.times.push(now.getHours()+":"+String(now.getMinutes()).padStart(2,"0")); vm.lastLog=vm.log.length; }
+  // スタンプ
+  let gotTicket=false;
+  if(has("add_stamp")){ const before=vm.stamps; const r=call("add_stamp",[vm.stamps]); if(r.ok&&typeof r.value==="number"){ vm.stamps=r.value; if(before>0&&r.value===0){ vm.tickets++; gotTicket=true; } } }
+  refresh();
+  if(gotTicket){ say(`スタンプが15個たまった！ 無料チケットを1枚プレゼント！`,"happy"); burst($("#pStamp")); }
+  else say(`ガコン！ ${d.name}をどうぞ。${msgs.length?msgs.join(" "):""}${vm.credit>0?` 残り ${vm.credit}円。`:""}`,msgs.length?"sad":"happy");
+}
+async function pullLever(){
+  if(vm.credit<=0){ say("おつりはありません。","" ); return; }
+  if(!has("change_coins")){ say(`おつりを硬貨に分けられない！ ${vm.credit}円が出てこない…（ミッション3）`,"sad"); return; }
+  const r=call("change_coins",[vm.credit]); if(!r.ok) return;
+  const coins=Array.isArray(r.value)?r.value:[]; const sum=coins.reduce((a,b)=>a+(+b||0),0);
+  const amount=vm.credit; vm.credit=0; refresh();
+  for(const c of coins){ const mn=MONEY.find(x=>x.v===c)||{v:c,c:"#ddd",t:"coin"}; await fly($("#slot"),$("#tray"),moneyEl(mn),300); addToTray(mn); }
+  say(sum===amount?`おつり ${amount}円、硬貨 ${coins.length}枚で出したよ。`:`あれ？ ${amount}円のはずが、出た硬貨は合計 ${sum}円…`, sum===amount?"happy":"sad");
+}
+function burst(el){
+  if(RM) return; const r=el.getBoundingClientRect(); const cols=["var(--sun)","var(--coral)","var(--vm)","var(--ok)"];
+  for(let i=0;i<18;i++){ const p=document.createElement("i"); p.className="burst"; p.style.background=cols[i%4]; p.style.left=(r.left+r.width/2)+"px"; p.style.top=(r.top+r.height/3)+"px"; document.body.appendChild(p);
+    const ang=Math.random()*Math.PI*2, dist=60+Math.random()*90;
+    p.animate([{transform:"translate(0,0) rotate(0)",opacity:1},{transform:`translate(${Math.cos(ang)*dist}px,${Math.sin(ang)*dist+40}px) rotate(${Math.random()*540}deg)`,opacity:0}],{duration:900+Math.random()*400,easing:"cubic-bezier(.2,.7,.4,1)"}).finished.then(()=>p.remove()); }
+}
+function toast(t){ const el=$("#toast"); el.textContent=t; el.classList.add("show"); clearTimeout(toast._t); toast._t=setTimeout(()=>el.classList.remove("show"),2600); }
+
+/* ===== デモ（クリアしたとき自販機で実演） ===== */
+function idx(name){return DRINKS.findIndex(d=>d.name===name);}
+function demoCredit(n){ if(vm.credit<n){ vm.credit=n; refresh(); } }
+const DEMOS={
+  accept_coin:async()=>{ say("見てて！ 100円 → 5円 → 2000円札 の順に入れるよ。",""); await wait(700);
+    await insertMoney(4,null); await wait(700); await insertMoney(1,null); await wait(700); await insertMoney(7,null); await wait(500);
+    say("使えるお金だけ受け付けて、使えないお金は返せるようになった！","happy"); },
+  can_buy:async()=>{ vm.credit=150; refresh(); const so=DRINKS.filter((d,i)=>vm.stock[i]<=0).map(d=>d.name); say(`デモ用に 150円 入れたことにするね。150円で買える飲み物だけランプがついた！${so.length?` ${so.join("・")}は在庫0だから「売切」。`:""}`,"happy"); },
+  change_coins:async()=>{ vm.credit=380; refresh(); say("デモ用に 380円 入れたことにして、おつりレバーを引くよ。",""); await wait(900); await pullLever(); },
+  sell_i:async()=>{ demoCredit(130); say("緑茶を1本買ってみるね。右上の在庫の数に注目！",""); await wait(900); await pressBuy(idx("緑茶"),{force:true,noTicket:true}); },
+  sold_out:async()=>{ vm.stock[idx("オレンジ")]=1; demoCredit(120); say("最後の1本のオレンジを買うと…？",""); await wait(900); await pressBuy(idx("オレンジ"),{force:true,noTicket:true}); await wait(600);
+    say("補充お願いリストにオレンジが入った！ 下の「補充の人を呼ぶ」を押すと、売り切れた飲み物が補充されるよ。","happy"); burst($("#pRefill")); },
+  total_sales:async()=>{ demoCredit(100); say("おいしい水（0番）を買うと、売上の記録に 0 が増えて、合計も変わるよ。",""); await wait(900); await pressBuy(idx("おいしい水"),{force:true,noTicket:true}); await wait(300); burst($("#pSales")); },
+  count_no:async()=>{ say("いくつか買って、ランキングを作ってみよう。",""); await wait(700);
+    for(const n of ["スポーツドリンク","おいしい水","スポーツドリンク"]){ const d=DRINKS[idx(n)]; if(vm.stock[idx(n)]<=0) vm.stock[idx(n)]=2; demoCredit(d.price); await pressBuy(idx(n),{force:true,noTicket:true}); await wait(450); }
+    say("どれがよく売れているか、ひと目で分かるようになった！","happy"); burst($("#pRank")); },
+  add_stamp:async()=>{ vm.stamps=13; refresh(); say("スタンプが13個たまっているところから、2本買ってみるよ。",""); await wait(900);
+    for(let k=0;k<2;k++){ demoCredit(100); if(vm.stock[idx("おいしい水")]<=0) vm.stock[idx("おいしい水")]=3; await pressBuy(idx("おいしい水"),{force:true,noTicket:true}); await wait(800); } }
+};
+async function runDemo(key){
+  if(!has(key)) return;
+  if(window.innerWidth<=920) $("#vm").scrollIntoView({behavior:RM?"auto":"smooth",block:"start"});
+  await wait(400); await DEMOS[key]();
+}
+
+/* ================= ミッション画面 ================= */
+const LANGS=[["py","Python"],["dncl","共通テスト表記"],["flow","フローチャート"]];
+const toMaisu=v=>[500,100,50,10].map(c=>(Array.isArray(v)?v:[]).filter(x=>x===c).length);
+const DFMT={
+  accept_coin:v=>`${v===true?1:v===false?0:pyLit(v)} を返す`,
+  can_buy:v=>`${v===true?1:v===false?0:pyLit(v)} を返す`,
+  change_coins:v=>`${pyLit(toMaisu(v))} を返す`,
+  sold_out:v=>`表示：${Array.isArray(v)&&v.length?v.join("、"):"なし"}`
+};
+const dfmt=(k,v)=>DFMT[k]?DFMT[k](v):`${pyLit(v)} を返す`;
+function tabs(){
+  $("#tabs").innerHTML=MISSIONS.map((m,i)=>`<button type="button" class="tab${i===st.cur?" cur":""}${st.passed[m.key]?" done":""}" data-i="${i}"><span class="no"><b>${i+1}</b></span>${m.title}</button>`).join("");
+}
+function hlRun(code,re,cls){
+  let out="",last=0,m;
+  while((m=re.exec(code))){ out+=esc(code.slice(last,m.index)); const s=esc(m[0]); let c="";
+    for(let k=1;k<m.length;k++) if(m[k]!==undefined){ c=cls[k-1]; break; }
+    out+=c?`<span class="${c}">${s}</span>`:s; last=m.index+m[0].length; if(m[0].length===0) re.lastIndex++; }
+  return out+esc(code.slice(last))+"\n";
+}
+function highlight(code){
+  if(st.lang==="dncl") return hlRun(code,/(#.*$)|("(?:[^"\\\n]|\\.)*"?|「[^」\n]*」?)|(_{2,})|(そうでなくもし|そうでなければ|もし|ならば|関数|を次のように定義する|を返す|ずつ増やしながら繰り返す|ずつ減らしながら繰り返す|の間繰り返す|から|まで|を(?=[\s　]))|(表示する|要素数|整数|\band\b|\bor\b|\bnot\b)|([│└|]+)|(\b\d+\b)/gm,["hl-com","hl-str","hl-blank","hl-kw","hl-fn","hl-bar","hl-num"]);
+  return hlRun(code,/(#.*$)|("(?:[^"\\\n]|\\.)*"?|'(?:[^'\\\n]|\\.)*'?)|(_{2,})|\b(def|return|if|elif|else|for|while|in|and|or|not|True|False|None|break|continue|pass)\b|(\b\d+\b)|\b(print|len|range|append)\b/gm,["hl-com","hl-str","hl-blank","hl-kw","hl-num","hl-fn"]);
+}
+function stars(n){return "★".repeat(n)+"☆".repeat(3-n);}
+const codeOf=(m,lang)=>lang==="py"?(st.codes[m.key]!=null?st.codes[m.key]:m.starter):(st.dcodes[m.key]!=null?st.dcodes[m.key]:m.dncl.starter);
+const runLang=()=>st.lang==="flow"?(st.mode||st.flowSrc):st.lang;
+const SNIPS=[["│ ","│"],["└ ","└"],["もし  ならば:","もし〜ならば"],["そうでなければ:","そうでなければ"],[" の間繰り返す:","〜の間繰り返す"],["i を 0 から  まで 1 ずつ増やしながら繰り返す:","〜を〜から〜まで"],["表示する()","表示する"],["要素数()","要素数"]];
+function renderCard(){
+  if(st.mode&&st.lang!=="flow"&&st.lang!==st.mode) st.lang=st.mode; if(st.mode) st.flowSrc=st.mode;
+  const m=MISSIONS[st.cur], i=st.cur, L=st.lang, isPy=runLang()==="py";
+  const hints=isPy?m.hints:m.dhints, open=Math.min(st.hintOpen[m.key]||0,hints.length);
+  const nosRow=m.io.find(r=>r[0]==="商品番号");
+  const ioRows=isPy?m.io:(nosRow?[nosRow]:[]);
+  const editorHtml=L==="flow"?`
+    <div class="fc-wrap" id="fcWrap">${flowSVG(codeOf(m,st.flowSrc),st.flowSrc)}</div>
+    <p class="kbd" style="margin:0">${st.flowSrc==="py"?"Python":"共通テスト表記"}のプログラムから自動で描いています。［　］が穴。プログラムの穴を埋めると、図にも反映されます。</p>`:`
+    <div>
+      <div class="editor-head"><b>${isPy?`関数 <code style="font-family:var(--f-code)">${m.fname}</code> を完成させよう`:"共通テスト表記のプログラムを完成させよう"}</b><small>${isPy?"黄色の ____ が穴。Tabで字下げ":"黄色の ____ が穴。Tab で │ が入る"}</small></div>
+      ${isPy?"":`<div class="snips" id="snips">${SNIPS.map((s,k)=>`<button type="button" class="snip" data-k="${k}">${esc(s[1])}</button>`).join("")}</div>`}
+      <div class="editor" style="margin-top:6px"><div class="gutter" id="gutter"></div><div class="code-area"><pre id="hl" aria-hidden="true"></pre><textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" wrap="off" aria-label="プログラム">${esc(codeOf(m,L))}</textarea></div></div>
+    </div>`;
+  $("#card").innerHTML=`
+  <div class="card-head"><span class="mno">MISSION ${i+1}</span><h2>${m.title}</h2>
+    <span class="meta"><span class="stars" aria-label="むずかしさ${m.stars}">${stars(m.stars)}</span><span class="concept">${m.concept}</span></span></div>
+  <div class="card-body">
+    <div class="voice"><div class="face happy"><i></i></div><p>${m.voice}</p></div>
+    <div class="langs" role="tablist" aria-label="書き方">${LANGS.filter(([k])=>!st.mode||k===st.mode||k==="flow").map(([k,n])=>`<button type="button" role="tab" aria-selected="${k===L}" class="lang${k===L?" on":""}" data-l="${k}">${n}</button>`).join("")}</div>
+    <p class="task">${isPy?m.task:m.dtask}</p>
+    ${ioRows.length?`<div class="io-wrap"><table class="io"><tbody>${ioRows.map(r=>`<tr><th>${r[0]}</th><td>${r[1]}</td></tr>`).join("")}</tbody></table></div>`:""}
+    ${editorHtml}
+    <div class="actions">
+      <button class="btn run" type="button" id="run">▶ ${L==="flow"?"共通テスト表記でテストする":"テストする"}</button>
+      <button class="btn small" type="button" id="hintBtn"${open>=hints.length?" disabled":""}>ヒントを見る（${open}/${hints.length}）</button>
+      ${L==="flow"?"":`<span id="resetWrap"><button class="btn small" type="button" id="reset">最初のコードに戻す</button></span><span class="kbd">Ctrl + Enter でもテスト</span>`}
+    </div>
+    <div class="hints" id="hints">${hints.slice(0,open).map((h,k)=>`<div class="hint"><b>ヒント${k+1}</b>${h}</div>`).join("")}</div>
+    <div id="result"></div>
+    ${m.real?`<div class="realnote">${m.real}</div>`:""}
+    <details class="ai"><summary>生成AIに相談するときの文をつくる</summary>
+      <p>答えではなく「考え方のヒント」をもらうための文です。コピーして生成AIに貼り付けよう。</p>
+      <textarea id="aiText" readonly></textarea>
+      <div class="actions" style="margin-top:6px"><button class="btn small" type="button" id="aiCopy">コピーする</button><span class="kbd" id="aiMsg"></span></div>
+    </details>
+  </div>`;
+  if(L!=="flow") setupEditor();
+  const lr=lastResult[m.key]; showResult(lr&&lr.lang===runLang()?lr:null);
+  document.querySelectorAll(".lang").forEach(b=>b.addEventListener("click",()=>{ st.lang=b.dataset.l; save(); renderCard(); }));
+  $("#run").addEventListener("click",doRun);
+  $("#hintBtn").addEventListener("click",()=>{ st.hintOpen[m.key]=Math.min(hints.length,open+1); renderCard(); });
+  if(L!=="flow") $("#reset").addEventListener("click",()=>{ $("#resetWrap").innerHTML=`<span class="confirm">本当に戻す？ <button class="btn small" type="button" id="rsY">戻す</button><button class="btn small" type="button" id="rsN">やめる</button></span>`;
+    $("#rsY").onclick=()=>{ if(isPy) delete st.codes[m.key]; else delete st.dcodes[m.key]; save(); renderCard(); }; $("#rsN").onclick=()=>renderCard(); });
+  document.querySelector(".ai").addEventListener("toggle",updateAI);
+  $("#aiCopy").addEventListener("click",()=>{ updateAI(); const t=$("#aiText"); const done=()=>{$("#aiMsg").textContent="コピーしました";};
+    if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t.value).then(done,()=>{t.focus();t.select();$("#aiMsg").textContent="選択しました。Ctrl+C でコピーしてね";}); } else { t.focus(); t.select(); $("#aiMsg").textContent="選択しました。Ctrl+C でコピーしてね"; } });
+}
+function updateAI(){
+  const m=MISSIONS[st.cur], lg=runLang(), r=lastResult[m.key], tmp=document.createElement("div"); tmp.innerHTML=lg==="py"?m.task:m.dtask; const task=tmp.textContent;
+  let res="まだテストしていません";
+  if(r&&r.lang===lg){ if(r.error) res=`エラー：${r.error.name}（${r.error.line?r.error.line+"行目":"行不明"}）${r.error.raw||""}`; else res=r.tests.map(x=>`${x.ok?"○":"×"} ${x.t.label}`).join(" / "); }
+  const what=lg==="py"?"Pythonの穴埋めプログラム":"大学入学共通テストの「共通テスト用プログラム表記」で書かれた穴埋めプログラム";
+  $("#aiText").value=`私は高校生で、${what}に取り組んでいます。
+
+【ミッション】${m.title}
+【やること】${task}
+【いまの私のプログラム】
+${codeOf(m,lg)}
+【テストの結果】${res}
+
+お願い：答えのプログラムは書かないでください。考え方のヒントを1つだけ教えてください。私がもう一度聞いたら、少しずつ詳しくしてください。`;
+}
+let errLine=null;
+function syncEditor(){
+  const ta=$("#code"); if(!ta) return; const v=ta.value;
+  $("#hl").innerHTML=highlight(v);
+  const n=v.split("\n").length; $("#gutter").innerHTML=Array.from({length:n},(_,k)=>k+1===errLine?`<span class="errline">${k+1}</span>`:String(k+1)).join("\n");
+  const area=ta.parentElement, pre=$("#hl");
+  ta.style.width=pre.scrollWidth+"px"; ta.style.height=pre.offsetHeight+"px"; area.style.height=pre.offsetHeight+"px";
+}
+function setupEditor(){
+  const ta=$("#code"), m=MISSIONS[st.cur], isPy=st.lang==="py";
+  const lr=lastResult[m.key]; errLine=(lr&&lr.lang===runLang()&&lr.error)?lr.error.line:null;
+  syncEditor();
+  const ins=t=>{ ta.focus(); if(!document.execCommand("insertText",false,t)) { ta.setRangeText(t,ta.selectionStart,ta.selectionEnd,"end"); ta.dispatchEvent(new Event("input")); } };
+  ta.addEventListener("input",()=>{ if(isPy) st.codes[m.key]=ta.value; else st.dcodes[m.key]=ta.value; save(); errLine=null; syncEditor(); });
+  ta.addEventListener("keydown",e=>{
+    if(e.isComposing||e.keyCode===229) return;
+    if((e.ctrlKey||e.metaKey)&&e.key==="Enter"){ e.preventDefault(); doRun(); return; }
+    const s=ta.selectionStart, ls=ta.value.lastIndexOf("\n",s-1)+1;
+    if(e.key==="Tab"&&!e.shiftKey){ e.preventDefault(); ins(isPy?"    ":"│ "); return; }
+    if(e.key==="Tab"&&e.shiftKey){ e.preventDefault(); const lead=ta.value.slice(ls).match(isPy?/^ {1,4}/:/^([│└|] ?| {1,4})/); if(lead){ ta.setSelectionRange(ls,ls+lead[0].length); ins(""); } return; }
+    if(e.key==="Enter"){ e.preventDefault(); const line=ta.value.slice(ls,s);
+      if(isPy){ let ind=(line.match(/^ */)||[""])[0]; if(/:\s*(#.*)?$/.test(line)) ind+="    "; ins("\n"+ind); }
+      else { const pre=(line.match(/^[ │└|]*/)||[""])[0]; let d=(pre.match(/[│|]/g)||[]).length; if(/[:：]\s*$/.test(line)) d++; ins("\n"+"│ ".repeat(d)); } }
+  });
+  const sn=$("#snips"); if(sn) sn.addEventListener("click",e=>{ const b=e.target.closest(".snip"); if(b) ins(SNIPS[+b.dataset.k][0]); });
+}
+function showResult(r){
+  const box=$("#result"); if(!box) return;
+  if(!r){ box.innerHTML=""; return; }
+  const m=MISSIONS[st.cur], D=r.lang==="dncl";
+  if(r.error){
+    box.innerHTML=`<div class="result"><div class="result-head fail"><span class="big">まだ動かない</span><span>${r.error.line?r.error.line+"行目あたり":""}</span></div>
+      <div class="errbox">${esc(r.error.msg)}${r.error.raw&&!D?`<code>${esc(r.error.raw)}</code>`:""}</div>${r.out?`<div class="console">${esc(r.out)}</div>`:""}</div>`;
+    return;
+  }
+  const okN=r.tests.filter(x=>x.ok).length;
+  const li=r.tests.map(x=>{
+    const callTxt=`${m.fname}(${x.t.args.map(pyLit).join(", ")})`;
+    const want=D?dfmt(m.key,x.t.expect):pyLit(x.t.expect)+(x.t.unordered?"（順番は自由）":"");
+    const gv=D&&!x.err?dfmt(m.key,x.js):x.repr;
+    const got=x.err?`<em>エラー：${esc(x.err.msg)}</em>`:(x.ok?esc(gv):`<em>${esc(gv)}</em>`);
+    return `<li><span class="mark ${x.ok?"ok":"ng"}">${x.ok?"○":"×"}</span><div style="min-width:0"><div>${esc(x.t.label)}</div><div class="call">${esc(callTxt)}</div><div class="vs">ほしい答え：${esc(want)}　きみの答え：${got}</div></div></li>`;
+  }).join("");
+  const last=st.cur===MISSIONS.length-1, allDone=MISSIONS.every(mm=>st.passed[mm.key]);
+  box.innerHTML=`<div class="result"><div class="result-head ${r.pass?"pass":"fail"}"><span class="big">${r.pass?"ミッションクリア！":"もう少し！"}</span><span>テスト ${okN} / ${r.tests.length} 合格</span></div>
+    <ul class="tests">${li}</ul>${r.out?`<div class="console">${esc(r.out)}</div>`:""}
+    ${r.pass?`<div class="clear-box"><span>このプログラムがミント号に組み込まれたよ。</span><button class="btn small" type="button" id="demoBtn">自販機でもう一度見る</button>${!last?`<button class="btn next" type="button" id="nextBtn">次のミッションへ →</button>`:""}</div>`:""}</div>
+    ${r.pass&&allDone?`<div class="finale" style="margin-top:12px"><h3>ミント号、営業再開！</h3><p>8つの機能がすべて動き出しました。おさいふのお金で、ミント号を自由に動かしてみよう。売上データやスタンプは、次は「ネットワーク」と「データベース」の学習で、本物の仕組みとつなげていきます。</p></div>`:""}`;
+  if(r.pass){ $("#demoBtn").onclick=()=>act(()=>runDemo(m.key)); const nb=$("#nextBtn"); if(nb) nb.onclick=()=>go(st.cur+1); }
+}
+function doRun(){
+  if(!engineReady){ toast("Pythonの準備中です。少し待ってね"); return; }
+  const m=MISSIONS[st.cur], lg=runLang(); const ta=$("#code");
+  if(ta){ if(lg==="py") st.codes[m.key]=ta.value; else st.dcodes[m.key]=ta.value; }
+  const code=codeOf(m,lg); const btn=$("#run"); btn.disabled=true;
+  setTimeout(()=>{
+    const r=runMission(m,code,lg); lastResult[m.key]=r;
+    errLine=r.error?r.error.line:null; syncEditor();
+    if(r.pass){ st.passed[m.key]=true; st.plang[m.key]=lg; mods[m.key]=r.mod; }
+    save(); tabs(); showResult(r); refresh(); btn.disabled=false;
+    if(st.lang==="flow"){ const w=$("#fcWrap"); if(w) w.innerHTML=flowSVG(code,lg); }
+    if(r.pass){ burst($("#result")); toast(`ミッション${st.cur+1} クリア！ 「${PART_NAMES[st.cur]}」が動き出した`); act(()=>runDemo(m.key)); }
+    else if(r.error) say("うーん、プログラムを読みこめなかった…。エラーの説明を見てみて。","sad");
+  },30);
+}
+function go(i){ st.cur=i; save(); tabs(); renderCard(); if(window.innerWidth<=920) $("#tabs").scrollIntoView({behavior:RM?"auto":"smooth"}); }
+
+/* ================= 起動 ================= */
+buildMachine(); tabs(); renderCard(); refresh();
+$("#tabs").addEventListener("click",e=>{const b=e.target.closest(".tab"); if(b) go(+b.dataset.i);});
+$("#resetAll").addEventListener("click",()=>{ $("#resetAllWrap").innerHTML=`<span class="confirm">書いたコードとクリア記録をすべて消す？ <button class="btn small" type="button" id="raY">消す</button><button class="btn small" type="button" id="raN">やめる</button></span>`;
+  $("#raY").onclick=()=>{ try{localStorage.removeItem(STORE)}catch(e){} location.reload(); };
+  $("#raN").onclick=()=>{ $("#resetAllWrap").innerHTML=`<button class="btn small" type="button" id="resetAll2">すべての進み具合を消す</button>`; $("#resetAll2").onclick=()=>$("#resetAll").click(); }; });
+
+function showMode(){ const o=$("#modeOv"); o.hidden=false; const c=o.querySelector(`.modecard[data-mode="${st.mode||"py"}"]`); if(c) c.focus(); }
+function setMode(md){ st.mode=md; st.lang=md; st.flowSrc=md; save(); $("#modeOv").hidden=true; $("#modeName").textContent=md==="py"?"Python":"共通テスト表記"; renderCard(); toast(md==="py"?"Pythonモードで始めよう":"共通テスト表記モードで始めよう"); }
+document.querySelectorAll(".modecard").forEach(b=>b.addEventListener("click",()=>setMode(b.dataset.mode)));
+$("#modeChip").addEventListener("click",showMode);
+$("#modeOv").addEventListener("click",e=>{ if(e.target.id==="modeOv"&&st.mode) $("#modeOv").hidden=true; });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&st.mode) $("#modeOv").hidden=true; });
+if(st.mode) $("#modeName").textContent=st.mode==="py"?"Python":"共通テスト表記"; else showMode();
+function boot(){
+  if(!initEngine()) return;
+  // 前回クリアしたミッションを組み込み直す
+  for(const m of MISSIONS){ if(!st.passed[m.key]) continue; const lg=st.plang[m.key]||"py"; const r=runMission(m,lg==="py"?(st.codes[m.key]||""):(st.dcodes[m.key]||""),lg); if(r.pass) mods[m.key]=r.mod; else delete st.passed[m.key]; }
+  engineReady=true; $("#loading").hidden=true; save(); tabs(); refresh();
+  const n=MISSIONS.filter(m=>st.passed[m.key]).length;
+  if(n===0) say("…………。（プログラムが消えて、ミント号は眠ったまま。ミッション1から始めよう！）","sleep");
+  else say(n===8?"おかえり！ 全部の機能が動いているよ。自由に買い物してみてね。":`おかえり！ いま ${n}個の機能が動いているよ。`,"happy");
+}
+if(document.readyState==="complete") boot(); else window.addEventListener("load",boot);
+})();
+</script>
+
+</body></html>
