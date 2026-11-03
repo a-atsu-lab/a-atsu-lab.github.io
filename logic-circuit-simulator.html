@@ -1,0 +1,926 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>論理回路シミュレーター</title>
+<style>
+:root{
+  --bg:#f5f6f8; --panel:#fff; --line:#d9dde4; --text:#1f2430; --muted:#6b7280;
+  --on:#f07a12; --on-dark:#b45309; --off:#2f74d8; --unk:#9ca3af;
+  --accent:#2563eb; --danger:#dc2626; --ok:#15803d;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI","Yu Gothic",Meiryo,system-ui,sans-serif;
+  color:var(--text);background:var(--bg);display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px 12px;background:#fff;border-bottom:1px solid var(--line)}
+.bar h1{font-size:17px;margin:0 10px 0 0;white-space:nowrap}
+button,select{font:inherit;font-size:14px;padding:6px 11px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--text);cursor:pointer}
+button:hover{background:#f1f3f7}
+button.run{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;padding:7px 20px;font-size:15px}
+button.run:hover{background:#1d4ed8}
+.sep{width:1px;height:24px;background:var(--line);margin:0 4px}
+label.chk{display:inline-flex;align-items:center;gap:4px;font-size:14px;cursor:pointer;white-space:nowrap}
+label.spd{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);white-space:nowrap}
+label.spd input{width:90px}
+main{flex:1;display:grid;grid-template-columns:160px 1fr 370px;min-height:0}
+.palette{background:#fff;border-right:1px solid var(--line);padding:10px;overflow:auto;display:flex;flex-direction:column;gap:6px}
+.ptitle{font-size:12px;font-weight:700;color:var(--muted);margin:4px 0 2px}
+.part{display:flex;align-items:center;gap:8px;padding:5px 8px;text-align:left;font-weight:600}
+.part svg{width:48px;height:32px;flex:none;pointer-events:none}
+.legend{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4px;margin-top:6px}
+.chip{display:inline-block;width:22px;height:5px;border-radius:3px;vertical-align:middle;margin-right:6px}
+.stats{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.6}
+.stage{position:relative;min-width:0;min-height:0}
+#svg{width:100%;height:100%;display:block;touch-action:none;user-select:none;-webkit-user-select:none;background:#fbfcfd}
+.status{position:absolute;left:12px;bottom:12px;right:12px;pointer-events:none;display:flex}
+.status span.box{background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,.06);pointer-events:auto}
+.empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:16px;pointer-events:none;text-align:center;line-height:1.8}
+.empty[hidden]{display:none}
+#toast{position:absolute;top:12px;left:50%;transform:translateX(-50%);background:#1f2937;color:#fff;padding:8px 14px;border-radius:10px;font-size:14px;opacity:0;transition:opacity .25s;pointer-events:none;max-width:90%}
+#toast.show{opacity:.95}
+.side{background:#fff;border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.tabs{display:flex;border-bottom:1px solid var(--line)}
+.tabs button{flex:1;border:none;border-radius:0;padding:10px;border-bottom:3px solid transparent;background:#fff;font-weight:700;color:var(--muted)}
+.tabs button.on{color:var(--accent);border-bottom-color:var(--accent)}
+.tab{padding:12px;overflow:auto;flex:1}
+.opts{display:flex;flex-wrap:wrap;gap:6px 14px;margin-bottom:10px}
+.muted{color:var(--muted)} .small{font-size:12px}
+.note{font-size:12px;color:var(--muted);margin:8px 0 0;line-height:1.6}
+table.tt{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;text-align:center;font-size:15px}
+.tt th,.tt td{border:1px solid var(--line);padding:5px 6px}
+.tt th{background:#f3f4f6}
+.tt th.o{background:#fff1e3} .tt th.m{background:#f3f0ff;color:#6d28d9} .tt th.t{background:#e9f7ee}
+.tt .dv{border-left:3px solid #9aa3b2}
+.tt td.o{font-weight:800}
+.tt td.v1{color:#c2410c} .tt td.v0{color:#1d4ed8} .tt td.vu{color:#9ca3af}
+.tt tbody tr{cursor:pointer}
+.tt tbody tr:hover td{background:#f0f6ff}
+.tt tr.cur td{background:#fff7e0}
+.tt tr.cur td:first-child{box-shadow:inset 4px 0 0 var(--on)}
+.tt td.hid{color:var(--muted);background:repeating-linear-gradient(45deg,#f1f2f5 0 6px,#fff 6px 12px);cursor:help}
+.tt td.ok{color:var(--ok);font-weight:800} .tt td.ng{color:var(--danger);font-weight:800;background:#fff1f1}
+.expr{font-size:21px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;line-height:1.9;word-break:break-all}
+.expr .lhs{font-weight:800;margin-right:6px}
+.ov{display:inline-block;border-top:2px solid currentColor;padding-top:1px;margin-top:3px;line-height:1.2}
+.q{color:var(--danger)}
+.btns{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.btns button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+#chMsg{margin:6px 0 10px;font-size:15px;font-weight:700}
+#chMsg.ok{color:var(--ok)} #chMsg.ng{color:var(--danger)}
+.badge-live{display:inline-block;font-size:11px;background:#fde68a;color:#78350f;border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:middle}
+.modal{position:fixed;inset:0;background:rgba(15,23,42,.45);display:flex;align-items:center;justify-content:center;z-index:10}
+.modal[hidden]{display:none}
+.modal .card{background:#fff;border-radius:14px;padding:20px 24px;max-width:560px;width:92%;max-height:86vh;overflow:auto;line-height:1.75;font-size:15px}
+.modal h2{margin:0 0 8px;font-size:18px}
+.modal ul{padding-left:1.2em;margin:6px 0}
+kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;font-size:12px;background:#f9fafb}
+
+/* SVG */
+.wire{fill:none;stroke-linecap:round;stroke-width:3.2;transition:stroke .25s}
+.wire.idle{stroke:#8a93a3}
+.wire.v1{stroke:var(--on);stroke-width:4.6}
+.wire.v0{stroke:var(--off)}
+.wire.vu{stroke:#b8bec9;stroke-dasharray:6 6}
+.wire.sel{stroke:var(--accent);stroke-width:6}
+.wire.temp{stroke:var(--accent);stroke-dasharray:7 6;pointer-events:none}
+.wirehit{fill:none;stroke:transparent;stroke-width:16;cursor:pointer;pointer-events:stroke}
+.comp{cursor:grab}
+.selbox{fill:rgba(37,99,235,.06);stroke:var(--accent);stroke-dasharray:5 4;stroke-width:1.5}
+.inbox.on{fill:#fff4e8;stroke:var(--on);stroke-width:2}
+.inbox.off{fill:#eef4ff;stroke:var(--off);stroke-width:2}
+.tog.on{fill:var(--on)} .tog.off{fill:var(--off)}
+.togv{fill:#fff;font-weight:800;font-size:19px;text-anchor:middle;pointer-events:none}
+.lbl{font-weight:800;font-size:17px;text-anchor:middle;fill:var(--text);pointer-events:none}
+.lbl2{font-weight:800;font-size:15px;text-anchor:middle;fill:var(--text);pointer-events:none}
+.lamp.idle{fill:#f3f4f6;stroke:#9ca3af;stroke-width:2}
+.lamp.on{fill:var(--on);stroke:var(--on-dark);stroke-width:2;filter:url(#glow)}
+.lamp.off{fill:#dbe6f5;stroke:var(--off);stroke-width:2}
+.lamp.unk{fill:#f3f4f6;stroke:#9ca3af;stroke-width:2;stroke-dasharray:4 3}
+.lampv{font-size:18px;font-weight:800;text-anchor:middle;fill:#4b5563;pointer-events:none}
+.lampv.on{fill:#fff} .lampv.off{fill:#1d4ed8}
+.gname{font-size:11px;font-weight:700;text-anchor:middle;fill:#374151;pointer-events:none}
+.gname.small{font-size:9px}
+.glabel{font-size:11px;fill:var(--muted);pointer-events:none}
+.badge.b1{fill:var(--on)} .badge.b0{fill:var(--off)} .badge.bu{fill:#9ca3af}
+.badgev{fill:#fff;font-size:12px;font-weight:800;text-anchor:middle;pointer-events:none}
+.port{fill:#fff;stroke:#1f2937;stroke-width:1.8;pointer-events:none}
+.port.out{fill:#1f2937}
+.port.open{stroke:var(--danger);fill:#fee2e2}
+.porthit{fill:transparent;cursor:crosshair}
+.porthit:hover{fill:rgba(37,99,235,.2)}
+.pulse{pointer-events:none}
+.pulse.p1{fill:#ffb347;stroke:#fff;stroke-width:2;filter:url(#glow)}
+.pulse.p0{fill:#6aa8ff;stroke:#fff;stroke-width:2}
+.pulse.pu{fill:#c0c6cf}
+
+@media (max-width:1000px){
+  body{height:auto;overflow:auto}
+  main{grid-template-columns:1fr}
+  .palette{flex-direction:row;flex-wrap:wrap;border-right:none;border-bottom:1px solid var(--line)}
+  .stage{height:62vh}
+  .side{border-left:none;border-top:1px solid var(--line)}
+}
+</style>
+</head>
+<body>
+<header class="bar">
+  <h1>論理回路シミュレーター</h1>
+  <button id="runBtn" class="run" title="実行（Enter）">▶ 実行</button>
+  <button id="resetBtn" title="実行結果の表示を消す">⟲ 未実行に戻す</button>
+  <label class="spd">ゆっくり<input type="range" id="speed" min="0" max="4" step="1" value="2">はやい</label>
+  <label class="chk" title="入力を切り替えた瞬間に結果を反映します"><input type="checkbox" id="autoRun">即時反映</label>
+  <span class="sep"></span>
+  <button id="undoBtn" title="元に戻す（Ctrl+Z）">↶ 元に戻す</button>
+  <button id="delBtn" title="選択中の部品・配線を削除（Delete）">削除</button>
+  <button id="clearBtn">全消去</button>
+  <span class="sep"></span>
+  <button id="saveBtn" title="回路をファイルに保存">保存</button>
+  <button id="loadBtn" title="保存した回路を読み込む">読込</button>
+  <input type="file" id="fileIn" accept=".json,application/json" hidden>
+  <span class="sep"></span>
+  <button id="zoomOut" title="縮小">－</button>
+  <button id="zoomFit" title="回路全体を表示">全体</button>
+  <button id="zoomIn" title="拡大">＋</button>
+  <button id="helpBtn">？ 使い方</button>
+</header>
+
+<main>
+  <aside class="palette" id="palette">
+    <div class="ptitle">部品（クリック or ドラッグ）</div>
+    <div id="parts" style="display:contents"></div>
+    <label class="chk small" style="margin-top:6px"><input type="checkbox" id="advChk">発展ゲート</label>
+    <div id="advParts" style="display:contents"></div>
+    <div class="legend">
+      <div><span class="chip" style="background:var(--on)"></span>1（オン）</div>
+      <div><span class="chip" style="background:var(--off)"></span>0（オフ）</div>
+      <div><span class="chip" style="background:#8a93a3"></span>未実行</div>
+      <div><span class="chip" style="background:#fee2e2;border:1px solid var(--danger)"></span>未接続の端子</div>
+    </div>
+    <div class="stats" id="stats"></div>
+  </aside>
+
+  <section class="stage" id="stage">
+    <svg id="svg" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1.1" fill="#d3d8e0"/></pattern>
+        <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+          <feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <rect id="gridRect" fill="url(#grid)"/>
+      <g id="wiresL"></g>
+      <g id="compsL"></g>
+      <g id="pulseL"></g>
+      <g id="tempL"></g>
+    </svg>
+    <div class="empty" id="empty" hidden>左の部品をクリック（またはドラッグ）して配置しよう<br><span class="small">「課題」タブから問題に挑戦することもできます</span></div>
+    <div class="status"><span class="box" id="status"></span></div>
+    <div id="toast"></div>
+  </section>
+
+  <aside class="side">
+    <div class="tabs">
+      <button data-tab="tt" class="on">真理値表</button>
+      <button data-tab="ex">論理式</button>
+      <button data-tab="ch">課題</button>
+    </div>
+    <div class="tab" id="tab-tt">
+      <div class="opts">
+        <label class="chk"><input type="checkbox" id="midChk">途中の値（G1, G2…）も表示</label>
+        <label class="chk"><input type="checkbox" id="predChk">出力を隠す（予想モード）</label>
+        <button id="revealAll" hidden>すべて表示</button>
+      </div>
+      <div id="ttBox"></div>
+      <p class="note">行をクリックすると、その入力の組み合わせに切り替えて実行します。黄色の行が現在の入力です。<br>予想モードでは「?」のマスをクリックすると答えが表示されます。</p>
+    </div>
+    <div class="tab" id="tab-ex" hidden>
+      <div id="exBox"></div>
+      <p class="note">記号： A・B … AND（論理積）／ A＋B … OR（論理和）／ 上線 … NOT（否定）／ A⊕B … XOR（排他的論理和）<br>回路の配線から自動で式を組み立てています。配線を変えると式も変わります。</p>
+    </div>
+    <div class="tab" id="tab-ch" hidden>
+      <select id="chSel" style="width:100%"></select>
+      <div id="chDesc" style="margin-top:10px;line-height:1.7"></div>
+      <div class="btns">
+        <button id="chStart" class="primary">この課題に挑戦</button>
+        <button id="chJudge">判定する</button>
+        <button id="chAns">答えの例</button>
+      </div>
+      <div id="chMsg"></div>
+      <div id="chTable"></div>
+      <p class="note">「この課題に挑戦」を押すと、必要な入力・出力が配置されます。ゲートを置いて配線し、「判定する」で目標の真理値表と一致するか確かめよう。答えの例は一つの例です（もっと少ないゲートでできるかも？）。</p>
+    </div>
+  </aside>
+</main>
+
+<div class="modal" id="help" hidden>
+  <div class="card">
+    <h2>使い方</h2>
+    <ul>
+      <li><b>部品を置く</b>：左の部品をクリック（画面中央に出ます）またはドラッグして置きます。</li>
+      <li><b>動かす</b>：部品をドラッグ。何もないところをドラッグすると画面全体が動きます。ホイールで拡大・縮小。</li>
+      <li><b>配線</b>：部品の右側の●（出力端子）から、別の部品の左側の○（入力端子）までドラッグ。逆向きでもOK。部品の上に落とすと空いている入力に自動でつながります。</li>
+      <li><b>入力の切り替え</b>：入力部品をクリックすると 0 ⇔ 1 が切り替わります。</li>
+      <li><b>実行</b>：<kbd>▶ 実行</kbd>（または <kbd>Enter</kbd>）で入力から出力へ信号が段ごとに流れます。オレンジが 1、青が 0 です。</li>
+      <li><b>名前の変更</b>：入力・出力をダブルクリック。</li>
+      <li><b>削除</b>：部品や配線をクリックして選び <kbd>Delete</kbd>、または右クリック。</li>
+      <li><b>元に戻す</b>：<kbd>Ctrl</kbd>+<kbd>Z</kbd></li>
+      <li>回路はブラウザに自動保存されます。「保存」でファイルに書き出すと、別のPCでも「読込」できます。</li>
+      <li>赤い○は、まだ何もつながっていない入力端子です。</li>
+    </ul>
+    <div style="text-align:right"><button id="helpClose">閉じる</button></div>
+  </div>
+</div>
+
+<script>
+(()=>{
+'use strict';
+const NS='http://www.w3.org/2000/svg';
+const $=s=>document.querySelector(s);
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);if(attrs)for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ---------- 部品の定義 ---------- */
+const GATE2={w:90,h:60,ins:[[0,18],[0,42]],out:[90,30]};
+const GEOM={
+  IN:{w:76,h:44,ins:[],out:[76,22]},
+  OUT:{w:58,h:44,ins:[[0,22]],out:null},
+  AND:GATE2, OR:GATE2, NAND:GATE2, NOR:GATE2, XOR:GATE2,
+  NOT:{w:90,h:60,ins:[[0,30]],out:[90,30]}
+};
+const FN={AND:(a,b)=>a&b,OR:(a,b)=>a|b,NOT:a=>1-a,NAND:(a,b)=>1-(a&b),NOR:(a,b)=>1-(a|b),XOR:(a,b)=>a^b,OUT:a=>a};
+const BASIC=['IN','OUT','AND','OR','NOT'], ADV=['NAND','NOR','XOR'];
+const NAME={IN:'入力',OUT:'出力',AND:'AND',OR:'OR',NOT:'NOT',NAND:'NAND',NOR:'NOR',XOR:'XOR'};
+const SPEEDS=[1300,850,550,300,120];
+const KEY='logic-circuit-sim-v1';
+const isGate=c=>c.type!=='IN'&&c.type!=='OUT';
+
+/* ---------- 状態 ---------- */
+let C={comps:[],wires:[]};
+let seq=1;
+let view={x:-20,y:-20,s:1};
+let sel=null;
+let sim={status:'idle',vals:{},lv:{},reveal:-1,max:0,token:0,timer:null};
+let undoStack=[];
+let challenge=null, judge=null;
+const predict={on:false,shown:new Set()};
+let showMid=false;
+
+const svg=$('#svg'), wiresL=$('#wiresL'), compsL=$('#compsL'), pulseL=$('#pulseL'), tempL=$('#tempL'), gridRect=$('#gridRect');
+const byId=id=>C.comps.find(c=>c.id===id);
+const byLabel=(a,b)=>String(a.label).localeCompare(String(b.label),'ja',{numeric:true});
+const snap=v=>Math.round(v/10)*10;
+
+/* ---------- 課題 ---------- */
+const CH=[
+ {id:'nand',title:'① NAND をつくろう',desc:'A と B がどちらも 1 のときだけ 0 になり、それ以外は 1 になる回路。',
+  inputs:['A','B'],outputs:['X'],f:(a,b)=>[1-(a&b)],
+  sol:{n:[['A','IN',40,80],['B','IN',40,190],['g1','AND',200,112],['g2','NOT',350,112],['X','OUT',520,120]],
+       w:[['A','g1',0],['B','g1',1],['g1','g2',0],['g2','X',0]]}},
+ {id:'xor',title:'② XOR（排他的論理和）',desc:'A と B が<b>異なるとき</b>だけ 1 になる回路を、AND・OR・NOT の組み合わせでつくろう。',
+  inputs:['A','B'],outputs:['X'],f:(a,b)=>[a^b],
+  sol:{n:[['A','IN',40,90],['B','IN',40,250],['nA','NOT',190,20],['nB','NOT',190,300],['g1','AND',350,80],['g2','AND',350,220],['g3','OR',510,150],['X','OUT',670,158]],
+       w:[['A','nA',0],['B','nB',0],['A','g1',0],['nB','g1',1],['nA','g2',0],['B','g2',1],['g1','g3',0],['g2','g3',1],['g3','X',0]]}},
+ {id:'half',title:'③ 半加算器',desc:'1 桁の 2 進数 A と B を足し算する回路。C は桁上がり、S は和（1 の位）。',
+  inputs:['A','B'],outputs:['C','S'],f:(a,b)=>[a&b,a^b],
+  sol:{n:[['A','IN',40,100],['B','IN',40,300],['nA','NOT',190,20],['nB','NOT',190,380],['g1','AND',350,90],['g2','AND',350,230],['g3','OR',510,160],['S','OUT',680,168],['g4','AND',510,330],['C','OUT',680,338]],
+       w:[['A','nA',0],['B','nB',0],['A','g1',0],['nB','g1',1],['nA','g2',0],['B','g2',1],['g1','g3',0],['g2','g3',1],['g3','S',0],['A','g4',0],['B','g4',1],['g4','C',0]]}},
+ {id:'major',title:'④ 多数決回路',desc:'3 人（A・B・C）の賛成(1)・反対(0)のうち、<b>2 人以上が賛成</b>なら X=1 になる回路。',
+  inputs:['A','B','C'],outputs:['X'],f:(a,b,c)=>[a+b+c>=2?1:0],
+  sol:{n:[['A','IN',40,60],['B','IN',40,190],['C','IN',40,320],['g1','AND',220,40],['g2','AND',220,170],['g3','AND',220,300],['g4','OR',390,100],['g5','OR',550,190],['X','OUT',710,198]],
+       w:[['A','g1',0],['B','g1',1],['B','g2',0],['C','g2',1],['A','g3',0],['C','g3',1],['g1','g4',0],['g2','g4',1],['g4','g5',0],['g3','g5',1],['g5','X',0]]}},
+ {id:'mux',title:'⑤ 切り替え回路（マルチプレクサ）',desc:'S=0 のときは A の値を、S=1 のときは B の値をそのまま X に出す回路。',
+  inputs:['A','B','S'],outputs:['X'],f:(a,b,s)=>[s?b:a],
+  sol:{n:[['A','IN',40,50],['B','IN',40,170],['S','IN',40,310],['nS','NOT',190,300],['g1','AND',350,60],['g2','AND',350,200],['g3','OR',510,130],['X','OUT',670,138]],
+       w:[['S','nS',0],['A','g1',0],['nS','g1',1],['B','g2',0],['S','g2',1],['g1','g3',0],['g2','g3',1],['g3','X',0]]}},
+ {id:'full',title:'⑥ 全加算器（発展）',desc:'下の桁からの桁上がり Ci も含めて A＋B＋Ci を計算する回路。Co は桁上がり、S は和。（答えの例は発展ゲート XOR を使用）',
+  inputs:['A','B','Ci'],outputs:['Co','S'],adv:true,f:(a,b,c)=>{const s=a+b+c;return [s>>1,s&1];},
+  sol:{n:[['A','IN',40,60],['B','IN',40,170],['Ci','IN',40,300],['x1','XOR',210,95],['x2','XOR',420,170],['S','OUT',720,178],['a1','AND',420,290],['a2','AND',420,400],['o1','OR',570,340],['Co','OUT',720,348]],
+       w:[['A','x1',0],['B','x1',1],['x1','x2',0],['Ci','x2',1],['x2','S',0],['x1','a1',0],['Ci','a1',1],['A','a2',0],['B','a2',1],['a1','o1',0],['a2','o1',1],['o1','Co',0]]}}
+];
+const solGates=ch=>ch.sol.n.filter(n=>n[1]!=='IN'&&n[1]!=='OUT').length;
+
+/* ---------- 描画 ---------- */
+function drawGateShape(g,type,fill){
+  const S={stroke:'#1f2937','stroke-width':2.2,'stroke-linejoin':'round',fill:fill||'#fff'};
+  const lead=(x1,y1,x2,y2)=>el('line',{x1,y1,x2,y2,stroke:'#1f2937','stroke-width':2.2},g);
+  if(type==='NOT'){
+    lead(0,30,18,30); el('path',{...S,d:'M18 10 L62 30 L18 50 Z'},g);
+    el('circle',{...S,cx:67,cy:30,r:5},g); lead(72,30,90,30); return;
+  }
+  lead(0,18,26,18); lead(0,42,26,42);
+  if(type==='AND'||type==='NAND'){
+    el('path',{...S,d:'M16 8 H44 A22 22 0 0 1 44 52 H16 Z'},g);
+    if(type==='NAND'){el('circle',{...S,cx:70,cy:30,r:4},g);lead(74,30,90,30);} else lead(66,30,90,30);
+  }else{
+    const d=type==='XOR'?4:0;
+    if(type==='XOR') el('path',{d:'M8 8 Q20 30 8 52',fill:'none',stroke:'#1f2937','stroke-width':2.2},g);
+    el('path',{...S,d:`M${12+d} 8 Q${40+d} 8 ${66+d} 30 Q${40+d} 52 ${12+d} 52 Q${24+d} 30 ${12+d} 8 Z`},g);
+    const tip=66+d;
+    if(type==='NOR'){el('circle',{...S,cx:tip+4,cy:30,r:4},g);lead(tip+8,30,90,30);} else lead(tip,30,90,30);
+  }
+}
+function portPos(c,kind,i){const G=GEOM[c.type];const p=kind==='out'?G.out:G.ins[i||0];return [c.x+p[0],c.y+p[1]];}
+function bez(a,b){const dx=Math.max(30,Math.abs(b[0]-a[0])*0.5);return `M${a[0]} ${a[1]} C${a[0]+dx} ${a[1]} ${b[0]-dx} ${b[1]} ${b[0]} ${b[1]}`;}
+function shown(id){
+  if(sim.status==='idle') return {rev:false};
+  const l=sim.lv[id]; if(l===undefined||l>sim.reveal) return {rev:false};
+  return {rev:true,v:sim.vals[id]};
+}
+const vcls=(v,p)=>p+(v===1?'1':v===0?'0':'u');
+
+function render(){
+  const r=svg.getBoundingClientRect();
+  const vw=Math.max(1,r.width)/view.s, vh=Math.max(1,r.height)/view.s;
+  svg.setAttribute('viewBox',`${view.x} ${view.y} ${vw} ${vh}`);
+  gridRect.setAttribute('x',view.x);gridRect.setAttribute('y',view.y);
+  gridRect.setAttribute('width',vw);gridRect.setAttribute('height',vh);
+  wiresL.textContent='';compsL.textContent='';
+  const connected=new Set(C.wires.map(w=>w.to+':'+w.port));
+  for(const w of C.wires){
+    const a=byId(w.from),b=byId(w.to); if(!a||!b) continue;
+    const d=bez(portPos(a,'out'),portPos(b,'in',w.port));
+    const s=shown(a.id);
+    let cls='wire '+(s.rev?vcls(s.v,'v'):'idle');
+    if(sel&&sel.kind==='wire'&&sel.id===w.id) cls+=' sel';
+    el('path',{d,class:cls},wiresL);
+    el('path',{d,class:'wirehit','data-wire':w.id},wiresL);
+  }
+  for(const c of C.comps) drawComp(c,connected);
+  $('#empty').hidden=C.comps.length>0;
+}
+function drawComp(c,connected){
+  const G=GEOM[c.type];
+  const isSel=sel&&sel.kind==='comp'&&sel.id===c.id;
+  const g=el('g',{transform:`translate(${c.x} ${c.y})`,'data-comp-g':c.id,class:'comp'},compsL);
+  if(isSel) el('rect',{x:-8,y:-20,width:G.w+16,height:G.h+28,rx:8,class:'selbox'},g);
+  if(c.type==='IN'){
+    const v=c.value?1:0, k=v?'on':'off';
+    el('rect',{x:0,y:0,width:76,height:44,rx:9,class:'inbox '+k},g);
+    el('text',{x:20,y:28,class:'lbl'},g).textContent=c.label;
+    el('rect',{x:38,y:7,width:30,height:30,rx:7,class:'tog '+k},g);
+    el('text',{x:53,y:28.5,class:'togv'},g).textContent=v;
+  }else if(c.type==='OUT'){
+    const s=shown(c.id);
+    const k=s.rev?(s.v===1?'on':s.v===0?'off':'unk'):'idle';
+    el('line',{x1:0,y1:22,x2:14,y2:22,stroke:'#1f2937','stroke-width':2.2},g);
+    el('circle',{cx:34,cy:22,r:19,class:'lamp '+k},g);
+    el('text',{x:34,y:28.5,class:'lampv '+k},g).textContent=(s.rev&&s.v!==undefined)?s.v:'?';
+    el('text',{x:34,y:-6,class:'lbl2'},g).textContent=c.label;
+  }else{
+    const s=shown(c.id);
+    const fill=s.rev?(s.v===1?'#fff0de':s.v===0?'#e6efff':'#fff'):'#fff';
+    drawGateShape(g,c.type,fill);
+    const tx=c.type==='NOT'?33:(c.type==='XOR'?42:38);
+    el('text',{x:tx,y:34,class:'gname'+(c.type==='NOT'||c.type==='NAND'?' small':'')},g).textContent=c.type;
+    el('text',{x:4,y:1,class:'glabel'},g).textContent=c.label;
+    if(s.rev){
+      el('circle',{cx:82,cy:12,r:9.5,class:'badge '+vcls(s.v,'b')},g);
+      el('text',{x:82,y:16.3,class:'badgev'},g).textContent=s.v===undefined?'?':s.v;
+    }
+  }
+  G.ins.forEach((p,i)=>{
+    const con=connected.has(c.id+':'+i);
+    el('circle',{cx:p[0],cy:p[1],r:4.5,class:'port in'+(con?'':' open')},g);
+    el('circle',{cx:p[0],cy:p[1],r:12,class:'porthit','data-port':'in','data-comp':c.id,'data-idx':i},g);
+  });
+  if(G.out){
+    el('circle',{cx:G.out[0],cy:G.out[1],r:4.5,class:'port out'},g);
+    el('circle',{cx:G.out[0],cy:G.out[1],r:12,class:'porthit','data-port':'out','data-comp':c.id,'data-idx':0},g);
+  }
+}
+
+/* ---------- 論理演算 ---------- */
+function inMap(){const m={};C.wires.forEach(w=>m[w.to+':'+w.port]=w.from);return m;}
+function evaluate(assign){
+  const inm=inMap(), M=new Map(C.comps.map(c=>[c.id,c])), vals={}, st={};
+  const val=id=>{
+    if(st[id]===2) return vals[id];
+    if(st[id]===1) return undefined;
+    st[id]=1;
+    const c=M.get(id); let v;
+    if(!c) v=undefined;
+    else if(c.type==='IN') v=assign?(assign[id]??0):(c.value?1:0);
+    else{
+      const ins=GEOM[c.type].ins.map((_,i)=>{const s=inm[id+':'+i];return s?val(s):undefined;});
+      v=ins.some(x=>x===undefined)?undefined:FN[c.type](...ins);
+    }
+    st[id]=2; vals[id]=v; return v;
+  };
+  C.comps.forEach(c=>val(c.id));
+  return {vals};
+}
+function levels(){
+  const inm=inMap(), lv={}, M=new Map(C.comps.map(c=>[c.id,c]));
+  const f=id=>{
+    if(lv[id]!==undefined) return lv[id];
+    const c=M.get(id); if(!c) return 0;
+    if(c.type==='IN') return lv[id]=0;
+    lv[id]=1;
+    let m=1;
+    GEOM[c.type].ins.forEach((_,i)=>{const s=inm[id+':'+i]; if(s) m=Math.max(m,f(s)+1);});
+    return lv[id]=m;
+  };
+  C.comps.forEach(c=>f(c.id));
+  return lv;
+}
+function reaches(start,target){
+  const seen=new Set([start]),q=[start];
+  while(q.length){const x=q.shift(); if(x===target) return true;
+    for(const w of C.wires) if(w.from===x&&!seen.has(w.to)){seen.add(w.to);q.push(w.to);}}
+  return false;
+}
+
+/* ---------- 実行（信号の伝わり方のアニメーション） ---------- */
+function resetSim(){sim.token++;clearTimeout(sim.timer);sim.status='idle';sim.reveal=-1;pulseL.textContent='';}
+function run(animate){
+  resetSim();
+  if(!C.comps.length){toast('部品がありません');updateStatus();return;}
+  sim.vals=evaluate(null).vals; sim.lv=levels();
+  sim.max=Math.max(0,...Object.values(sim.lv));
+  if(!animate){sim.status='done';sim.reveal=sim.max;render();updateStatus();return;}
+  sim.status='running';
+  const tok=sim.token, step=SPEEDS[+$('#speed').value];
+  const tick=()=>{
+    if(tok!==sim.token) return;
+    sim.reveal++;
+    for(const w of C.wires) if(sim.lv[w.from]===sim.reveal) spawnPulse(w,sim.vals[w.from],step,tok);
+    render();
+    if(sim.reveal>=sim.max){sim.status='done';updateStatus();return;}
+    updateStatus();
+    sim.timer=setTimeout(tick,step);
+  };
+  tick();
+}
+function spawnPulse(w,v,step,tok){
+  const a=byId(w.from),b=byId(w.to); if(!a||!b) return;
+  const path=el('path',{d:bez(portPos(a,'out'),portPos(b,'in',w.port)),fill:'none',stroke:'none'},pulseL);
+  const dot=el('circle',{r:6.5,class:'pulse '+vcls(v,'p'),cx:-999,cy:-999},pulseL);
+  const L=path.getTotalLength(), dur=Math.max(100,step*0.85), t0=performance.now();
+  const f=t=>{
+    const k=Math.min(1,(t-t0)/dur), pt=path.getPointAtLength(L*k);
+    dot.setAttribute('cx',pt.x);dot.setAttribute('cy',pt.y);
+    if(k<1&&tok===sim.token) requestAnimationFrame(f); else {path.remove();dot.remove();}
+  };
+  requestAnimationFrame(f);
+}
+function gateDepth(){let m=0;for(const c of C.comps) if(isGate(c)) m=Math.max(m,sim.lv[c.id]||0);return m;}
+function updateStatus(){
+  const st=$('#status');
+  if(!C.comps.length){st.parentElement.style.visibility='hidden';return;}
+  st.parentElement.style.visibility='visible';
+  if(sim.status==='idle'){
+    st.innerHTML='入力をクリックして 0／1 を切り替え、<b>▶ 実行</b> で信号を流します';
+  }else if(sim.status==='running'){
+    st.innerHTML=`信号が伝わっています… <b>${sim.reveal}</b> ／ ${sim.max} 段目`;
+  }else{
+    const outs=orderedOuts();
+    const txt=outs.map(c=>{const v=sim.vals[c.id];const col=v===1?'var(--on-dark)':v===0?'var(--off)':'var(--muted)';
+      return `${esc(c.label)} = <b style="color:${col};font-size:17px">${v===undefined?'?':v}</b>`;}).join('　');
+    const und=outs.some(c=>sim.vals[c.id]===undefined);
+    st.innerHTML=`<b>実行完了</b>　${txt||'（出力がありません）'}　<span class="muted small">｜ 入力→出力で最大 ${gateDepth()} 段のゲートを通過</span>`+
+      (und?'<br><span class="small" style="color:var(--danger)">「?」の出力は、途中に未接続の端子（赤い○）があるため決まりません</span>':'');
+  }
+}
+
+/* ---------- 変更の反映 ---------- */
+function changed(){
+  judge=null; predict.shown.clear();
+  resetSim();
+  if($('#autoRun').checked) run(false);
+  render(); renderSide(); updateStatus(); saveLocal();
+}
+function inputsChanged(){
+  resetSim();
+  if($('#autoRun').checked) run(false);
+  render(); renderSide(); updateStatus(); saveLocal();
+}
+function pushUndo(){undoStack.push(JSON.stringify(C));if(undoStack.length>100) undoStack.shift();}
+function undo(){
+  if(!undoStack.length){toast('これ以上戻せません');return;}
+  C=JSON.parse(undoStack.pop()); sel=null; changed();
+}
+
+/* ---------- 部品の追加・削除・接続 ---------- */
+function nextLabel(type){
+  const used=new Set(C.comps.filter(c=>c.type===type||(isGate(c)&&!['IN','OUT'].includes(type))).map(c=>c.label));
+  if(type==='IN'){for(const L of 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') if(!used.has(L)) return L; return 'I'+C.comps.length;}
+  if(type==='OUT'){for(const L of ['X','Y','Z','W','V','U','T','R','Q','P']) if(!used.has(L)) return L; return 'O'+C.comps.length;}
+  let m=0; C.comps.filter(isGate).forEach(c=>{const n=parseInt(String(c.label).slice(1));if(n>m)m=n;}); return 'G'+(m+1);
+}
+let addN=0;
+function addComp(type,x,y){
+  const G=GEOM[type];
+  if(x===undefined){
+    const r=svg.getBoundingClientRect();
+    const cx=view.x+r.width/view.s/2, cy=view.y+r.height/view.s/2, k=addN%6; addN++;
+    x=cx-G.w/2+k*20-50; y=cy-G.h/2+k*20-50;
+  }
+  pushUndo();
+  const c={id:'c'+(seq++),type,x:snap(x),y:snap(y),label:nextLabel(type)};
+  if(type==='IN') c.value=0;
+  C.comps.push(c); sel={kind:'comp',id:c.id}; changed();
+}
+function deleteSel(){
+  if(!sel){toast('削除する部品か配線をクリックして選んでください');return;}
+  pushUndo();
+  if(sel.kind==='comp'){C.comps=C.comps.filter(c=>c.id!==sel.id);C.wires=C.wires.filter(w=>w.from!==sel.id&&w.to!==sel.id);}
+  else C.wires=C.wires.filter(w=>w.id!==sel.id);
+  sel=null; changed();
+}
+function connect(from,to,port){
+  if(from===to){toast('同じ部品の出力と入力はつなげません');return;}
+  const a=byId(from),b=byId(to);
+  if(!a||!b||!GEOM[a.type].out||!GEOM[b.type].ins[port]) return;
+  if(reaches(to,from)){toast('信号がぐるっと戻るループはつくれません（組み合わせ回路のみ）');return;}
+  pushUndo();
+  C.wires=C.wires.filter(w=>!(w.to===to&&w.port===port));
+  C.wires.push({id:'w'+(seq++),from,to,port});
+  changed();
+}
+function nearestInPort(c,pt){
+  const G=GEOM[c.type]; if(!G.ins.length) return -1;
+  const con=new Set(C.wires.filter(w=>w.to===c.id).map(w=>w.port));
+  let best=-1,bd=1e9;
+  G.ins.forEach((p,i)=>{const d=Math.hypot(c.x+p[0]-pt.x,c.y+p[1]-pt.y)+(con.has(i)?1000:0);if(d<bd){bd=d;best=i;}});
+  return best;
+}
+
+/* ---------- マウス・タッチ操作 ---------- */
+function toWorld(e){const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;return p.matrixTransform(svg.getScreenCTM().inverse());}
+let drag=null;
+svg.addEventListener('pointerdown',e=>{
+  if(e.button!==0) return;
+  const t=e.target, pt=toWorld(e);
+  const port=t.closest('[data-port]');
+  if(port){
+    const c=byId(port.dataset.comp); if(!c) return;
+    const dir=port.dataset.port, idx=+port.dataset.idx;
+    drag={kind:'wire',dir,comp:c.id,idx,start:portPos(c,dir,idx),path:el('path',{class:'wire temp'},tempL)};
+    e.preventDefault(); return;
+  }
+  const cg=t.closest('[data-comp-g]');
+  if(cg){
+    const c=byId(cg.dataset.compG);
+    drag={kind:'move',c,dx:pt.x-c.x,dy:pt.y-c.y,sx:e.clientX,sy:e.clientY,moved:false};
+    sel={kind:'comp',id:c.id}; render(); e.preventDefault(); return;
+  }
+  const wh=t.closest('[data-wire]');
+  if(wh){sel={kind:'wire',id:wh.dataset.wire};render();return;}
+  drag={kind:'pan',sx:e.clientX,sy:e.clientY,vx:view.x,vy:view.y,moved:false};
+});
+window.addEventListener('pointermove',e=>{
+  if(!drag) return;
+  if(drag.kind==='wire'){
+    const pt=toWorld(e), p=[pt.x,pt.y];
+    drag.path.setAttribute('d',drag.dir==='out'?bez(drag.start,p):bez(p,drag.start));
+  }else if(drag.kind==='move'){
+    if(!drag.moved&&Math.hypot(e.clientX-drag.sx,e.clientY-drag.sy)>4){drag.moved=true;pushUndo();}
+    if(drag.moved){const pt=toWorld(e);drag.c.x=snap(pt.x-drag.dx);drag.c.y=snap(pt.y-drag.dy);render();}
+  }else if(drag.kind==='pan'){
+    const dx=e.clientX-drag.sx, dy=e.clientY-drag.sy;
+    if(Math.hypot(dx,dy)>3) drag.moved=true;
+    view.x=drag.vx-dx/view.s; view.y=drag.vy-dy/view.s; render();
+  }
+});
+window.addEventListener('pointerup',e=>{
+  if(!drag) return;
+  const d=drag; drag=null;
+  if(d.kind==='wire'){
+    d.path.remove();
+    const hit=document.elementFromPoint(e.clientX,e.clientY);
+    if(!hit) return;
+    const tp=hit.closest('[data-port]');
+    if(tp){
+      if(d.dir==='out'&&tp.dataset.port==='in') connect(d.comp,tp.dataset.comp,+tp.dataset.idx);
+      else if(d.dir==='in'&&tp.dataset.port==='out') connect(tp.dataset.comp,d.comp,d.idx);
+      return;
+    }
+    const cg=hit.closest('[data-comp-g]');
+    if(cg&&cg.dataset.compG!==d.comp){
+      const c=byId(cg.dataset.compG);
+      if(d.dir==='out'){const i=nearestInPort(c,toWorld(e)); if(i>=0) connect(d.comp,c.id,i); else toast('この部品には入力端子がありません');}
+      else if(GEOM[c.type].out) connect(c.id,d.comp,d.idx);
+    }
+  }else if(d.kind==='move'){
+    if(!d.moved){ if(d.c.type==='IN'){d.c.value=d.c.value?0:1;inputsChanged();} }
+    else saveLocal();
+  }else if(d.kind==='pan'){
+    if(!d.moved&&sel){sel=null;render();}
+    saveLocal();
+  }
+});
+svg.addEventListener('dblclick',e=>{
+  const cg=e.target.closest('[data-comp-g]'); if(!cg) return;
+  const c=byId(cg.dataset.compG); if(!c||isGate(c)) return;
+  const nv=prompt(`${NAME[c.type]}の名前を入力してください（4文字まで）`,c.label);
+  if(nv===null) return;
+  const s=nv.trim().slice(0,4); if(!s) return;
+  if(C.comps.some(x=>x!==c&&x.type===c.type&&x.label===s)){toast(`「${s}」はすでに使われています`);return;}
+  pushUndo(); c.label=s; changed();
+});
+svg.addEventListener('contextmenu',e=>{
+  const cg=e.target.closest('[data-comp-g]'), wh=e.target.closest('[data-wire]');
+  if(cg){e.preventDefault();sel={kind:'comp',id:cg.dataset.compG};deleteSel();}
+  else if(wh){e.preventDefault();sel={kind:'wire',id:wh.dataset.wire};deleteSel();}
+});
+svg.addEventListener('wheel',e=>{
+  e.preventDefault();
+  zoomAt(toWorld(e),e.deltaY<0?1.1:1/1.1);
+},{passive:false});
+function zoomAt(p,f){
+  const ns=Math.min(3,Math.max(0.3,view.s*f));
+  view.x=p.x-(p.x-view.x)*view.s/ns; view.y=p.y-(p.y-view.y)*view.s/ns; view.s=ns; render(); saveLocal();
+}
+function zoomCenter(f){const r=svg.getBoundingClientRect();zoomAt({x:view.x+r.width/view.s/2,y:view.y+r.height/view.s/2},f);}
+function fit(){
+  const r=svg.getBoundingClientRect();
+  if(!C.comps.length||!r.width){view={x:-20,y:-20,s:1};render();return;}
+  let x1=1e9,y1=1e9,x2=-1e9,y2=-1e9;
+  for(const c of C.comps){const G=GEOM[c.type];x1=Math.min(x1,c.x);y1=Math.min(y1,c.y-20);x2=Math.max(x2,c.x+G.w);y2=Math.max(y2,c.y+G.h);}
+  const pad=50, bottom=60;
+  const s=Math.min(1.6,Math.max(0.3,Math.min(r.width/(x2-x1+pad*2),(r.height-bottom)/(y2-y1+pad*2))));
+  view.s=s; view.x=(x1+x2)/2-r.width/s/2; view.y=(y1+y2)/2-(r.height-bottom)/s/2;
+  render(); saveLocal();
+}
+
+/* 部品パレットからのドラッグ＆ドロップ */
+svg.addEventListener('dragover',e=>e.preventDefault());
+svg.addEventListener('drop',e=>{
+  e.preventDefault();
+  const type=e.dataTransfer.getData('text/plain'); if(!GEOM[type]) return;
+  const pt=toWorld(e), G=GEOM[type];
+  addComp(type,pt.x-G.w/2,pt.y-G.h/2);
+});
+
+/* ---------- 右パネル ---------- */
+function orderedBy(type,labels){
+  const arr=C.comps.filter(c=>c.type===type).sort(byLabel);
+  if(labels){const ix=l=>{const i=labels.indexOf(l);return i<0?999:i;};arr.sort((a,b)=>ix(a.label)-ix(b.label)||byLabel(a,b));}
+  return arr;
+}
+const curCh=()=>CH.find(c=>c.id===challenge);
+const orderedIns=()=>orderedBy('IN',curCh()&&curCh().inputs);
+const orderedOuts=()=>orderedBy('OUT',curCh()&&curCh().outputs);
+const cell=(v,cls)=>`<td class="${cls} ${v===1?'v1':v===0?'v0':'vu'}">${v===undefined?'–':v}</td>`;
+
+function renderTable(){
+  const box=$('#ttBox');
+  const ins=orderedIns(), outs=orderedOuts(), mids=showMid?C.comps.filter(isGate).sort(byLabel):[];
+  $('#revealAll').hidden=!predict.on;
+  if(!ins.length){box.innerHTML='<p class="muted">「入力」を置くと、ここに真理値表が表示されます。</p>';return;}
+  if(ins.length>6){box.innerHTML=`<p class="muted">入力が ${ins.length} 個あります。真理値表は入力 6 個（64 行）まで表示します。</p>`;return;}
+  const n=ins.length, rows=1<<n;
+  let cur=0; ins.forEach((c,i)=>{if(c.value) cur|=1<<(n-1-i);});
+  let h='<table class="tt"><thead><tr>'+
+    ins.map(c=>`<th>${esc(c.label)}</th>`).join('')+
+    mids.map((c,i)=>`<th class="m${i===0?' dv':''}">${esc(c.label)}</th>`).join('')+
+    outs.map((c,i)=>`<th class="o${i===0?' dv':''}">${esc(c.label)}</th>`).join('')+'</tr></thead><tbody>';
+  for(let r=0;r<rows;r++){
+    const a={}; ins.forEach((c,i)=>a[c.id]=(r>>(n-1-i))&1);
+    const {vals}=evaluate(a);
+    h+=`<tr data-row="${r}"${r===cur?' class="cur"':''}>`+
+      ins.map(c=>`<td>${a[c.id]}</td>`).join('')+
+      mids.map((c,i)=>cell(vals[c.id],'m'+(i===0?' dv':''))).join('')+
+      outs.map((c,j)=>{
+        const dv=j===0?' dv':'';
+        return (predict.on&&!predict.shown.has(r+':'+j))?`<td class="o hid${dv}" data-cell="${r}:${j}">?</td>`:cell(vals[c.id],'o'+dv);
+      }).join('')+'</tr>';
+  }
+  h+='</tbody></table>';
+  if(!outs.length) h+='<p class="note">「出力」を置いて回路につなぐと、出力の列が表示されます。</p>';
+  else if(outs.some(c=>C.wires.every(w=>w.to!==c.id))) h+='<p class="note" style="color:var(--danger)">つながっていない出力があります（「–」は値が決まらないことを表します）。</p>';
+  box.innerHTML=h;
+}
+function setRow(r,ins){
+  const n=ins.length;
+  ins.forEach((c,i)=>c.value=(r>>(n-1-i))&1);
+  inputsChanged();
+  if(!$('#autoRun').checked) run(true);
+}
+function exprOf(id,inm,depth){
+  const c=byId(id); if(!c||depth>80) return {h:'…',p:3};
+  if(c.type==='IN') return {h:`<i>${esc(c.label)}</i>`,p:3};
+  const arg=i=>{const s=inm[id+':'+i];return s?exprOf(s,inm,depth+1):{h:'<span class="q">?</span>',p:3};};
+  const wrap=(e,p)=>e.p<p?`(${e.h})`:e.h;
+  const ov=h=>`<span class="ov">${h}</span>`;
+  switch(c.type){
+    case 'OUT': return arg(0);
+    case 'NOT': return {h:ov(arg(0).h),p:3};
+    case 'AND': return {h:wrap(arg(0),2)+'・'+wrap(arg(1),2),p:2};
+    case 'OR':  return {h:wrap(arg(0),1)+' ＋ '+wrap(arg(1),1),p:1};
+    case 'XOR': return {h:wrap(arg(0),2)+' ⊕ '+wrap(arg(1),2),p:0.5};
+    case 'NAND':return {h:ov(wrap(arg(0),2)+'・'+wrap(arg(1),2)),p:3};
+    case 'NOR': return {h:ov(wrap(arg(0),1)+' ＋ '+wrap(arg(1),1)),p:3};
+  }
+  return {h:'?',p:3};
+}
+function renderExpr(){
+  const outs=orderedOuts(), inm=inMap();
+  if(!outs.length){$('#exBox').innerHTML='<p class="muted">「出力」を置いて回路につなぐと、論理式が表示されます。</p>';return;}
+  $('#exBox').innerHTML=outs.map(c=>`<div class="expr"><span class="lhs">${esc(c.label)} =</span>${exprOf(c.id,inm,0).h}</div>`).join('')+
+    (outs.some(c=>!inm[c.id+':0'])||C.comps.some(c=>isGate(c)&&GEOM[c.type].ins.some((_,i)=>!inm[c.id+':'+i]))?
+      '<p class="note"><span class="q">?</span> はまだつながっていない端子を表します。</p>':'');
+}
+function renderChallenge(){
+  const ch=CH.find(x=>x.id===$('#chSel').value);
+  $('#chDesc').innerHTML=`<b>${ch.title}</b>${challenge===ch.id?'<span class="badge-live">挑戦中</span>':''}<br>${ch.desc}
+    <div class="muted small">入力：${ch.inputs.join('・')} ／ 出力：${ch.outputs.join('・')} ／ 答えの例のゲート数：${solGates(ch)} 個</div>`;
+  const J=judge&&judge.id===ch.id?judge:null;
+  const msg=$('#chMsg'); msg.className=J?(J.ok?'ok':'ng'):''; msg.innerHTML=J?J.msg:'';
+  const n=ch.inputs.length;
+  let h='<table class="tt"><thead><tr>'+ch.inputs.map(l=>`<th>${esc(l)}</th>`).join('')+
+    ch.outputs.map((l,i)=>`<th class="t${i===0?' dv':''}">${esc(l)}<br><span class="small">目標</span></th>`).join('');
+  if(J&&J.res) h+=ch.outputs.map((l,i)=>`<th class="o${i===0?' dv':''}">${esc(l)}<br><span class="small">回路</span></th>`).join('')+'<th>判定</th>';
+  h+='</tr></thead><tbody>';
+  for(let r=0;r<(1<<n);r++){
+    const bits=ch.inputs.map((_,i)=>(r>>(n-1-i))&1), exp=ch.f(...bits);
+    h+=`<tr data-crow="${r}">`+bits.map(b=>`<td>${b}</td>`).join('')+exp.map((v,i)=>cell(v,'o'+(i===0?' dv':''))).join('');
+    if(J&&J.res){const R=J.res[r];h+=R.got.map((v,i)=>cell(v,'o'+(i===0?' dv':''))).join('')+`<td class="${R.ok?'ok':'ng'}">${R.ok?'○':'×'}</td>`;}
+    h+='</tr>';
+  }
+  $('#chTable').innerHTML=h+'</tbody></table>';
+}
+function doJudge(){
+  const ch=CH.find(x=>x.id===$('#chSel').value);
+  const inBy={},outBy={};
+  C.comps.forEach(c=>{if(c.type==='IN')inBy[c.label]=c;if(c.type==='OUT')outBy[c.label]=c;});
+  const miss=[...ch.inputs.filter(l=>!inBy[l]),...ch.outputs.filter(l=>!outBy[l])];
+  if(miss.length){judge={id:ch.id,ok:false,msg:`名前が ${miss.join('・')} の入力・出力が見つかりません。「この課題に挑戦」を押して配置しよう。`};renderChallenge();return;}
+  const n=ch.inputs.length,res=[];
+  for(let r=0;r<(1<<n);r++){
+    const bits=ch.inputs.map((_,i)=>(r>>(n-1-i))&1), a={};
+    ch.inputs.forEach((l,i)=>a[inBy[l].id]=bits[i]);
+    const {vals}=evaluate(a), exp=ch.f(...bits), got=ch.outputs.map(l=>vals[outBy[l].id]);
+    res.push({got,ok:got.every((v,j)=>v===exp[j])});
+  }
+  const ng=res.filter(x=>!x.ok).length, gates=C.comps.filter(isGate).length;
+  judge={id:ch.id,res,ok:ng===0,msg:ng===0?
+    `🎉 正解！　使ったゲート：${gates} 個（答えの例：${solGates(ch)} 個）`:
+    `${ng} 行が目標と違います。× の行をクリックすると、その入力で回路を動かして確かめられます。`};
+  renderChallenge();
+}
+function renderStats(){
+  const k=t=>C.comps.filter(c=>c.type===t).length;
+  $('#stats').innerHTML=`入力 ${k('IN')}／出力 ${k('OUT')}<br>ゲート ${C.comps.filter(isGate).length} 個・配線 ${C.wires.length} 本`;
+}
+function renderSide(){renderStats();renderTable();renderExpr();renderChallenge();}
+
+$('#ttBox').addEventListener('click',e=>{
+  const hc=e.target.closest('td.hid');
+  if(hc){predict.shown.add(hc.dataset.cell);renderTable();return;}
+  const tr=e.target.closest('tr[data-row]'); if(tr) setRow(+tr.dataset.row,orderedIns());
+});
+$('#chTable').addEventListener('click',e=>{
+  const tr=e.target.closest('tr[data-crow]'); if(!tr) return;
+  const ch=CH.find(x=>x.id===$('#chSel').value);
+  const ins=ch.inputs.map(l=>C.comps.find(c=>c.type==='IN'&&c.label===l));
+  if(ins.some(x=>!x)){toast('課題の入力がまだ配置されていません');return;}
+  setRow(+tr.dataset.crow,ins);
+});
+
+/* ---------- 課題の読み込み ---------- */
+function buildFromSpec(ch,full){
+  const comps=[],wires=[],map={}; let gi=1;
+  for(const [k,t,x,y] of ch.sol.n){
+    if(!full&&isGate({type:t})) continue;
+    const c={id:'c'+(seq++),type:t,x,y};
+    if(t==='IN'){c.label=k;c.value=0;} else if(t==='OUT') c.label=k; else c.label='G'+(gi++);
+    comps.push(c); map[k]=c.id;
+  }
+  if(full) for(const [a,b,p] of ch.sol.w) wires.push({id:'w'+(seq++),from:map[a],to:map[b],port:p});
+  return {comps,wires};
+}
+$('#chStart').onclick=()=>{
+  const ch=CH.find(x=>x.id===$('#chSel').value);
+  if(C.comps.length&&!confirm('いまの回路を消して、課題用の入力・出力を配置します。よろしいですか？\n（「元に戻す」で戻せます）')) return;
+  pushUndo(); C=buildFromSpec(ch,false); challenge=ch.id; if(ch.adv) setAdv(true);
+  sel=null; changed(); fit(); toast('入力と出力を配置しました。ゲートを置いて配線しよう');
+};
+$('#chAns').onclick=()=>{
+  const ch=CH.find(x=>x.id===$('#chSel').value);
+  if(!confirm('答えの例を表示します。いまの回路は置き換わります（「元に戻す」で戻せます）。')) return;
+  pushUndo(); C=buildFromSpec(ch,true); challenge=ch.id; if(ch.adv) setAdv(true);
+  sel=null; changed(); fit();
+};
+$('#chJudge').onclick=doJudge;
+$('#chSel').onchange=()=>{renderChallenge();};
+
+/* ---------- 保存・読込 ---------- */
+function setCircuit(o){
+  const comps=(o.comps||[]).filter(c=>c&&GEOM[c.type]).map(c=>({...c,x:+c.x||0,y:+c.y||0,label:String(c.label??'?')}));
+  const ids=new Set(comps.map(c=>c.id));
+  const wires=(o.wires||[]).filter(w=>w&&ids.has(w.from)&&ids.has(w.to));
+  C={comps,wires};
+  let m=0; [...comps,...wires].forEach(x=>{const n=parseInt(String(x.id).slice(1));if(n>m)m=n;}); seq=m+1;
+  if(comps.some(c=>ADV.includes(c.type))) setAdv(true);
+}
+function saveLocal(){try{localStorage.setItem(KEY,JSON.stringify({C,view,challenge}));}catch(e){}}
+function loadLocal(){
+  try{const s=localStorage.getItem(KEY); if(!s) return false;
+    const o=JSON.parse(s); if(!o||!o.C) return false;
+    setCircuit(o.C); if(o.view&&isFinite(o.view.s)) view=o.view;
+    if(o.challenge&&CH.some(c=>c.id===o.challenge)){challenge=o.challenge;$('#chSel').value=challenge;}
+    return true;
+  }catch(e){return false;}
+}
+$('#saveBtn').onclick=()=>{
+  const blob=new Blob([JSON.stringify({app:'logic-circuit-sim',version:1,circuit:C},null,1)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='logic-circuit.json';
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+};
+$('#loadBtn').onclick=()=>$('#fileIn').click();
+$('#fileIn').onchange=e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const rd=new FileReader();
+  rd.onload=()=>{
+    try{const o=JSON.parse(rd.result); const circ=o.circuit||o;
+      if(!Array.isArray(circ.comps)) throw 0;
+      pushUndo(); setCircuit(circ); challenge=null; sel=null; changed(); fit(); toast('回路を読み込みました');
+    }catch(err){toast('このファイルは読み込めませんでした');}
+  };
+  rd.readAsText(f); e.target.value='';
+};
+
+/* ---------- パレット・ツールバー ---------- */
+function paletteIcon(type){
+  const s=el('svg',{viewBox:type==='IN'?'-4 -4 84 52':type==='OUT'?'-4 -4 66 52':'-2 -2 94 64'});
+  const g=el('g',{},s);
+  if(type==='IN'){
+    el('rect',{x:0,y:0,width:76,height:44,rx:9,class:'inbox on'},g);
+    el('text',{x:20,y:28,class:'lbl'},g).textContent='A';
+    el('rect',{x:38,y:7,width:30,height:30,rx:7,class:'tog on'},g);
+    el('text',{x:53,y:28.5,class:'togv'},g).textContent='1';
+  }else if(type==='OUT'){
+    el('line',{x1:0,y1:22,x2:14,y2:22,stroke:'#1f2937','stroke-width':2.2},g);
+    el('circle',{cx:34,cy:22,r:19,class:'lamp idle'},g);
+    el('text',{x:34,y:28.5,class:'lampv'},g).textContent='X';
+  }else drawGateShape(g,type,'#fff');
+  return s;
+}
+function makePart(type,parent){
+  const b=document.createElement('button');
+  b.className='part'; b.draggable=true; b.title=`${NAME[type]}を追加`;
+  b.appendChild(paletteIcon(type));
+  b.appendChild(document.createTextNode(NAME[type]));
+  b.onclick=()=>addComp(type);
+  b.addEventListener('dragstart',e=>e.dataTransfer.setData('text/plain',type));
+  parent.appendChild(b); return b;
+}
+BASIC.forEach(t=>makePart(t,$('#parts')));
+const advButtons=ADV.map(t=>makePart(t,$('#advParts')));
+function setAdv(on){$('#advChk').checked=on;advButtons.forEach(b=>b.hidden=!on);}
+setAdv(false);
+$('#advChk').onchange=e=>setAdv(e.target.checked);
+
+CH.forEach(ch=>{const o=document.createElement('option');o.value=ch.id;o.textContent=ch.title;$('#chSel').appendChild(o);});
+
+$('#runBtn').onclick=()=>run(true);
+$('#resetBtn').onclick=()=>{resetSim();render();updateStatus();};
+$('#autoRun').onchange=e=>{if(e.target.checked) run(false); else {resetSim();render();updateStatus();}};
+$('#undoBtn').onclick=undo;
+$('#delBtn').onclick=deleteSel;
+$('#clearBtn').onclick=()=>{if(!C.comps.length) return; if(!confirm('回路をすべて消去しますか？（「元に戻す」で戻せます）')) return;
+  pushUndo(); C={comps:[],wires:[]}; challenge=null; sel=null; changed();};
+$('#zoomIn').onclick=()=>zoomCenter(1.2);
+$('#zoomOut').onclick=()=>zoomCenter(1/1.2);
+$('#zoomFit').onclick=fit;
+$('#helpBtn').onclick=()=>$('#help').hidden=false;
+$('#helpClose').onclick=()=>$('#help').hidden=true;
+$('#help').onclick=e=>{if(e.target.id==='help') $('#help').hidden=true;};
+$('#midChk').onchange=e=>{showMid=e.target.checked;renderTable();};
+$('#predChk').onchange=e=>{predict.on=e.target.checked;predict.shown.clear();renderTable();};
+$('#revealAll').onclick=()=>{const n=orderedIns().length,m=orderedOuts().length;for(let r=0;r<(1<<n);r++)for(let j=0;j<m;j++)predict.shown.add(r+':'+j);renderTable();};
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));
+  ['tt','ex','ch'].forEach(t=>$('#tab-'+t).hidden=t!==b.dataset.tab);
+});
+window.addEventListener('keydown',e=>{
+  if(e.target.closest&&e.target.closest('input,select,textarea')) return;
+  if(e.key==='Delete'||e.key==='Backspace'){if(sel){e.preventDefault();deleteSel();}}
+  else if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();undo();}
+  else if(e.key==='Enter'&&!e.target.closest('button')){e.preventDefault();run(true);}
+  else if(e.key==='Escape'){$('#help').hidden=true;sel=null;render();}
+});
+let toastT=null;
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2400);}
+window.addEventListener('resize',render);
+
+/* ---------- 起動 ---------- */
+if(!loadLocal()){
+  C={comps:[
+    {id:'c1',type:'IN',x:60,y:80,label:'A',value:1},
+    {id:'c2',type:'IN',x:60,y:200,label:'B',value:0},
+    {id:'c3',type:'AND',x:240,y:120,label:'G1'},
+    {id:'c4',type:'NOT',x:400,y:120,label:'G2'},
+    {id:'c5',type:'OUT',x:570,y:128,label:'X'}],
+    wires:[{id:'w6',from:'c1',to:'c3',port:0},{id:'w7',from:'c2',to:'c3',port:1},{id:'w8',from:'c3',to:'c4',port:0},{id:'w9',from:'c4',to:'c5',port:0}]};
+  seq=10;
+  requestAnimationFrame(fit);
+}
+render(); renderSide(); updateStatus();
+})();
+</script>
+</body>
+</html>

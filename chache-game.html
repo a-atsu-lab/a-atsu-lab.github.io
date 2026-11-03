@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>データ運び係ゲーム｜情報Ⅰ コンピュータの性能</title>
+<style>
+:root{
+  --navy:#1F3864; --subnavy:#2E4A7D; --orange:#C55A11; --amber:#FFC000;
+  --light:#F5F7FB; --gray:#6B7280; --dark:#1B2540; --red:#B03A2E; --green:#1E7A46;
+  --line:#D8DFEA;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:"メイリオ",Meiryo,"Hiragino Kaku Gothic ProN","游ゴシック",sans-serif;
+  background:var(--light); color:var(--dark); -webkit-text-size-adjust:100%;
+}
+.mono{font-family:Consolas,"ＭＳ ゴシック",monospace}
+button{font-family:inherit;cursor:pointer}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.wrap{max-width:1000px;margin:0 auto;padding:0 16px 64px}
+.hide{display:none !important}
+
+header{background:var(--navy);color:#fff}
+.hbar{max-width:1000px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.htitle{font-weight:bold;font-size:17px;letter-spacing:.02em}
+.hsub{font-size:12px;color:#9DB0D4}
+.hspace{flex:1}
+.gear{background:transparent;border:1px solid #4A5F8E;color:#CAD5EA;border-radius:6px;padding:6px 12px;font-size:13px}
+.gear:hover{background:var(--subnavy)}
+
+.score{display:flex;background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-top:18px}
+.score div{flex:1;padding:11px 6px;text-align:center;border-right:1px solid var(--line)}
+.score div:last-child{border-right:0;flex:1.5;background:#FFF9EC}
+.score .k{font-size:11px;color:var(--gray)}
+.score .v{font-size:24px;font-weight:bold;font-family:Consolas,monospace;color:var(--navy);line-height:1.15}
+.score .v.big{font-size:32px;color:var(--orange)}
+
+.ask{margin-top:16px;background:#fff;border:1px solid var(--line);border-left:6px solid var(--orange);
+  border-radius:10px;padding:14px 20px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.ask-label{font-size:12px;color:var(--gray)}
+.ask-card{width:62px;height:80px;border-radius:8px;background:var(--navy);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:42px;font-weight:bold;
+  font-family:Consolas,monospace;box-shadow:0 3px 8px rgba(0,0,0,.18)}
+.ask-msg{flex:1;min-width:220px;font-size:15px;line-height:1.65}
+.ask-msg strong{color:var(--orange)}
+.ask.warn{border-left-color:var(--red);background:#FDF3F1}
+.ask.warn .ask-msg,.ask.warn .ask-msg strong{color:var(--red)}
+
+.zone{margin:22px 0 8px;font-size:14px;font-weight:bold;color:var(--orange);display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.zone span{font-weight:normal;color:var(--gray);font-size:12px}
+.zone.cold{color:var(--gray)}
+
+.card{border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center;
+  font-family:Consolas,monospace;font-weight:bold;color:var(--navy);position:relative;padding:0;
+  border:2px solid var(--navy);touch-action:none;user-select:none;
+  transition:transform .12s ease,box-shadow .12s ease,opacity .12s ease}
+@media(prefers-reduced-motion:reduce){.card{transition:none}}
+.card.grab{cursor:grab}
+.card.grab:hover{transform:translateY(-4px);box-shadow:0 8px 16px rgba(31,56,100,.2)}
+.card.held{opacity:.35;transform:none;box-shadow:none}
+.card.shake{animation:shake .3s}
+@keyframes shake{0%,100%{transform:none}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+.card.justin{animation:pop .32s ease}
+@keyframes pop{0%{transform:scale(.82);opacity:.2}100%{transform:none;opacity:1}}
+@media(prefers-reduced-motion:reduce){.card.shake,.card.justin{animation:none}}
+
+.desk{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.desk.n4{grid-template-columns:repeat(4,1fr)}
+.desk.n5{grid-template-columns:repeat(5,1fr)}
+.slot{aspect-ratio:3/4;border:2px solid var(--orange);border-radius:12px;background:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:clamp(38px,8.5vw,68px)}
+.slot.free{border-style:dashed;border-color:#C2C8D2;background:#FBFCFE;color:#AEB6C4;
+  font-size:13px;font-family:inherit;font-weight:normal;cursor:default}
+.slot.free.target{border-color:var(--green);border-style:solid;background:#E9F5EE;color:var(--green);
+  font-size:13px;box-shadow:0 0 0 4px rgba(30,122,70,.15)}
+
+.store{background:#E9ECF1;border:2px solid #C2C8D2;border-radius:14px;padding:14px 16px}
+.store.target{border-color:var(--red);background:#FBECE8;box-shadow:0 0 0 4px rgba(176,58,46,.14)}
+.shelf{display:flex;gap:12px;flex-wrap:wrap}
+.scard{width:66px;height:88px;font-size:34px;border-color:var(--subnavy);background:#fff;color:var(--subnavy)}
+.scard.out{border-style:dashed;border-color:#B9C0CC;background:transparent;color:#B9C0CC;
+  font-size:11px;font-family:inherit;font-weight:normal;flex-direction:column;gap:2px;cursor:default}
+.scard.out b{font-family:Consolas,monospace;font-size:24px;color:#C6CCD6}
+.store-note{margin-top:10px;font-size:12px;color:var(--gray)}
+
+#ghost{position:fixed;z-index:999;pointer-events:none;width:72px;height:96px;border-radius:12px;
+  background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;
+  font-family:Consolas,monospace;font-size:44px;font-weight:bold;
+  box-shadow:0 14px 28px rgba(0,0,0,.32);transform:translate(-50%,-50%) rotate(-4deg)}
+
+table{border-collapse:collapse;width:100%;margin-top:10px;font-size:13px;background:#fff}
+th,td{border:1px solid var(--line);padding:5px 6px;text-align:center}
+th{background:var(--navy);color:#fff;font-size:12px}
+td.hit{color:var(--green);font-weight:bold}
+td.miss{color:var(--red);font-weight:bold}
+details{margin-top:24px}
+summary{cursor:pointer;font-size:14px;color:var(--navy);font-weight:bold;padding:6px 0}
+
+.panel{background:#fff;border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin-top:18px}
+.panel h2{margin:0 0 4px;font-size:16px;color:var(--navy)}
+.panel p.note{margin:0 0 16px;font-size:12px;color:var(--gray)}
+.row{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px;align-items:flex-end}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:12px;color:var(--gray)}
+select,input[type=text],input[type=number]{font-family:inherit;font-size:15px;padding:8px 10px;
+  border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--dark)}
+input.mono{letter-spacing:.2em}
+.start{background:var(--orange);color:#fff;border:0;border-radius:8px;padding:13px 30px;font-size:16px;font-weight:bold}
+.start:hover{background:#A94A0D}
+.ghostbtn{background:#fff;color:var(--navy);border:1px solid var(--navy);border-radius:8px;padding:11px 20px;font-size:14px;font-weight:bold}
+.ghostbtn:hover{background:var(--light)}
+.hint{font-size:12px;color:var(--gray);line-height:1.8}
+
+.result h2{font-size:20px;color:var(--navy);margin:0 0 4px}
+.big2{margin-top:14px;display:flex;gap:16px;flex-wrap:wrap}
+.big2 div{flex:1;min-width:230px;background:var(--light);border:1px solid var(--line);
+  border-radius:12px;padding:20px 24px;text-align:center}
+.big2 .k{font-size:13px;color:var(--gray)}
+.big2 .v{font-family:Consolas,monospace;font-weight:bold;font-size:52px;line-height:1.15;color:var(--navy)}
+.big2 .s{font-size:12px;color:var(--gray)}
+.big2 div.acc{background:#FFF7ED;border-color:var(--orange)}
+.big2 div.acc .v{color:var(--orange)}
+.after{margin-top:18px;font-size:14px;line-height:1.8}
+@media(max-width:620px){
+  .score .v{font-size:19px} .score .v.big{font-size:25px}
+  .ask-card{width:52px;height:68px;font-size:34px}
+  .scard{width:54px;height:72px;font-size:28px}
+  .big2 .v{font-size:40px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hbar">
+    <div>
+      <div class="htitle">データ運び係ゲーム</div>
+      <div class="hsub">情報Ⅰ　コンピュータの性能　キャッシュメモリ</div>
+    </div>
+    <div class="hspace"></div>
+    <button class="gear" id="btnSetup">設定をひらく</button>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- ============ 設定 ============ -->
+<section class="panel" id="setup">
+  <h2>ゲームの設定</h2>
+  <p class="note">先生が設定してから、班に端末を渡してください。</p>
+
+  <div class="row">
+    <div class="field">
+      <label for="preset">使うデータ列</label>
+      <select id="preset">
+        <option value="many" selected>① ヒットが多いデータ列（16手）</option>
+        <option value="few">② ヒットが少ないデータ列（16手）</option>
+        <option value="custom">③ 自分で設定</option>
+      </select>
+    </div>
+    <div class="field" id="customWrap" style="display:none">
+      <label for="customSeq">データの並び（A〜Dで入力）</label>
+      <input type="text" id="customSeq" class="mono" size="26" value="ABCABDAB">
+    </div>
+    <div class="field">
+      <label for="rule">戻し方のルール</label>
+      <select id="rule">
+        <option value="fifo" selected>いちばん長く置いてあるものを戻す</option>
+        <option value="free">班で自由に決める</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="cap">机に置ける枚数</label>
+      <input type="number" id="cap" value="3" min="2" max="5" style="width:90px">
+    </div>
+  </div>
+
+  <div class="row" style="margin-bottom:0"><button class="start" id="btnStart">ゲームをはじめる</button></div>
+
+  <p class="hint" style="margin-top:16px">
+    時計は「ゲームをはじめる」を押した瞬間に動きだし、最後の1手が終わると止まります。かかる時間には、手を動かす速さがそのまま出ます。<br>
+    操作は2つです。必要なデータが机の上にあれば、そのカードをクリック（1回で終わります）。なければ、倉庫からそのカードを机へドラッグします。机がいっぱいなら、先に机のカードを倉庫へドラッグして空けるので、2往復することになります。ドラッグのかわりに、カードをクリックしてから置きたい場所をクリックしても動かせます。<br>
+    ①と②を続けて行い、タイムとヒット率を比べさせてください。どちらも使うデータは A〜D の4種類で、並び方だけが違います。操作する人は2回とも同じ人にします。手の速さが変わると、比べられなくなります。<br>
+    戻し方は「いちばん長く置いてあるものを戻す」が初期設定です。この設定では、そのルール以外の戻し方ができません。班で作戦を考えさせたいときだけ「班で自由に決める」に変えてください。
+  </p>
+</section>
+
+<!-- ============ ゲーム ============ -->
+<section id="game" class="hide">
+  <div class="score">
+    <div><div class="k">何回目</div><div class="v" id="sStep">1 / 16</div></div>
+    <div><div class="k">ヒット</div><div class="v" id="sHit">0</div></div>
+    <div><div class="k">ミス</div><div class="v" id="sMiss">0</div></div>
+    <div><div class="k">スタートからの経過時間</div><div class="v big" id="sClock">0.0秒</div></div>
+  </div>
+
+  <div class="ask" id="ask">
+    <div>
+      <div class="ask-label">次に必要なデータ</div>
+      <div class="ask-card" id="askCard">A</div>
+    </div>
+    <div class="ask-msg" id="askMsg"></div>
+  </div>
+
+  <div class="zone">机の上（キャッシュメモリ）<span id="capLabel">3枚まで</span><span>クリック1回でとどく</span></div>
+  <div class="desk" id="desk"></div>
+
+  <div class="zone cold">倉庫（主記憶装置）<span>ここから運ぶと、その分だけ手間と時間がかかる</span></div>
+  <div class="store" id="store">
+    <div class="shelf" id="shelf"></div>
+    <div class="store-note">点線の枠は、そのデータがいま机の上にあることを表しています。</div>
+  </div>
+
+  <details id="logWrap">
+    <summary>記録を見る（ワークシートに写せます）</summary>
+    <table id="log">
+      <thead><tr><th>回</th><th>要求</th><th>判定</th><th>倉庫に戻した</th><th>机の上（処理後）</th><th>この1手（秒）</th><th>経過（秒）</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </details>
+
+  <p style="margin-top:22px"><button class="ghostbtn" id="btnAbort">設定にもどる</button></p>
+</section>
+
+<!-- ============ 結果 ============ -->
+<section id="result" class="panel result hide">
+  <h2 id="rTitle">結果</h2>
+  <p class="note" id="rSub"></p>
+  <div class="big2">
+    <div class="acc"><div class="k">実測タイム</div><div class="v" id="rTime">0.0</div><div class="s">スタートから最後の1手まで</div></div>
+    <div><div class="k">ヒット率</div><div class="v" id="rRate">0%</div><div class="s" id="rRateSub">必要なデータが机の上にあった割合</div></div>
+  </div>
+  <p class="after">この2つをワークシートに書きうつして、もう一方のデータ列の結果と比べましょう。</p>
+  <p style="margin-top:22px">
+    <button class="ghostbtn" id="btnAgain">同じ設定でもう一度</button>
+    <button class="ghostbtn" id="btnBack">設定にもどる</button>
+  </p>
+</section>
+
+</div>
+
+<script>
+(function(){
+"use strict";
+
+var PRESETS = {
+  many: "BCABACACBDADADAB",   // A〜D・くり返しが多い（ヒット11回）
+  few:  "BDACBDBACBDABCAD"    // A〜D・くり返しが少ない（ヒット4回）
+};
+var el = function(id){ return document.getElementById(id); };
+var S = null, HOLD = null, DRAG = null, NOCLICK = false, TICK = null;
+
+function now(){
+  return (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
+}
+
+/* ============ 画面 ============ */
+function show(which){
+  ["setup","game","result"].forEach(function(k){ el(k).classList.toggle("hide", k!==which); });
+  el("btnSetup").style.visibility = (which==="setup") ? "hidden" : "visible";
+  window.scrollTo(0,0);
+}
+function say(msg, warn){
+  el("askMsg").innerHTML = msg;
+  el("ask").classList.toggle("warn", !!warn);
+}
+function shake(node){
+  if(!node) return;
+  node.classList.remove("shake"); void node.offsetWidth; node.classList.add("shake");
+}
+var GUIDE = "必要なデータが机の上にあればクリック。なければ、倉庫からそのカードを机へドラッグします。";
+function guide(){ say(GUIDE); }
+
+function elapsed(){
+  if (S.stoppedAt != null) return (S.stoppedAt - S.t0)/1000;
+  return (now() - S.t0)/1000;
+}
+function paintClock(){
+  if (!S) return;
+  el("sClock").textContent = elapsed().toFixed(1) + "秒";
+}
+
+function want(){ return S.seq[S.i]; }
+function needFetch(){ return S.cache.indexOf(want()) < 0; }
+function deskFull(){ return S.cache.length >= S.cap; }
+
+function render(justIn){
+  var desk = el("desk");
+  desk.className = "desk" + (S.cap>=4 ? " n"+S.cap : "");
+  desk.innerHTML = "";
+  for (var i=0;i<S.cap;i++){
+    var c = S.cache[i], b = document.createElement("button");
+    if (c === undefined){
+      b.className = "card slot free";
+      b.textContent = "あき";
+      b.dataset.drop = "desk";
+      if (!S.done && HOLD && HOLD.from==="store") b.className += " target";
+      b.onclick = function(){ if(!S.done) dropOn("desk", this); };
+    } else {
+      b.className = "card slot";
+      b.textContent = c;
+      b.dataset.card = c; b.dataset.from = "desk";
+      if (HOLD && HOLD.from==="desk" && HOLD.card===c) b.className += " held";
+      else if (!S.done && canGrabDesk(c)) b.className += " grab";
+      if (justIn === c) b.className += " justin";
+      b.setAttribute("aria-label","机の上のカード "+c);
+      bindCard(b, c, "desk");
+    }
+    desk.appendChild(b);
+  }
+
+  var shelf = el("shelf");
+  shelf.innerHTML = "";
+  S.universe.forEach(function(c){
+    var onDesk = S.cache.indexOf(c) >= 0, b = document.createElement("button");
+    if (onDesk){
+      b.className = "card scard out";
+      b.innerHTML = "<b>"+c+"</b>机の上";
+      b.disabled = true;
+    } else {
+      b.className = "card scard";
+      b.textContent = c;
+      b.dataset.card = c; b.dataset.from = "store";
+      if (HOLD && HOLD.from==="store" && HOLD.card===c) b.className += " held";
+      else if (!S.done) b.className += " grab";
+      b.setAttribute("aria-label","倉庫のカード "+c);
+      bindCard(b, c, "store");
+    }
+    shelf.appendChild(b);
+  });
+  el("store").classList.toggle("target", !!(!S.done && HOLD && HOLD.from==="desk"));
+  el("store").onclick = function(ev){
+    if (!S.done && HOLD && HOLD.from==="desk" && !ev.target.dataset.card) dropOn("store", null);
+  };
+
+  el("sStep").textContent = Math.min(S.i+1, S.seq.length)+" / "+S.seq.length;
+  el("sHit").textContent  = S.hit;
+  el("sMiss").textContent = S.miss;
+  el("askCard").textContent = S.i < S.seq.length ? want() : "";
+  paintClock();
+}
+
+function canGrabDesk(c){
+  if (!needFetch() || !deskFull()) return false;
+  if (S.rule === "fifo") return c === S.cache[0];
+  return true;
+}
+
+/* ============ 操作 ============ */
+function bindCard(node, card, from){
+  node.addEventListener("pointerdown", function(ev){ onDown(ev, node, card, from); });
+  node.addEventListener("click", function(){
+    if (NOCLICK){ NOCLICK = false; return; }
+    if (S.done) return;
+    onTap(node, card, from);
+  });
+}
+
+function onDown(ev, node, card, from){
+  if (S.done) return;
+  if (ev.button !== undefined && ev.button !== 0) return;
+  if (from === "desk" && !needFetch()) return;
+  if (from === "desk" && !canGrabDesk(card)) return;
+  if (from === "store" && card !== want()) return;
+  DRAG = { moved:false, startX:ev.clientX, startY:ev.clientY, node:node, card:card, from:from, ghost:null };
+  try { node.setPointerCapture(ev.pointerId); } catch(e){}
+}
+
+document.addEventListener("pointermove", function(ev){
+  if (!DRAG) return;
+  var dx = ev.clientX-DRAG.startX, dy = ev.clientY-DRAG.startY;
+  if (!DRAG.moved && Math.abs(dx)+Math.abs(dy) < 8) return;
+  if (!DRAG.moved){
+    DRAG.moved = true;
+    HOLD = { card:DRAG.card, from:DRAG.from };
+    var g = document.createElement("div");
+    g.id = "ghost"; g.textContent = DRAG.card;
+    document.body.appendChild(g);
+    DRAG.ghost = g;
+    render();
+    say("置きたい場所ではなしてください。");
+  }
+  DRAG.ghost.style.left = ev.clientX+"px";
+  DRAG.ghost.style.top  = ev.clientY+"px";
+});
+
+document.addEventListener("pointerup", function(ev){
+  if (!DRAG) return;
+  if (!DRAG.moved){ DRAG = null; return; }
+  if (DRAG.ghost && DRAG.ghost.parentNode) DRAG.ghost.parentNode.removeChild(DRAG.ghost);
+  NOCLICK = true;
+  setTimeout(function(){ NOCLICK = false; }, 300);
+  var target = document.elementFromPoint(ev.clientX, ev.clientY);
+  var kind = null;
+  while (target && target !== document.body){
+    if (target.dataset && target.dataset.drop === "desk"){ kind = "desk"; break; }
+    if (target.id === "store"){ kind = "store"; break; }
+    target = target.parentElement;
+  }
+  DRAG = null;
+  if (S.done){ HOLD = null; render(); return; }
+  if (kind) dropOn(kind, target);
+  else { HOLD = null; render(); guide(); }
+});
+
+function onTap(node, card, from){
+  if (from === "desk" && card === want()){ doHit(card); return; }
+  if (HOLD && HOLD.card === card && HOLD.from === from){ HOLD = null; render(); guide(); return; }
+
+  if (from === "desk"){
+    if (!needFetch()){
+      shake(node);
+      say("それは <strong>"+card+"</strong> です。必要なのは <strong>"+want()+"</strong> ですよ。", true);
+      return;
+    }
+    if (!deskFull()){
+      shake(node);
+      say("机にはまだ空きがあります。倉庫から <strong>"+want()+"</strong> を持ってきてください。", true);
+      return;
+    }
+    if (S.rule === "fifo" && card !== S.cache[0]){
+      shake(node);
+      say("このルールで戻せるのは、いちばん長く置いてある <strong>"+S.cache[0]+"</strong> だけです。", true);
+      return;
+    }
+    HOLD = { card:card, from:"desk" };
+    render();
+    say("<strong>"+card+"</strong> を持ちました。倉庫をクリックすると戻せます。");
+    return;
+  }
+
+  if (HOLD && HOLD.from === "desk"){ dropOn("store", null); return; }
+  if (card !== want()){
+    shake(node);
+    say("いま必要なのは <strong>"+want()+"</strong> です。", true);
+    return;
+  }
+  HOLD = { card:card, from:"store" };
+  render();
+  say(deskFull()
+    ? "机がいっぱいです。先に机のカードを1枚、倉庫へ戻してください。"
+    : "<strong>"+card+"</strong> を持ちました。机のあいている場所をクリックすると置けます。");
+}
+
+function dropOn(kind, node){
+  if (!HOLD || S.done) return;
+
+  if (kind === "desk"){
+    if (HOLD.from !== "store"){ HOLD=null; render(); guide(); return; }
+    if (deskFull()){
+      say("机がいっぱいです。先に机のカードを1枚、倉庫へ戻してください。", true);
+      HOLD = null; render(); return;
+    }
+    var c = HOLD.card; HOLD = null;
+    S.miss++;
+    S.cache.push(c); S.used.push(c);
+    if (completeStep(c, "ミス", S.lastEvicted || "―")) return;
+    render(c); guide();
+    return;
+  }
+
+  if (kind === "store"){
+    if (HOLD.from !== "desk"){ HOLD=null; render(); guide(); return; }
+    var v = HOLD.card; HOLD = null;
+    S.cache.splice(S.cache.indexOf(v),1);
+    S.used.splice(S.used.indexOf(v),1);
+    S.lastEvicted = v;
+    render();
+    say("<strong>"+v+"</strong> を倉庫に戻しました。倉庫から <strong>"+want()+"</strong> を机へ運んでください。");
+  }
+}
+
+function doHit(c){
+  S.hit++;
+  S.used.splice(S.used.indexOf(c),1); S.used.push(c);
+  if (completeStep(c, "ヒット", "―")) return;
+  render(); guide();
+}
+
+// 1手の完了。かかった時間を測って記録する。最後の手なら true を返す。
+function completeStep(card, judge, evicted){
+  var t = now();
+  var dt = (t - S.stepT0)/1000;
+  record(card, judge, evicted, dt, (t - S.t0)/1000);
+  S.lastEvicted = null;
+  S.stepT0 = t;
+  S.i++;
+  if (S.i >= S.seq.length){ S.stoppedAt = t; finish(); return true; }
+  return false;
+}
+
+function record(w, judge, evicted, dt, at){
+  var tb = el("log").querySelector("tbody");
+  var tr = document.createElement("tr");
+  [String(S.i+1), w, judge, evicted, S.cache.join(" "),
+   dt.toFixed(1), at.toFixed(1)].forEach(function(v,k){
+    var td = document.createElement("td");
+    td.textContent = v;
+    if (k===1||k===4) td.className = "mono";
+    if (k===2) td.className = (judge==="ヒット" ? "hit" : "miss");
+    tr.appendChild(td);
+  });
+  tb.appendChild(tr);
+}
+
+/* ============ 結果 ============ */
+function finish(){
+  S.done = true;
+  if (TICK){ clearInterval(TICK); TICK = null; }
+  HOLD = null;
+  render();
+
+  var n = S.seq.length, total = elapsed(), rate = S.hit/n;
+  el("rTitle").textContent = S.label + "　の結果";
+  el("rSub").textContent = n + "回のうち、ヒット " + S.hit + "回／ミス " + S.miss + "回";
+  el("rTime").textContent = total.toFixed(1) + "秒";
+  el("rRate").textContent = (rate*100).toFixed(1) + "%";
+  el("rRateSub").textContent = S.hit + " ÷ " + n + " ＝ " + (rate*100).toFixed(1) + "%";
+  show("result");
+}
+
+/* ============ 開始 ============ */
+function start(){
+  var p = el("preset").value;
+  var raw = (p==="custom") ? el("customSeq").value : PRESETS[p];
+  var s = (raw||"").toUpperCase().replace(/[^A-D]/g,"");
+  if (s.length < 2){ alert("データの並びを、A〜Dの文字で2つ以上入力してください。"); return; }
+  var cap = Math.max(2, Math.min(5, parseInt(el("cap").value,10)||3));
+  S = {
+    seq:s.split(""), cap:cap, rule: el("rule").value,
+    label: (p==="many" ? "① ヒットが多いデータ列" : p==="few" ? "② ヒットが少ないデータ列" : "③ 自分で設定したデータ列"),
+    cache:[], used:[], i:0, hit:0, miss:0,
+    lastEvicted:null, done:false, stoppedAt:null
+  };
+  S.universe = [];
+  S.seq.forEach(function(c){ if (S.universe.indexOf(c)<0) S.universe.push(c); });
+  S.universe.sort();
+  HOLD = null; DRAG = null;
+  el("log").querySelector("tbody").innerHTML = "";
+  el("logWrap").open = false;
+  el("capLabel").textContent = S.cap+"枚まで";
+  show("game");
+  S.t0 = now(); S.stepT0 = S.t0;
+  if (TICK) clearInterval(TICK);
+  TICK = setInterval(paintClock, 100);
+  render(); guide();
+}
+
+function leave(){
+  if (TICK){ clearInterval(TICK); TICK = null; }
+  if (S) S.done = true;
+  show("setup");
+}
+
+el("preset").addEventListener("change", function(){
+  var custom = this.value === "custom";
+  el("customWrap").style.display = custom ? "flex" : "none";
+});
+el("btnStart").addEventListener("click", start);
+el("btnAbort").addEventListener("click", leave);
+el("btnBack").addEventListener("click",  leave);
+el("btnAgain").addEventListener("click", start);
+el("btnSetup").addEventListener("click", leave);
+
+show("setup");
+})();
+</script>
+</body>
+</html>
