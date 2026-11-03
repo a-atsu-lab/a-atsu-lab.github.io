@@ -1,64 +1,173 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Akasaka-Lab</title>
-    <link rel="icon" href="./images/icon2.ico">
-    <link rel="stylesheet" href="./css/general.css">
-    <link rel="stylesheet" href="./css/sheet_top.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>アプリのひろば</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FBF7F0; --card:#FFFFFF; --ink:#2B3A55; --sub:#6B7280;
+    --line:#EDE6DA; --accent:#E8833A;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Meiryo",sans-serif;
+    line-height:1.7;
+  }
+  .wrap{max-width:1080px; margin:0 auto; padding:0 20px}
+
+  /* ヘッダー */
+  header{padding:56px 0 28px; text-align:center; position:relative; overflow:hidden}
+  header .dots{position:absolute; inset:0; pointer-events:none}
+  header .dots span{position:absolute; border-radius:50%; opacity:.18}
+  h1{font-size:clamp(28px,5vw,42px); font-weight:900; margin:0 0 8px; letter-spacing:.04em; position:relative}
+  h1 .mark{display:inline-block; transform:rotate(-8deg); margin-right:6px}
+  .subtitle{color:var(--sub); margin:0; font-weight:500; position:relative}
+
+  /* 絞り込み */
+  .tools{display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:center; margin:8px 0 28px}
+  .chip{
+    border:2px solid var(--line); background:#fff; color:var(--ink);
+    padding:6px 16px; border-radius:999px; font:inherit; font-weight:700; font-size:14px;
+    cursor:pointer; transition:.15s;
+  }
+  .chip:hover{transform:translateY(-1px)}
+  .chip.on{color:#fff; border-color:transparent}
+  .search{
+    flex:0 1 240px; border:2px solid var(--line); border-radius:999px; padding:7px 16px;
+    font:inherit; font-size:14px; background:#fff; color:var(--ink); outline:none;
+  }
+  .search:focus{border-color:var(--accent)}
+
+  /* カード */
+  .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:18px; padding-bottom:40px}
+  .card{
+    position:relative; display:flex; flex-direction:column; gap:10px;
+    background:var(--card); border-radius:20px; padding:20px 20px 16px;
+    text-decoration:none; color:inherit; border:2px solid var(--line);
+    box-shadow:0 4px 0 var(--line); transition:transform .15s, box-shadow .15s;
+  }
+  .card:hover{transform:translateY(-4px); box-shadow:0 8px 0 var(--c)}
+  .card:focus-visible{outline:3px solid var(--c); outline-offset:3px}
+  .icon{
+    width:56px; height:56px; border-radius:16px; display:grid; place-items:center;
+    font-size:30px; background:color-mix(in srgb, var(--c) 14%, white);
+  }
+  .card h2{font-size:18px; margin:0; line-height:1.4}
+  .card p{margin:0; color:var(--sub); font-size:14px; flex:1}
+  .foot{display:flex; justify-content:space-between; align-items:center; margin-top:4px}
+  .cat{font-size:12px; font-weight:700; color:var(--c); background:color-mix(in srgb, var(--c) 12%, white); padding:2px 10px; border-radius:999px}
+  .go{font-size:13px; font-weight:700; color:var(--c)}
+  .new{
+    position:absolute; top:14px; right:14px; background:var(--accent); color:#fff;
+    font-size:11px; font-weight:900; padding:2px 9px; border-radius:999px; letter-spacing:.06em;
+  }
+  .empty{text-align:center; color:var(--sub); padding:40px 0 60px; grid-column:1/-1}
+  .count{text-align:center; color:var(--sub); font-size:13px; margin:-14px 0 18px}
+
+  footer{text-align:center; color:var(--sub); font-size:13px; padding:20px 0 36px; border-top:2px dashed var(--line)}
+</style>
 </head>
 <body>
-    <header>
-        <div class="container">
-            <div class="header-box">
-            <div class="header-left">
-                <a href="index.html" class="title-a"><img class="title-img" src="./images/title.png"></a>
-            </div>
-            <div class="header-right">
-                <ul class="menu-ul">
-                    <li><a href="index.html" class="home-a"><img class="menu-img home-img" src="./images/home.png"></a></li>
-                    <li><a href="siryo_syakai.html" class="siryo-a"><img class="menu-img" src="./images/siryo.png"></a>
-                        <ul class="siryo-ul">
-                            <li><a href="siryo_syakai.html" class="siryo-a2">社会と情報</a></li>
-                            <li><a href="siryo_joichi.html" class="siryo-a2">情報Ⅰ</a></li>
-                        </ul>
-                    </li>
-                    <li><a href="tawagoto.html" class="idea-a"><img class="menu-img" src="./images/work.png"></a></li>
-                    <li><a href="memo.html" class="idea-a"><img class="menu-img" src="./images/memo.png"></a></li>
-                </ul>
-                <!-- newsとか戯言、リンクとかあってもいいかも。アイディアは他のに変えようかな -->
-            </div>
-            </div>
-        </div>
-    </header>
-    
-    <div class="main-top">
-        <div class="container">
-            <div class="box box-topics">
-                <img class="top-img topics-img" src="images/topics.png">
-                <div class="li-topics">
-                    <ul>
-                        <li>サイトを開設しました。(2020/10/2) </li>
-                        <li>授業資料はまだありません（2021/2/19）</li>
-                        <li>作品物にプログラミング環境の記事をアップしました（2021/2/19）</li>
-                    </ul>
-                </div>
-            </div>
-            <div class="box box-visitor">
-                <img class="top-img visitor-img" src="images/visitor.png">
-                <p>情報科教員の情報共有を目的にしたホームページです。授業資料や 作品物などを公開していく予定です。</p>
-                <p>今後ゆっくり更新していきます。</p>
-                <div class="btn-wrapper">
-                    <a href="siryo_syakai.html" class="btn siryo-btn">授業資料を見る</a>
-                    <a href="tawagoto.html" class="btn idea-btn">作品物を見る</a>
-                </div>
-            </div>
+<header>
+  <div class="dots" id="dots"></div>
+  <div class="wrap">
+    <h1><span class="mark">🧩</span><span id="title"></span></h1>
+    <p class="subtitle" id="subtitle"></p>
+  </div>
+</header>
 
+<main class="wrap">
+  <div class="tools">
+    <div id="chips" style="display:contents"></div>
+    <input class="search" id="search" type="search" placeholder="🔍 アプリをさがす">
+  </div>
+  <p class="count" id="count"></p>
+  <div class="grid" id="grid"></div>
+</main>
+
+<footer class="wrap" id="footer"></footer>
+
+<script src="links.js"></script>
+<script>
+(function(){
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const site = (typeof SITE !== "undefined") ? SITE : {};
+  const cats = (typeof CATEGORIES !== "undefined") ? CATEGORIES : [];
+  const apps = (typeof APPS !== "undefined") ? APPS : [];
+  const colorOf = name => (cats.find(c => c.name === name) || {}).color || "#8A94A6";
+
+  document.getElementById("title").textContent = site.title || "アプリのひろば";
+  document.getElementById("subtitle").textContent = site.subtitle || "";
+  document.title = site.title || "アプリのひろば";
+  document.getElementById("footer").textContent = "© " + new Date().getFullYear() + " " + (site.footer || "");
+
+  // 背景の水玉（カテゴリの色を使う）
+  const dots = document.getElementById("dots");
+  const palette = cats.length ? cats.map(c => c.color) : ["#E8833A","#3B82C4"];
+  [[6,30,70],[88,20,90],[14,78,40],[80,74,50],[50,8,26],[95,55,30]].forEach(([x,y,s],i)=>{
+    const d = document.createElement("span");
+    Object.assign(d.style,{left:x+"%",top:y+"%",width:s+"px",height:s+"px",background:palette[i%palette.length]});
+    dots.appendChild(d);
+  });
+
+  // 絞り込みボタン（アプリが1つ以上あるカテゴリだけ表示）
+  let current = "すべて";
+  const chipBox = document.getElementById("chips");
+  const used = cats.filter(c => apps.some(a => a.category === c.name));
+  const others = [...new Set(apps.map(a => a.category).filter(n => n && !cats.some(c => c.name === n)))];
+  const chipList = [{name:"すべて",color:"#2B3A55"}, ...used, ...others.map(n => ({name:n,color:colorOf(n)}))];
+  if (chipList.length > 2) {
+    chipList.forEach(c => {
+      const b = document.createElement("button");
+      b.className = "chip"; b.textContent = c.name; b.dataset.color = c.color;
+      b.onclick = () => { current = c.name; render(); };
+      chipBox.appendChild(b);
+    });
+  }
+
+  const search = document.getElementById("search");
+  search.addEventListener("input", render);
+
+  function isNew(a){
+    if (!a.added) return false;
+    const d = new Date(a.added + "T00:00:00");
+    if (isNaN(d)) return false;
+    return (Date.now() - d.getTime()) / 86400000 <= (site.newDays ?? 30);
+  }
+
+  function render(){
+    chipBox.querySelectorAll(".chip").forEach(b => {
+      const on = b.textContent === current;
+      b.classList.toggle("on", on);
+      b.style.background = on ? b.dataset.color : "";
+    });
+    const q = search.value.trim().toLowerCase();
+    const list = apps.filter(a =>
+      (current === "すべて" || a.category === current) &&
+      (!q || [a.title,a.description,a.category].join(" ").toLowerCase().includes(q))
+    );
+    const grid = document.getElementById("grid");
+    grid.innerHTML = list.length ? list.map(a => `
+      <a class="card" href="${esc(a.url || "#")}" target="_blank" rel="noopener" style="--c:${esc(colorOf(a.category))}">
+        ${isNew(a) ? '<span class="new">NEW</span>' : ""}
+        <div class="icon">${esc(a.icon || "✨")}</div>
+        <h2>${esc(a.title)}</h2>
+        <p>${esc(a.description)}</p>
+        <div class="foot">
+          <span class="cat">${esc(a.category || "")}</span>
+          <span class="go">ひらく →</span>
         </div>
-    </div>
-    <footer>
-       
-    </footer>
+      </a>`).join("")
+      : '<p class="empty">見つかりませんでした 🙈</p>';
+    document.getElementById("count").textContent = list.length + " 個のアプリ";
+  }
+  render();
+})();
+</script>
 </body>
 </html>
