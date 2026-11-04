@@ -1,0 +1,1774 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>フローよみとき道場｜フローチャート読解トレーニング</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=M+PLUS+1+Code:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF8FD; --card:#fff; --ink:#16324A; --sub:#5F7688; --navy:#0E4F7A; --navy2:#1B6A9C;
+  --orange:#1E9BD7; --orange-d:#0B78AE; --orange-l:#DDF2FB; --mint:#16A37A; --mint-l:#DDF6E8;
+  --red:#E5484D; --red-l:#FDE3E4; --yellow:#FFD166; --yellow-l:#E9F7FD; --line:#D3E8F3;
+  --code-bg:#F8FCFF; --purple:#7C3AED; --fs:1;
+  --r:18px; --shadow:0 4px 0 rgba(43,45,66,.08), 0 8px 24px rgba(43,45,66,.06);
+}
+*{box-sizing:border-box}
+html{font-size:calc(16px * var(--fs))}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Meiryo",sans-serif;font-weight:500;line-height:1.7;
+  background-image:radial-gradient(#D3EBF7 1.2px, transparent 1.2px);background-size:22px 22px;-webkit-text-size-adjust:100%}
+button{font-family:inherit;font-weight:700;color:inherit;cursor:pointer;border:none;background:none;font-size:1rem}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--orange);outline-offset:2px}
+code,.mono{font-family:"M PLUS 1 Code",ui-monospace,monospace}
+
+/* header */
+.hdr{position:sticky;top:0;z-index:20;background:rgba(238,248,253,.92);backdrop-filter:blur(6px);border-bottom:2px solid var(--line)}
+.hdr-in{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:8px;padding:8px 14px}
+.logo{display:flex;align-items:center;gap:8px;font-weight:900;font-size:1.15rem;color:var(--navy)}
+.logo small{display:block;font-size:.62rem;color:var(--sub);font-weight:700;line-height:1.2}
+.logo .t{line-height:1.15}
+.hdr .sp{flex:1}
+.hbtn{display:flex;align-items:center;gap:4px;padding:6px 10px;border-radius:12px;font-size:.85rem;color:var(--navy)}
+.hbtn:hover{background:#fff}
+.hbtn .lb{display:inline}
+@media (max-width:560px){.hbtn .lb{display:none}.hbtn{font-size:1.1rem;padding:6px 8px}.logo small{display:none}}
+
+main{max-width:1180px;margin:0 auto;padding:16px 14px 80px}
+.card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);border:2px solid var(--line)}
+h2.sec{font-size:1.1rem;color:var(--navy);margin:26px 4px 10px;display:flex;align-items:center;gap:8px}
+h2.sec .pill{font-size:.75rem;background:var(--orange-l);color:var(--orange-d);padding:1px 10px;border-radius:99px}
+
+/* home */
+.hero{display:flex;gap:16px;align-items:center;padding:18px 20px}
+.hero .owl{flex:0 0 auto}
+.bubble{position:relative;background:var(--yellow-l);border:2px solid #BFE4F5;border-radius:16px;padding:10px 14px;font-weight:700}
+.bubble:before{content:"";position:absolute;left:-10px;top:22px;border:8px solid transparent;border-right-color:#BFE4F5}
+.hero h1{margin:0 0 4px;font-size:1.35rem;color:var(--navy);font-weight:900;line-height:1.35}
+.stats{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.stat{background:#E6F3FA;border-radius:12px;padding:4px 12px;font-size:.85rem;color:var(--sub)}
+.stat b{color:var(--ink);font-size:1.05rem;margin-left:4px}
+.acts{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:14px}
+@media (max-width:820px){.acts{grid-template-columns:repeat(2,1fr)}}
+.act{position:relative;text-align:left;padding:16px 16px 14px;border-radius:var(--r);color:#fff;box-shadow:0 5px 0 rgba(0,0,0,.18);transition:transform .08s}
+.act:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.18)}
+.act .ic{font-size:1.7rem;line-height:1}
+.act .nm{display:block;font-size:1.08rem;font-weight:900;margin-top:6px}
+.act .ds{display:block;font-size:.78rem;opacity:.92;font-weight:700}
+.act.o{background:var(--orange)} .act.n{background:var(--navy)} .act.m{background:var(--mint)} .act.y{background:#F2B705;color:#3b2c00}
+.badge{position:absolute;top:10px;right:12px;background:#fff;color:var(--red);border-radius:99px;font-size:.8rem;padding:0 9px;font-weight:900;min-width:26px;text-align:center}
+.act[disabled]{opacity:.55;cursor:default}
+.units{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.unit{display:flex;gap:12px;align-items:center;text-align:left;padding:14px;background:#fff;border-radius:var(--r);border:2px solid var(--line);box-shadow:var(--shadow);transition:transform .1s}
+.unit:hover{transform:translateY(-2px)}
+.unit .ui{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;font-size:1.5rem;flex:0 0 auto}
+.unit .un{font-weight:900;font-size:1rem}
+.unit .us{font-size:.75rem;color:var(--sub);font-weight:700;line-height:1.4}
+.unit .bar{height:7px;background:#DCEBF4;border-radius:9px;margin-top:6px;overflow:hidden}
+.unit .bar i{display:block;height:100%;border-radius:9px}
+.unit .cnt{font-size:.72rem;color:var(--sub);margin-top:2px}
+.links{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media (max-width:640px){.links{grid-template-columns:1fr}}
+.lnk{display:flex;align-items:center;gap:12px;text-align:left;padding:14px 16px;background:#fff;border:2px solid var(--line);border-radius:var(--r)}
+.lnk .ic{font-size:1.5rem}
+.lnk small{display:block;color:var(--sub);font-size:.75rem}
+.note{font-size:.8rem;color:var(--sub);margin:14px 6px 0}
+
+/* quiz */
+.qtop{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.xbtn{width:38px;height:38px;border-radius:12px;background:#fff;border:2px solid var(--line);font-size:1.1rem;flex:0 0 auto}
+.prog{flex:1;height:14px;background:#fff;border:2px solid var(--line);border-radius:99px;overflow:hidden}
+.prog i{display:block;height:100%;background:linear-gradient(90deg,var(--orange),#6CCBF2);border-radius:99px;transition:width .3s}
+.qnum{font-weight:900;color:var(--navy);font-size:.95rem;white-space:nowrap}
+.star{width:38px;height:38px;border-radius:12px;background:#fff;border:2px solid var(--line);font-size:1.2rem;color:#C9BFAE;flex:0 0 auto}
+.star.on{color:#F2B705;border-color:#BFE4F5;background:var(--yellow-l)}
+.qgrid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:900px){.qgrid{grid-template-columns:minmax(0,1fr)}}
+.qcard{padding:16px 18px}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.tag{font-size:.72rem;font-weight:900;padding:2px 10px;border-radius:99px;background:#E3F1F9;color:var(--sub)}
+.qtitle{font-size:1.2rem;font-weight:900;color:var(--navy);margin:2px 0 6px}
+.qtext{margin:0 0 12px}
+.fig{background:#2B2D42;color:#fff;border-radius:12px;padding:10px 14px;margin:0 0 12px;font-size:.95rem;white-space:pre;line-height:1.5}
+.fig .cap{display:block;font-size:.7rem;color:#C8CCE0;font-family:"Zen Maru Gothic",sans-serif;margin-bottom:2px}
+.acard{padding:16px 18px;position:sticky;top:76px}
+@media (max-width:900px){.acard{position:static}}
+.alabel{font-size:.85rem;font-weight:900;color:var(--sub);margin:0 0 8px}
+
+/* code */
+@media (max-width:560px){.code{font-size:.86rem !important}}
+.code{background:var(--code-bg);border:2px solid #CFE5F1;border-radius:14px;padding:10px 0;overflow-x:auto;font-family:"M PLUS 1 Code",ui-monospace,monospace;font-size:.95rem;line-height:1.55}
+.cl{display:flex;align-items:stretch;min-height:1.9em;padding-right:14px;white-space:pre;position:relative}
+.cl .no{flex:0 0 auto;width:3.4em;text-align:right;padding-right:.7em;color:#8FB2C6;font-size:.82em;user-select:none;display:flex;align-items:center;justify-content:flex-end}
+.cl .g{flex:0 0 auto;width:1.5em;border-left:2px solid #9CC3D8;margin-left:.15em}
+.cl .g.end{border-bottom:2px solid #9CC3D8;margin-bottom:.45em;border-bottom-left-radius:3px}
+.cl .tx{display:block;align-self:center;white-space:pre;padding-left:.2em}
+.cl.sel{cursor:pointer}
+.cl.sel:hover{background:#E3F4FC}
+.cl.pick{background:#CDEBFA}
+.cl.pick .no{color:var(--orange-d);font-weight:700}
+.cl.right{background:var(--mint-l)} .cl.right .no{color:var(--mint);font-weight:700}
+.cl.wrong{background:var(--red-l)} .cl.wrong .no{color:var(--red);font-weight:700}
+.cl.hl{background:#FFE7A8}
+.cl.hl:before{content:"▶";position:absolute;left:4px;top:50%;transform:translateY(-50%);color:var(--orange-d);font-size:.7em}
+.cl.errl{background:var(--red-l)}
+.k{color:var(--navy);font-weight:700} .s{color:#1E7A46} .nmb{color:#C2410C} .fn{color:var(--purple);font-weight:600} .v{color:#2B2D42}
+.blank{display:inline-flex;align-items:center;justify-content:center;min-width:3.2em;padding:0 .5em;margin:0 .15em;border:2px dashed var(--orange);border-radius:8px;background:#E9F7FD;color:var(--orange-d);font-weight:700;height:1.6em;font-family:"Zen Maru Gothic",sans-serif}
+.blank.filled{border-style:solid;background:#D6EFFB;color:var(--ink);font-family:"M PLUS 1 Code",monospace;font-weight:400}
+.blank.filled .bl{font-family:"Zen Maru Gothic";font-size:.7em;color:var(--orange-d);font-weight:900;margin-right:.4em}
+.blank.ok{border-color:var(--mint);background:var(--mint-l)} .blank.ng{border-color:var(--red);background:var(--red-l)}
+
+/* answer UI */
+.bgroup{margin-bottom:14px}
+.bhead{display:flex;align-items:center;gap:8px;font-weight:900;margin-bottom:6px}
+.bhead .bx{display:inline-grid;place-items:center;width:1.9em;height:1.9em;border-radius:8px;border:2px solid var(--orange);color:var(--orange-d);background:#E9F7FD}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{display:flex;gap:10px;align-items:flex-start;text-align:left;padding:10px 12px;background:#fff;border:2px solid var(--line);border-radius:14px;font-weight:700;transition:transform .06s,border-color .1s;box-shadow:0 3px 0 #D3E8F3}
+.opt:hover{border-color:#8FD0EE}
+.opt:active{transform:translateY(2px);box-shadow:0 1px 0 #D3E8F3}
+.opt .mk{flex:0 0 auto;font-size:1.15rem;line-height:1.35;color:var(--orange-d)}
+.opt .ot{flex:1;min-width:0;word-break:break-all}
+.opt .ot.mono{font-weight:400;font-size:.92rem;line-height:1.6}
+.opt.on{border-color:var(--orange);background:#E9F7FD;box-shadow:0 3px 0 #8FD0EE}
+.opt.ok{border-color:var(--mint);background:var(--mint-l);box-shadow:0 3px 0 #A9E3C4}
+.opt.ng{border-color:var(--red);background:var(--red-l);box-shadow:0 3px 0 #F4B4B6}
+.opt[disabled]{cursor:default}
+.opt .res{flex:0 0 auto;font-size:1rem}
+.inbox{display:flex;gap:8px}
+.inbox input{flex:1;min-width:0;font-size:1.4rem;padding:10px 14px;border-radius:14px;border:2px solid var(--line);font-family:"M PLUS 1 Code",monospace;background:#fff;color:var(--ink)}
+.inbox input.ok{border-color:var(--mint);background:var(--mint-l)} .inbox input.ng{border-color:var(--red);background:var(--red-l)}
+.linepick{padding:12px;border:2px dashed var(--line);border-radius:14px;text-align:center;color:var(--sub);font-weight:700}
+.linepick b{color:var(--orange-d);font-size:1.3rem}
+.btnrow{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.btn{flex:1;min-width:140px;padding:12px 16px;border-radius:14px;font-weight:900;font-size:1rem;box-shadow:0 4px 0 rgba(0,0,0,.15);transition:transform .06s}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.15)}
+.btn.pri{background:var(--orange);color:#fff}
+.btn.nav{background:var(--navy);color:#fff}
+.btn.mint{background:var(--mint);color:#fff}
+.btn.ghost{background:#fff;border:2px solid var(--line);box-shadow:0 3px 0 #D3E8F3;color:var(--navy)}
+.btn.sm{flex:0 0 auto;min-width:0;padding:8px 12px;font-size:.88rem}
+.hintbox{margin-top:12px;background:var(--yellow-l);border:2px solid #BFE4F5;border-radius:14px;padding:10px 12px;font-size:.92rem}
+.fb{margin-top:16px;border-radius:16px;padding:14px;border:2px solid}
+.fb.ok{background:var(--mint-l);border-color:#A9E3C4}
+.fb.ng{background:var(--red-l);border-color:#F4B4B6}
+.fbhead{display:flex;align-items:center;gap:10px;font-size:1.3rem;font-weight:900}
+.fb.ok .fbhead{color:#16834F} .fb.ng .fbhead{color:#C2353A}
+.fbhead small{display:block;font-size:.8rem;color:var(--sub);font-weight:700}
+.exp{background:#fff;border-radius:12px;padding:10px 12px;margin-top:10px;font-size:.95rem}
+.exp .lb{font-weight:900;color:var(--navy);font-size:.85rem;display:block;margin-bottom:2px}
+.correct-ans{font-size:.92rem;margin-top:8px}
+.correct-ans code{background:#fff;padding:1px 6px;border-radius:6px}
+.pop{animation:pop .35s ease}
+@keyframes pop{0%{transform:scale(.6);opacity:0}70%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+.shake{animation:shake .35s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+/* result */
+.result{padding:24px;text-align:center}
+.score{font-size:3rem;font-weight:900;color:var(--navy);line-height:1}
+.score small{font-size:1.2rem;color:var(--sub)}
+.rlist{text-align:left;margin-top:18px;display:flex;flex-direction:column;gap:8px}
+.ritem{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:#F3FAFE;border:2px solid var(--line)}
+.ritem .ok{color:var(--mint);font-weight:900;font-size:1.2rem}
+.ritem .ng{color:var(--red);font-weight:900;font-size:1.2rem}
+.ritem .rt{flex:1;font-weight:700}
+.ritem small{color:var(--sub)}
+
+/* select */
+.sel-sec{padding:16px 18px;margin-bottom:14px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:7px 14px;border-radius:99px;background:#fff;border:2px solid var(--line);font-size:.9rem;font-weight:700;color:var(--sub)}
+.chip.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.sel-h{font-weight:900;color:var(--navy);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center}
+.sel-h button{font-size:.78rem;color:var(--orange-d)}
+
+/* records */
+.rec-top{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media (max-width:700px){.rec-top{grid-template-columns:repeat(2,1fr)}}
+.rbox{padding:14px;text-align:center}
+.rbox .n{font-size:1.8rem;font-weight:900;color:var(--navy);line-height:1.2}
+.rbox .l{font-size:.78rem;color:var(--sub);font-weight:700}
+.urow{display:grid;grid-template-columns:9em 1fr 4.5em;gap:10px;align-items:center;padding:6px 0}
+.urow .ubar{height:14px;background:#DCEBF4;border-radius:9px;overflow:hidden;position:relative}
+.urow .ubar i{position:absolute;left:0;top:0;bottom:0;border-radius:9px}
+.urow .pct{text-align:right;font-weight:900;font-size:.9rem}
+.qlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}
+.qi{display:flex;align-items:center;gap:8px;text-align:left;padding:8px 10px;background:#fff;border:2px solid var(--line);border-radius:12px;font-size:.88rem}
+.qi .dot{width:12px;height:12px;border-radius:50%;flex:0 0 auto;background:#D5E3EC}
+.qi .dot.ok{background:var(--mint)} .qi .dot.ng{background:var(--red)} .qi .dot.rv{background:var(--orange)}
+.qi .qt{flex:1;font-weight:700}
+.qi .st{color:#F2B705}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.78rem;color:var(--sub);margin:4px 2px 10px}
+.legend span{display:flex;align-items:center;gap:4px}
+.legend .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+
+/* guide */
+.gtable{width:100%;border-collapse:separate;border-spacing:0;font-size:.92rem}
+.gtable th,.gtable td{padding:9px 10px;border-bottom:2px solid #DDEEF7;text-align:left;vertical-align:top}
+.gtable th{background:#E6F3FA;color:var(--navy);font-weight:900;font-size:.82rem}
+.gtable td code{font-size:.88rem;white-space:pre-wrap}
+.gtable td.py code{color:#3776AB}
+.gwrap{overflow-x:auto;padding:4px}
+.tips{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.tip{padding:14px 16px}
+.tip .tn{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--orange);color:#fff;font-weight:900;margin-right:6px}
+.tip h3{margin:0 0 6px;font-size:1rem;color:var(--navy);display:flex;align-items:center}
+.tip p{margin:0;font-size:.9rem}
+
+/* save */
+textarea.code-area{width:100%;min-height:110px;font-family:"M PLUS 1 Code",monospace;font-size:.8rem;border:2px solid var(--line);border-radius:12px;padding:10px;background:#F8FCFF;color:var(--ink);word-break:break-all}
+
+/* trace overlay */
+.ov{position:fixed;inset:0;z-index:50;background:rgba(43,45,66,.55);display:flex;align-items:stretch;justify-content:center;padding:14px}
+@media (max-width:700px){.ov{padding:0}}
+.tr{background:var(--bg);width:100%;max-width:1180px;border-radius:20px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+@media (max-width:700px){.tr{border-radius:0}}
+.tr-h{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--navy);color:#fff}
+.tr-h .tt{font-weight:900;flex:1;line-height:1.3}
+.tr-h .tt small{display:block;font-size:.72rem;color:#CAD5EA;font-weight:700}
+.tr-h button{color:#fff}
+.tr-b{flex:1;overflow:auto;display:grid;align-content:start;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:14px;padding:14px}
+@media (max-width:900px){.tr-b{grid-template-columns:minmax(0,1fr);gap:10px;padding:10px}}
+.tr-code{max-height:100%;overflow:auto}
+@media (max-width:900px){.tr-code{max-height:38vh}}
+.tnote{display:flex;gap:10px;align-items:flex-start;background:#fff;border:2px solid var(--line);border-radius:14px;padding:10px 12px;font-weight:700;min-height:62px}
+.tnote .stp{flex:0 0 auto;font-size:.72rem;background:var(--orange);color:#fff;border-radius:99px;padding:1px 9px;margin-top:3px}
+.tnote.t{border-color:#A9E3C4;background:var(--mint-l)} .tnote.f{border-color:#F4B4B6;background:var(--red-l)}
+.tnote.e{border-color:var(--red);background:var(--red-l);color:#B42318}
+.vlist{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.vh{font-size:.8rem;font-weight:900;color:var(--sub);margin:12px 2px 4px}
+.var{background:#fff;border:2px solid var(--line);border-radius:12px;padding:6px 10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.var .vn{font-family:"M PLUS 1 Code",monospace;font-weight:700;color:var(--navy);min-width:4em}
+.var .vv{font-family:"M PLUS 1 Code",monospace;font-size:1.05rem}
+.var.chg{border-color:var(--orange);background:#E9F7FD}
+.arr{display:flex;flex-wrap:wrap;gap:3px}
+.cell{display:flex;flex-direction:column;align-items:center;min-width:2.4em}
+.cell .ix{font-size:.62rem;color:var(--sub);font-family:"M PLUS 1 Code",monospace}
+.cell .cv{border:2px solid #C9DFEC;border-radius:6px;padding:0 6px;min-width:2.4em;text-align:center;font-family:"M PLUS 1 Code",monospace;background:#F8FCFF;font-size:.92rem}
+.cell .cv.chg{border-color:var(--orange);background:#CDEBFA;font-weight:700}
+.grid2{border-collapse:collapse;font-family:"M PLUS 1 Code",monospace;font-size:.88rem}
+.grid2 td,.grid2 th{border:2px solid #C9DFEC;padding:1px 7px;text-align:center;background:#F8FCFF;min-width:2.4em}
+.grid2 th{background:transparent;border:none;color:var(--sub);font-size:.65rem;font-weight:400}
+.grid2 td.chg{border-color:var(--orange);background:#CDEBFA;font-weight:700}
+.console{background:#1E2235;color:#E7F6E9;border-radius:12px;padding:10px 12px;font-family:"M PLUS 1 Code",monospace;font-size:.92rem;min-height:56px;max-height:180px;overflow:auto;white-space:pre-wrap}
+.console .ln.new{color:#FFD166}
+.console .empty{color:#7F8AA8}
+.tr-c{display:flex;align-items:center;gap:8px;padding:10px 14px;background:#fff;border-top:2px solid var(--line);flex-wrap:wrap}
+.tr-c .cb{width:48px;height:44px;border-radius:12px;background:#E3F1F9;font-size:1.05rem}
+.tr-c .cb.main{background:var(--orange);color:#fff;width:auto;padding:0 18px;flex:1;max-width:240px}
+.tr-c .cb.play.on{background:var(--mint);color:#fff}
+.tr-c input[type=range]{flex:1;min-width:100px;accent-color:var(--orange)}
+.tr-c .sp{flex:1}
+.tswitch{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:99px;font-weight:700;z-index:80;box-shadow:0 8px 20px rgba(0,0,0,.2);animation:pop .3s}
+.empty-state{text-align:center;padding:30px 16px;color:var(--sub)}
+.fade{animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.acts.three{grid-template-columns:repeat(3,1fr)}
+@media (max-width:820px){.acts.three{grid-template-columns:1fr}}
+.act.y{background:#4FC3F7;color:#06344F}
+.act.m{background:#16A37A}
+.unit .ui{background:linear-gradient(135deg,#1E9BD7,#5CC8F2);color:#fff;font-weight:900;font-size:1.3rem}
+.unit .bar i{background:var(--orange)}
+.urow .ubar i{background:var(--orange)}
+.urow{grid-template-columns:minmax(0,1fr) 120px 4.5em}
+.qlist{margin-top:6px}
+.tag.big{background:var(--navy);color:#fff}
+.tag.rv{background:var(--orange-l);color:var(--orange-d)}
+.qq{font-weight:700;margin:4px 0 12px;font-size:1.02rem}
+@media (min-width:901px){.qgrid{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr)}}
+.chartwrap{overflow:auto;background:#F8FCFF;border:2px solid #CFE5F1;border-radius:14px;padding:6px;-webkit-overflow-scrolling:touch}
+.chart{display:block;margin:0 auto;height:auto}
+.eg{fill:none;stroke:#4C7C99;stroke-width:2}
+.el{font:700 12px "Zen Maru Gothic",sans-serif}
+.el.y{fill:#0F8A64}.el.n{fill:#C2353A}
+.nd .sh{fill:#fff;stroke:#2B8CC4;stroke-width:2}
+.nd.k-start .sh,.nd.k-end .sh{fill:#D5F0FB}
+.nd.k-dec .sh{fill:#EAF7FD}
+.nd.k-io .sh{fill:#F2FBFF}
+.nd.k-lp .sh,.nd.k-le .sh{fill:#E6EEFF;stroke:#4F7BD6}
+.lb{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font:400 14px/1.45 "M PLUS 1 Code",ui-monospace,monospace;color:#16324A;padding:0 6px;box-sizing:border-box;overflow:visible}
+.lb.k-start,.lb.k-end{font-family:"Zen Maru Gothic",sans-serif;font-weight:700}
+.lb.k-dec{padding:0 18%}
+.lpn{font:700 11px "Zen Maru Gothic",sans-serif;color:#4F7BD6;line-height:1.2}
+.fb2{display:inline-flex;align-items:center;justify-content:center;min-width:2.6em;padding:0 .4em;border:2px dashed var(--orange);border-radius:7px;background:#E9F7FD;color:var(--orange-d);font-family:"Zen Maru Gothic",sans-serif;font-weight:700;line-height:1.35}
+.fb2.filled{border-style:solid;background:#D6EFFB;color:#16324A;font-family:"M PLUS 1 Code",monospace;font-weight:400}
+.fb2.given{border-color:#9CC3D8;background:#EEF6FA}
+.fb2 .bl{font:900 10px "Zen Maru Gothic",sans-serif;color:var(--orange-d);margin-right:.35em}
+.fb2.ok{border-color:var(--mint);background:var(--mint-l)} .fb2.ng{border-color:var(--red);background:var(--red-l)}
+.nd.sel{cursor:pointer}
+.nd.sel:hover .sh{fill:#FFF6D6}
+.nd.pick .sh{fill:#FFE7A8;stroke:#F59E0B;stroke-width:3}
+.nd.right .sh{fill:var(--mint-l);stroke:var(--mint);stroke-width:3}
+.nd.wrong .sh{fill:var(--red-l);stroke:var(--red);stroke-width:3}
+.nd.cur .sh{fill:#FFE7A8;stroke:#F59E0B;stroke-width:3.5;filter:drop-shadow(0 0 6px rgba(245,158,11,.6))}
+.nd.errn .sh{fill:var(--red-l);stroke:var(--red);stroke-width:3}
+.nd.patched .sh{stroke-dasharray:6 3;stroke:#7C3AED}
+.tr-code .chartwrap{border:none;padding:0;background:transparent;overflow:visible}
+.tr-c .cb.main{white-space:nowrap}
+.tr-code{background:#F8FCFF;border:2px solid #CFE5F1;border-radius:14px;padding:6px;max-height:calc(100vh - 210px)}
+@media (max-width:900px){.tr-code{max-height:42vh}}
+.mini .mt{font:700 12px "Zen Maru Gothic",sans-serif;fill:#16324A}
+.guide2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:800px){.guide2{grid-template-columns:minmax(0,1fr)}}
+.tnote .stp{background:var(--orange)}
+.ar{font-family:"Zen Maru Gothic",sans-serif;font-size:1.15em;font-weight:700;color:#0B78AE;margin:0 .1em}
+</style>
+</head>
+<body>
+<header class="hdr"><div class="hdr-in">
+  <button class="logo" data-act="home" aria-label="ホームへ"><span id="logoOwl"></span><span class="t">フローよみとき道場<small>フローチャート読解トレーニング（総合問題）</small></span></button>
+  <span class="sp"></span>
+  <button class="hbtn" data-act="guide" title="記号ガイド">📘<span class="lb">記号ガイド</span></button>
+  <button class="hbtn" data-act="records" title="記録">📊<span class="lb">記録</span></button>
+  <button class="hbtn" data-act="font" title="文字の大きさ">🔠<span class="lb">文字サイズ</span></button>
+</div></header>
+<main id="app"></main>
+<div id="ov"></div>
+<script>
+// 共通テスト用プログラム表記 ミニ実行エンジン（トレース用）
+(function (G) {
+  class DError extends Error { constructor(msg, line) { super(msg); this.line = line; } }
+  class StepLimit extends Error {}
+
+  const toHalf = s => s.replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0));
+  const OPS2 = ['**', '==', '!=', '>=', '<='];
+  const OPS1 = ['>', '<', '+', '-', '*', '/', '÷', '%', '％', '(', ')', '[', ']', ',', '=', '×', '≧', '≦', '≠'];
+  const ID_RE = /^[A-Za-z_぀-ヿ㐀-鿿Ａ-Ｚａ-ｚ][A-Za-z0-9_぀-ヿ㐀-鿿]*/u;
+
+  function tokenize(s, line) {
+    const toks = []; let i = 0;
+    while (i < s.length) {
+      const c = s[i];
+      if (c === ' ' || c === '\t' || c === '　') { i++; continue; }
+      if (c === '"' || c === '「') {
+        const close = c === '"' ? '"' : '」'; let j = i + 1;
+        while (j < s.length && s[j] !== close) j++;
+        if (j >= s.length) throw new DError('文字列の " が閉じていません', line);
+        toks.push({ t: 'str', v: s.slice(i + 1, j) }); i = j + 1; continue;
+      }
+      if (/[0-9０-９]/.test(c)) {
+        const m = s.slice(i).match(/^[0-9０-９]+(\.[0-9]+)?/);
+        toks.push({ t: 'num', v: Number(toHalf(m[0])) }); i += m[0].length; continue;
+      }
+      const two = s.substr(i, 2);
+      if (OPS2.includes(two)) { toks.push({ t: 'op', v: two }); i += 2; continue; }
+      if (OPS1.includes(c)) {
+        let v = c;
+        if (v === '％') v = '%'; if (v === '×') v = '*'; if (v === '≧') v = '>='; if (v === '≦') v = '<='; if (v === '≠') v = '!=';
+        toks.push({ t: 'op', v }); i++; continue;
+      }
+      const m = s.slice(i).match(ID_RE);
+      if (m) { toks.push({ t: 'id', v: m[0] }); i += m[0].length; continue; }
+      throw new DError('読めない文字があります: ' + c, line);
+    }
+    return toks;
+  }
+
+  function Parser(toks, line) {
+    let p = 0;
+    const peek = () => toks[p];
+    const isOp = v => toks[p] && toks[p].t === 'op' && toks[p].v === v;
+    const isId = v => toks[p] && toks[p].t === 'id' && toks[p].v === v;
+    const expect = v => { if (!isOp(v)) throw new DError(`「${v}」が必要です`, line); p++; };
+    function expr() { return or(); }
+    function or() { let a = and(); while (isId('or')) { p++; a = { t: 'bin', op: 'or', a, b: and() }; } return a; }
+    function and() { let a = not(); while (isId('and')) { p++; a = { t: 'bin', op: 'and', a, b: not() }; } return a; }
+    function not() { if (isId('not')) { p++; return { t: 'un', op: 'not', a: not() }; } return cmp(); }
+    function cmp() {
+      const a = add();
+      const k = peek();
+      if (k && k.t === 'op' && ['==', '!=', '>', '<', '>=', '<='].includes(k.v)) { p++; return { t: 'bin', op: k.v, a, b: add() }; }
+      return a;
+    }
+    function add() {
+      let a = mul();
+      while (isOp('+') || isOp('-')) { const op = toks[p++].v; a = { t: 'bin', op, a, b: mul() }; }
+      return a;
+    }
+    function mul() {
+      let a = unary();
+      while (isOp('*') || isOp('/') || isOp('÷') || isOp('%')) { const op = toks[p++].v; a = { t: 'bin', op, a, b: unary() }; }
+      return a;
+    }
+    function unary() { if (isOp('-')) { p++; return { t: 'un', op: '-', a: unary() }; } return pow(); }
+    function pow() { const a = post(); if (isOp('**')) { p++; return { t: 'bin', op: '**', a, b: unary() }; } return a; }
+    function post() {
+      let a = prim();
+      for (;;) {
+        if (isOp('[')) { p++; const idx = [expr()]; while (isOp(',')) { p++; idx.push(expr()); } expect(']'); a = { t: 'idx', a, idx }; }
+        else if (isOp('(') && a.t === 'var') { p++; const args = []; if (!isOp(')')) { args.push(expr()); while (isOp(',')) { p++; args.push(expr()); } } expect(')'); a = { t: 'call', name: a.name, args }; }
+        else break;
+      }
+      return a;
+    }
+    function prim() {
+      const k = toks[p];
+      if (!k) throw new DError('式が途中で終わっています', line);
+      if (k.t === 'num' || k.t === 'str') { p++; return { t: 'lit', v: k.v }; }
+      if (k.t === 'id') { p++; return { t: 'var', name: k.v }; }
+      if (isOp('(')) { p++; const e = expr(); expect(')'); return e; }
+      if (isOp('[')) { p++; const items = []; if (!isOp(']')) { items.push(expr()); while (isOp(',')) { p++; items.push(expr()); } } expect(']'); return { t: 'arr', items }; }
+      throw new DError('式の書き方がおかしいところがあります', line);
+    }
+    return { expr, done: () => p >= toks.length, rest: () => toks.slice(p) };
+  }
+
+  function parseExpr(s, line) {
+    const ps = Parser(tokenize(s, line), line);
+    const e = ps.expr();
+    if (!ps.done()) throw new DError('式の後ろに余分なものがあります', line);
+    return e;
+  }
+
+  function parseProgram(src) {
+    const raw = src.replace(/\r/g, '').split('\n');
+    const lines = raw.map((s, i) => {
+      const m = s.match(/^( *)(.*)$/);
+      return { no: i + 1, ind: Math.floor(m[1].length / 2), text: m[2].trim() };
+    });
+    let i = 0;
+    function block(level) {
+      const out = [];
+      while (i < lines.length) {
+        const L = lines[i];
+        if (L.text === '') { i++; continue; }
+        if (L.ind < level) break;
+        if (L.ind > level) throw new DError('字下げ（インデント）がおかしいです', L.no);
+        out.push(stmt(level));
+      }
+      return out;
+    }
+    function body(level, no) {
+      const b = block(level + 1);
+      if (b.length === 0) throw new DError('ブロックの中身がありません', no);
+      return b;
+    }
+    function stmt(level) {
+      const L = lines[i]; const t = L.text; let m;
+      if ((m = t.match(/^もし (.+) ならば[:：]$/))) {
+        i++;
+        const br = [{ cond: parseExpr(m[1], L.no), condText: m[1], line: L.no, body: body(level, L.no) }];
+        let els = null, elseLine = null;
+        while (i < lines.length && lines[i].ind === level) {
+          const t2 = lines[i].text; let m2;
+          if ((m2 = t2.match(/^そうでなくもし (.+) ならば[:：]$/))) { const no = lines[i].no; i++; br.push({ cond: parseExpr(m2[1], no), condText: m2[1], line: no, body: body(level, no) }); }
+          else if (/^そうでなければ[:：]$/.test(t2)) { elseLine = lines[i].no; i++; els = body(level, elseLine); break; }
+          else break;
+        }
+        return { k: 'if', line: L.no, br, els, elseLine };
+      }
+      if ((m = t.match(/^(\S+) を (.+?) から (.+?) まで (.+?) ずつ(増やし|減らし)ながら繰り返す[:：]$/))) {
+        i++;
+        return { k: 'for', line: L.no, v: m[1], from: parseExpr(m[2], L.no), to: parseExpr(m[3], L.no), step: parseExpr(m[4], L.no), toText: m[3], inc: m[5] === '増やし', body: body(level, L.no) };
+      }
+      if ((m = t.match(/^(.+) の間繰り返す[:：]$/))) {
+        i++;
+        return { k: 'while', line: L.no, cond: parseExpr(m[1], L.no), condText: m[1], body: body(level, L.no) };
+      }
+      if (/^(そうでなくもし|そうでなければ)/.test(t)) throw new DError('「もし」がないのに「そうでなければ」があります', L.no);
+      i++;
+      const toks = tokenize(t, L.no);
+      let depth = 0, eq = -1;
+      toks.forEach((k, j) => {
+        if (k.t !== 'op') return;
+        if (k.v === '(' || k.v === '[') depth++;
+        else if (k.v === ')' || k.v === ']') depth--;
+        else if (k.v === '=' && depth === 0 && eq < 0) eq = j;
+      });
+      if (eq >= 0) {
+        const lp = Parser(toks.slice(0, eq), L.no); const lhs = lp.expr();
+        if (!lp.done() || (lhs.t !== 'var' && lhs.t !== 'idx')) throw new DError('代入の左側がおかしいです', L.no);
+        const rp = Parser(toks.slice(eq + 1), L.no); const rhs = rp.expr();
+        if (!rp.done()) throw new DError('式の後ろに余分なものがあります', L.no);
+        return { k: 'assign', line: L.no, lhs, rhs, lhsText: t.split('=')[0].trim() };
+      }
+      const ep = Parser(toks, L.no); const e = ep.expr();
+      if (!ep.done()) throw new DError('この行は読めません', L.no);
+      return { k: 'expr', line: L.no, e };
+    }
+    const prog = block(0);
+    return { prog, lines };
+  }
+
+  // ---------- 値の表示 ----------
+  function fmt(v) {
+    if (typeof v === 'number') return Number.isInteger(v) ? String(v) : String(+v.toPrecision(10));
+    if (typeof v === 'string') return v;
+    if (typeof v === 'boolean') return v ? '真' : '偽';
+    if (Array.isArray(v)) return '[' + v.map(x => typeof x === 'string' ? '"' + x + '"' : fmt(x)).join(', ') + ']';
+    return String(v);
+  }
+  const clone = v => Array.isArray(v) ? v.map(clone) : v;
+
+  // ---------- 実行 ----------
+  function makeRunner(funcs) {
+    const env = { vars: {}, order: [], out: [] };
+    const builtins = Object.assign({
+      '要素数': a => { if (Array.isArray(a) || typeof a === 'string') return a.length; throw new Error('要素数() には配列を渡します'); },
+      '整数': x => Math.trunc(x),
+      '乱数': () => Math.random(),
+    }, funcs || {});
+    let curLine = 0;
+    const err = msg => new DError(msg, curLine);
+
+    function ev(n) {
+      switch (n.t) {
+        case 'lit': return n.v;
+        case 'var':
+          if (n.name === 'true' || n.name === '真') return true;
+          if (n.name === 'false' || n.name === '偽') return false;
+          if (!(n.name in env.vars)) throw err(`変数「${n.name}」にまだ値が入っていません`);
+          return env.vars[n.name];
+        case 'arr': return n.items.map(ev);
+        case 'idx': {
+          let b = ev(n.a);
+          for (const ie of n.idx) {
+            const k = ev(ie);
+            if (!Array.isArray(b) && typeof b !== 'string') throw err('配列ではないものに添字をつけています');
+            if (!Number.isInteger(k) || k < 0 || k >= b.length) throw err(`添字 ${fmt(k)} は範囲外です（0〜${b.length - 1}）`);
+            b = b[k];
+          }
+          return b;
+        }
+        case 'call': {
+          const f = builtins[n.name];
+          if (n.name === '表示する') return undefined;
+          if (!f) throw err(`関数「${n.name}」は定義されていません`);
+          return f(...n.args.map(ev));
+        }
+        case 'un': { const a = ev(n.a); return n.op === 'not' ? !a : -a; }
+        case 'bin': {
+          if (n.op === 'and') return ev(n.a) && ev(n.b);
+          if (n.op === 'or') return ev(n.a) || ev(n.b);
+          const a = ev(n.a), b = ev(n.b);
+          switch (n.op) {
+            case '+': if (Array.isArray(a) || Array.isArray(b)) throw err('配列どうしや配列と数は足せません'); return (typeof a === 'string' || typeof b === 'string') ? fmt(a) + fmt(b) : a + b;
+            case '-': return a - b;
+            case '*': return a * b;
+            case '/': if (b === 0) throw err('0で割ろうとしました'); return a / b;
+            case '÷': if (b === 0) throw err('0で割ろうとしました'); return Math.floor(a / b);
+            case '%': if (b === 0) throw err('0で割ろうとしました'); return a - Math.floor(a / b) * b;
+            case '**': return a ** b;
+            case '==': return a === b;
+            case '!=': return a !== b;
+            case '>': return a > b; case '<': return a < b; case '>=': return a >= b; case '<=': return a <= b;
+          }
+        }
+      }
+      throw err('計算できない式です');
+    }
+    function setVar(name, v) { if (!(name in env.vars)) env.order.push(name); env.vars[name] = v; }
+    function assign(lhs, v) {
+      if (lhs.t === 'var') { setVar(lhs.name, clone(v)); return lhs.name; }
+      let b = ev(lhs.a);
+      const ks = lhs.idx.map(ev);
+      for (let j = 0; j < ks.length; j++) {
+        const k = ks[j];
+        if (!Array.isArray(b)) throw err('配列ではないものに添字をつけています');
+        if (!Number.isInteger(k) || k < 0 || k >= b.length) throw err(`添字 ${fmt(k)} は範囲外です（0〜${b.length - 1}）`);
+        if (j === ks.length - 1) b[k] = clone(v); else b = b[k];
+      }
+      return lhs.a.name;
+    }
+    const tf = c => c ? '成り立つ（真）' : '成り立たない（偽）';
+
+    function* runBlock(stmts) { for (const s of stmts) yield* runStmt(s); }
+    function* runStmt(s) {
+      curLine = s.line;
+      if (s.k === 'assign') {
+        const v = ev(s.rhs); const name = assign(s.lhs, v);
+        yield { line: s.line, note: `${s.lhsText} に ${typeof v === 'string' ? '"' + v + '"' : fmt(v)} を代入`, ch: name };
+      } else if (s.k === 'expr') {
+        if (s.e.t === 'call' && s.e.name === '表示する') {
+          const text = s.e.args.map(a => fmt(ev(a))).join('');
+          env.out.push(text);
+          yield { line: s.line, note: `「${text}」を表示`, show: true };
+        } else { ev(s.e); yield { line: s.line, note: '関数を実行' }; }
+      } else if (s.k === 'if') {
+        for (const b of s.br) {
+          curLine = b.line;
+          const c = ev(b.cond);
+          yield { line: b.line, note: `条件 ${b.condText} は ${tf(c)}`, cond: !!c };
+          if (c) { yield* runBlock(b.body); return; }
+        }
+        if (s.els) { yield { line: s.elseLine, note: 'どの条件も成り立たないので「そうでなければ」へ' }; yield* runBlock(s.els); }
+      } else if (s.k === 'while') {
+        for (;;) {
+          curLine = s.line;
+          const c = ev(s.cond);
+          yield { line: s.line, note: `条件 ${s.condText} は ${tf(c)}` + (c ? ' → 中を実行' : ' → 繰り返し終了'), cond: !!c };
+          if (!c) break;
+          yield* runBlock(s.body);
+        }
+      } else if (s.k === 'for') {
+        curLine = s.line;
+        const from = ev(s.from), to = ev(s.to), step = ev(s.step);
+        setVar(s.v, from);
+        for (;;) {
+          curLine = s.line;
+          const v = env.vars[s.v];
+          const go = s.inc ? v <= to : v >= to;
+          yield { line: s.line, note: go ? `${s.v} = ${fmt(v)}（${s.toText} = ${fmt(to)} まで）→ 中を実行` : `${s.v} = ${fmt(v)} は ${fmt(to)} を${s.inc ? '超えた' : '下回った'} → 繰り返し終了`, ch: s.v, cond: go };
+          if (!go) break;
+          yield* runBlock(s.body);
+          setVar(s.v, env.vars[s.v] + (s.inc ? step : -step));
+        }
+      }
+    }
+    return { env, runBlock, ev, setVar };
+  }
+
+  function snapshot(env) {
+    const o = {}; env.order.forEach(k => { o[k] = clone(env.vars[k]); });
+    return { order: env.order.slice(), vars: o };
+  }
+
+  function trace(src, funcs, opt) {
+    opt = Object.assign({ maxRecord: 1500, maxSteps: 400000 }, opt || {});
+    const { prog } = parseProgram(src);
+    const R = makeRunner(funcs);
+    const events = []; let steps = 0, skipped = 0, status = 'done', error = null;
+    try {
+      for (const e of R.runBlock(prog)) {
+        steps++;
+        if (events.length < opt.maxRecord) events.push(Object.assign(e, { snap: snapshot(R.env), outLen: R.env.out.length }));
+        else skipped++;
+        if (steps >= opt.maxSteps) { status = 'limit'; break; }
+      }
+    } catch (e) { status = 'error'; error = e; }
+    if (skipped > 0 || status !== 'done') {
+      const note = status === 'limit' ? `${steps.toLocaleString()} ステップを超えても終わりません（無限ループの可能性）`
+        : status === 'error' ? 'エラー：' + error.message
+        : `…途中の ${skipped.toLocaleString()} ステップは省略…　実行終了`;
+      events.push({ line: status === 'error' ? error.line : null, note, snap: snapshot(R.env), outLen: R.env.out.length, end: true, error: status === 'error' });
+    } else {
+      events.push({ line: null, note: '実行終了', snap: snapshot(R.env), outLen: R.env.out.length, end: true });
+    }
+    return { events, out: R.env.out, status, error, steps };
+  }
+
+  G.DNCL = { parseProgram, parseExpr, makeRunner, snapshot, trace, fmt, tokenize, DError };
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>
+// フローチャート実行エンジン（DNCL エンジンの式評価を利用）
+(function (G) {
+  const D = G.DNCL;
+  const condCode = t => t.replace(/≦/g, '<=').replace(/≧/g, '>=').replace(/≠/g, '!=').replace(/×/g, '*')
+    .replace(/かつ/g, ' and ').replace(/または/g, ' or ').replace(/(^|[^=!<>])=(?!=)/g, '$1==');
+  const stmtCode = t => t.replace(/←/g, '=').replace(/×/g, '*');
+  const LP_RE = /^(\S+) を (.+?) から (.+?) まで (.+?) ずつ(増やす|減らす)$/;
+
+  // ノードの表示テキスト（パッチ・空欄埋め込み済み）を返す
+  function nodeText(n, patch, fill) {
+    let t = (patch && patch[n.id] != null) ? patch[n.id] : (n.t || '');
+    if (fill) t = t.replace(/\[\[(.+?)\]\]/g, (m, l) => fill[l] != null ? fill[l] : m);
+    return t;
+  }
+
+  function runChart(chart, opt) {
+    opt = Object.assign({ patch: null, fill: null, funcs: null, maxRecord: 4000, maxSteps: 200000 }, opt || {});
+    const N = {}; chart.nodes.forEach(n => { N[n.id] = n; });
+    const R = D.makeRunner(opt.funcs);
+    const events = []; let steps = 0, skipped = 0, status = 'done', error = null, errNode = null;
+    const cache = {};
+    const prog = code => cache[code] || (cache[code] = D.parseProgram(code).prog);
+    const exprC = {};
+    const expr = code => exprC[code] || (exprC[code] = D.parseExpr(code, 0));
+    function exec(code) { const notes = []; for (const e of R.runBlock(prog(code))) notes.push(e.note); return notes; }
+    function push(e) {
+      steps++;
+      if (events.length < opt.maxRecord) events.push(Object.assign(e, { snap: D.snapshot(R.env), outLen: R.env.out.length }));
+      else skipped++;
+    }
+    let id = chart.nodes.find(n => n.k === 'start').id, prev = null;
+    try {
+      if (chart.init) exec(chart.init);
+      for (;;) {
+        if (steps >= opt.maxSteps) { status = 'limit'; break; }
+        const n = N[id]; errNode = id;
+        const t = nodeText(n, opt.patch, opt.fill);
+        if (/\[\[/.test(t)) throw new D.DError('空欄が埋まっていません');
+        let nextId = n.next;
+        if (n.k === 'start') push({ node: id, note: '開始' });
+        else if (n.k === 'end') { push({ node: id, note: '終了', end: true }); break; }
+        else if (n.k === 'proc') {
+          const notes = [];
+          t.split('\n').forEach(line => { notes.push(...exec(stmtCode(line))); });
+          push({ node: id, note: notes.join('、') });
+        } else if (n.k === 'io') {
+          const m = t.match(/^(.+) を表示$/);
+          exec(`表示する(${stmtCode(m[1])})`);
+          push({ node: id, note: `「${R.env.out[R.env.out.length - 1]}」を表示`, show: true });
+        } else if (n.k === 'dec') {
+          const c = !!R.ev(expr(condCode(t)));
+          push({ node: id, note: `${t} は ${c ? '成り立つ → Yes' : '成り立たない → No'}`, cond: c });
+          nextId = c ? n.yes : n.no;
+        } else if (n.k === 'lp') {
+          const m = t.match(LP_RE);
+          const v = m[1];
+          if (prev !== n.end) exec(`${v} = ${m[2]}`);
+          const cur = R.env.vars[v], to = R.ev(expr(m[3])), inc = m[5] === '増やす';
+          const go = inc ? cur <= to : cur >= to;
+          push({ node: id, note: go ? `${v} = ${D.fmt(cur)}（${D.fmt(to)} まで）→ 中へ進む` : `${v} = ${D.fmt(cur)} は ${D.fmt(to)} を${inc ? '超えた' : '下回った'} → ${n.name} を終了`, cond: go });
+          nextId = go ? n.next : N[n.end].next;
+        } else if (n.k === 'le') {
+          const st = N[n.start];
+          const m = nodeText(st, opt.patch, opt.fill).match(LP_RE);
+          const v = m[1];
+          exec(`${v} = ${v} ${m[5] === '増やす' ? '+' : '-'} (${m[4]})`);
+          push({ node: id, note: `${v} を ${m[4]} ${m[5] === '増やす' ? '増やす' : '減らす'} → ${v} = ${D.fmt(R.env.vars[v])}、${st.name} の始めへ` });
+          nextId = n.start;
+        }
+        prev = id; id = nextId;
+      }
+    } catch (e) { status = 'error'; error = e; }
+    if (status !== 'done' || skipped) {
+      const note = status === 'limit' ? `${steps.toLocaleString()} ステップを超えても終わりません（無限ループの可能性）`
+        : status === 'error' ? 'エラー：' + error.message : `…途中の ${skipped.toLocaleString()} ステップは省略…　終了`;
+      events.push({ node: status === 'error' ? errNode : null, note, snap: D.snapshot(R.env), outLen: R.env.out.length, end: true, error: status === 'error' });
+    }
+    return { events, out: R.env.out, status, error, steps };
+  }
+  G.FLOW = { runChart, nodeText, condCode, stmtCode };
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>
+// フローチャート総合問題データ
+// ノード種別: start/end(端子) proc(処理) io(表示) dec(判断) lp(ループ始端) le(ループ終端)
+// 座標 x,y は格子単位（列・行）。via は折れ点（格子単位）。
+const SETS = [
+// ------------------------------------------------------------
+{ id: 'd1', title: '映画館の料金', theme: '分岐の組み合わせ', lv: 1,
+  text: 'ある映画館の料金は、12歳以下は1000円、13歳以上18歳以下は1500円、65歳以上は1100円、それ以外は1900円である。年齢 nenrei から料金 ryokin を求めて表示するフローチャートを作った。',
+  blanks: {
+    'ア': { options: ['nenrei ≦ 18', 'nenrei ≧ 13', 'nenrei < 18', 'nenrei ≧ 18'], answer: 0 },
+    'イ': { options: ['nenrei ≧ 65', 'nenrei > 65', 'nenrei ≦ 65', 'nenrei ≧ 19'], answer: 0 },
+  },
+  chart: { nodes: [
+    { id: 's', k: 'start', x: 0, y: 0, t: 'はじめ', next: 'n1' },
+    { id: 'n1', k: 'proc', x: 0, y: 1, t: 'nenrei ← 15', next: 'n2' },
+    { id: 'n2', k: 'dec', x: 0, y: 2.1, t: 'nenrei ≦ 12', yes: 'n3', yesDir: 'right', no: 'n4', noDir: 'down' },
+    { id: 'n3', k: 'proc', x: 1.25, y: 2.1, t: 'ryokin ← 1000', next: 'n10', nextDir: 'right', via: { next: [[2.05, 6.3]] } },
+    { id: 'n4', k: 'dec', x: 0, y: 3.4, t: '[[ア]]', yes: 'n5', yesDir: 'right', no: 'n6', noDir: 'down' },
+    { id: 'n5', k: 'proc', x: 1.25, y: 3.4, t: 'ryokin ← 1500', next: 'n10', nextDir: 'right', via: { next: [[2.05, 6.3]] } },
+    { id: 'n6', k: 'dec', x: 0, y: 4.7, t: '[[イ]]', yes: 'n7', yesDir: 'right', no: 'n9', noDir: 'down' },
+    { id: 'n7', k: 'proc', x: 1.25, y: 4.7, t: 'ryokin ← 1100', next: 'n10', nextDir: 'right', via: { next: [[2.05, 6.3]] } },
+    { id: 'n9', k: 'proc', x: 0, y: 5.75, t: 'ryokin ← 1900', next: 'n10' },
+    { id: 'n10', k: 'io', x: 0, y: 6.9, t: 'ryokin を表示', next: 'e' },
+    { id: 'e', k: 'end', x: 0, y: 7.9, t: 'おわり' },
+  ] },
+  qs: [
+    { type: 'blank', ask: ['ア'], text: '空欄 ア に入る条件として最も適当なものを選びなさい。',
+      hint: 'ア の判断に来るのは「12歳以下ではなかった」人だけです。',
+      explain: 'ア の判断に来るのは nenrei ≦ 12 が No の人、つまり13歳以上の人だけです。なので「13歳以上」はもう確かめなくてよく、「18歳以下か」だけを調べれば 13〜18歳を選び出せます。nenrei ≧ 13 だと13歳以上の全員が1500円になってしまいます。判断の前に「どの条件を通ってきたか」を考えるのがポイントです。※ nenrei ← 15 のままでは、ほかの選択肢でも 1500 と表示されることがあります。13歳・18歳・19歳など境界の年齢でためしてみましょう。' },
+    { type: 'blank', ask: ['イ'], text: '空欄 イ に入る条件として最も適当なものを選びなさい。',
+      hint: '「65歳以上」は65歳をふくみます。',
+      explain: '「65歳以上」は 65 をふくむので nenrei ≧ 65 です。nenrei > 65 だと65歳ちょうどの人が1900円になってしまいます。境界の値（65）で確かめるのがコツです。nenrei ≧ 19 だと、19〜64歳も1100円になってしまいます。' },
+    { type: 'output', text: '処理 nenrei ← 15 を nenrei ← 65 に変えて実行したとき、表示される値を選びなさい。',
+      patch: { n1: 'nenrei ← 65' },
+      options: ['1100', '1900', '1500', '1000'], answer: 0,
+      hint: '上の判断から順にたどってみましょう。',
+      explain: '65 ≦ 12 は No、65 ≦ 18 は No、65 ≧ 65 は Yes なので ryokin ← 1100 となり、1100 が表示されます。' },
+    { type: 'purpose', text: '料金が1900円になる年齢の範囲として正しいものを選びなさい。',
+      options: ['19歳以上64歳以下', '18歳以上65歳以下', '19歳以上65歳以下', '13歳以上64歳以下'], answer: 0,
+      hint: '1900円になるのは、3つの判断がすべて No のときです。',
+      explain: 'ryokin ← 1900 にたどりつくのは、12以下でも、18以下でも、65以上でもないとき、つまり 19〜64歳です。「どの判断をどちらに進むとそこへ行くか」を逆にたどると範囲が分かります。' },
+  ] },
+
+// ------------------------------------------------------------
+{ id: 'd2', title: '1から n までの合計', theme: '条件による繰り返し', lv: 1,
+  text: '1 から n までの整数の合計 s を求めて表示するフローチャートである。',
+  chart: { nodes: [
+    { id: 's', k: 'start', x: 0, y: 0, t: 'はじめ', next: 'n1' },
+    { id: 'n1', k: 'proc', x: 0, y: 1.2, t: 'n ← 5\ns ← 0\ni ← 1', next: 'n2' },
+    { id: 'n2', k: 'dec', x: 0, y: 2.65, t: 'i ≦ n', yes: 'n3', yesDir: 'down', no: 'n5', noDir: 'right' },
+    { id: 'n3', k: 'proc', x: 0, y: 3.9, t: 's ← s + i', next: 'n4' },
+    { id: 'n4', k: 'proc', x: 0, y: 4.9, t: 'i ← i + 1', next: 'n2', via: { next: [[0, 5.55], [-1, 5.55], [-1, 2.02]] } },
+    { id: 'n5', k: 'io', x: 1.2, y: 6.1, t: 's を表示', next: 'e' },
+    { id: 'e', k: 'end', x: 1.2, y: 7.1, t: 'おわり' },
+  ] },
+  qs: [
+    { type: 'input', text: 'このフローチャートを実行したとき、表示される値を答えなさい。', accept: ['15'],
+      hint: 'i が 1, 2, 3, … と変わるたびに s に足されます。',
+      explain: 's には 1+2+3+4+5 = 15 がたまります。i が 6 になったとき i ≦ n が No になり、ループを抜けて s を表示します。' },
+    { type: 'input', text: '判断「i ≦ n」は全部で何回実行されるか答えなさい。', accept: ['6'],
+      hint: 'Yes になる回数と、最後に No になる1回を数えましょう。',
+      explain: 'i = 1〜5 の5回は Yes、i = 6 のとき No の1回、合わせて6回です。条件判断は「繰り返す回数 + 1回」実行されるのがふつうです。' },
+    { type: 'purpose', text: '1 から n までの奇数の合計を求めたい。どの処理をどのように変えればよいか。最も適当なものを選びなさい。',
+      options: ['i ← i + 1 を i ← i + 2 にする', 's ← s + i を s ← s + 2 にする', 'i ← 1 を i ← 2 にする', '判断 i ≦ n を i < n にする'], answer: 0,
+      patch: { n4: 'i ← i + 2' },
+      hint: 'i を 1, 3, 5, … と変えるには？',
+      explain: 'i は 1 から始まるので、2ずつ増やせば 1, 3, 5 と奇数だけを足せます（n = 5 なら 9）。トレースで「変更後」を選ぶと動きを確かめられます。' },
+    { type: 'output', text: '処理「s ← s + i」と「i ← i + 1」の順番を入れかえたとき、表示される値を選びなさい。',
+      patch: { n3: 'i ← i + 1', n4: 's ← s + i' },
+      options: ['20', '15', '14', '21'], answer: 0,
+      hint: '先に i を増やすと、最初に足されるのはいくつ？ 最後に足されるのは？',
+      explain: '先に i を増やすので、足される値は 2, 3, 4, 5, 6 になります（i = 5 のとき Yes → i が 6 になってから足す）。2+3+4+5+6 = 20。処理の順番が1つ変わるだけで結果が変わることに注意しましょう。' },
+  ] },
+
+// ------------------------------------------------------------
+{ id: 'd3', title: '最大値を探す', theme: '配列とループ端', lv: 2,
+  text: '配列 Data の中で最も大きい値を求めて表示するフローチャートである。添字は 0 から始まる。',
+  blanks: {
+    'ア': { options: ['Data[i] > saidai', 'Data[i] < saidai', 'Data[i] > Data[0]', 'i > saidai'], answer: 0 },
+    'イ': { options: ['saidai ← Data[i]', 'Data[i] ← saidai', 'saidai ← i', 'saidai ← saidai + 1'], answer: 0 },
+  },
+  chart: { nodes: [
+    { id: 's', k: 'start', x: 0, y: 0, t: 'はじめ', next: 'n1' },
+    { id: 'n1', k: 'proc', x: 0, y: 1.15, t: 'Data ← [41, 67, 23, 88, 54]\nsaidai ← Data[0]', next: 'L1' },
+    { id: 'L1', k: 'lp', x: 0, y: 2.4, name: 'ループ1', t: 'i を 1 から 4 まで 1 ずつ増やす', next: 'n3', end: 'L1e' },
+    { id: 'n3', k: 'dec', x: 0, y: 3.65, t: '[[ア]]', yes: 'n4', yesDir: 'right', no: 'L1e', noDir: 'down' },
+    { id: 'n4', k: 'proc', x: 1.3, y: 3.65, t: '[[イ]]', next: 'L1e' },
+    { id: 'L1e', k: 'le', x: 0, y: 5.0, name: 'ループ1', start: 'L1', next: 'n6' },
+    { id: 'n6', k: 'io', x: 0, y: 6.05, t: 'saidai を表示', next: 'e' },
+    { id: 'e', k: 'end', x: 0, y: 7.05, t: 'おわり' },
+  ] },
+  qs: [
+    { type: 'blank', ask: ['ア', 'イ'], text: '空欄 ア・イ に入るものとして最も適当なものを、それぞれ選びなさい。',
+      hint: '「今までの最大」saidai と、今見ている Data[i] をくらべます。',
+      explain: '先頭 Data[0] を「仮の最大」にして、Data[1]〜Data[4] と順にくらべます。今見ている Data[i] のほうが大きければ（ア）、saidai を Data[i] に更新します（イ）。saidai ← i だと値ではなく添字（場所）が入ってしまいます。' },
+    { type: 'input', text: 'このフローチャートを実行したとき、処理 イ は何回実行されるか答えなさい。', accept: ['2'],
+      hint: 'saidai が更新されるのはどの値を見たとき？ 41 → ? → ?',
+      explain: '67 > 41 で更新（1回目）、23 は No、88 > 67 で更新（2回目）、54 は No。全部で2回です。最大値が配列のどこにあるかで回数が変わります。' },
+    { type: 'purpose', text: '最も小さい値を求めるように変えたい。どのように変更すればよいか。最も適当なものを選びなさい。',
+      options: ['ア を Data[i] < saidai にする', 'イ を saidai ← Data[0] にする', 'ループ1 を i を 4 から 1 まで 1 ずつ減らす にする', 'saidai ← Data[0] を saidai ← 0 にする'], answer: 0,
+      patch: { n3: 'Data[i] < saidai' },
+      hint: '更新する条件を逆にすると…？',
+      explain: '「今見ている値のほうが小さければ更新」にすれば最小値になります（この例では 23）。ループの向きを逆にしても、くらべ方が同じなら最大値のままです。' },
+    { type: 'purpose', text: 'ループ1 を「i を 0 から 4 まで 1 ずつ増やす」に変えると、表示はどうなるか。最も適当なものを選びなさい。',
+      options: ['変わらず 88 が表示される', '41 が表示される', 'Data[5] を読もうとしてエラーになる', '88 が2回表示される'], answer: 0,
+      patch: { L1: 'i を 0 から 4 まで 1 ずつ増やす' },
+      hint: 'i = 0 のとき、Data[0] と saidai をくらべると？',
+      explain: 'i = 0 のとき Data[0] と saidai（= Data[0]）をくらべますが、等しいので「>」は成り立たず更新されません。むだな1回が増えるだけで、結果は 88 のままです。' },
+  ] },
+
+// ------------------------------------------------------------
+{ id: 'd4', title: '最大公約数（ユークリッドの互除法）', theme: '条件による繰り返し', lv: 2,
+  text: '2つの正の整数 a, b の最大公約数を求めるフローチャートである。「a を b で割った余り r を求め、a ← b、b ← r とする」ことを、余りが 0 になるまで繰り返すと、そのときの a が最大公約数になる。（％ は割り算の余りを表す）',
+  blanks: { 'ア': { options: ['b ≠ 0', 'b = 0', 'a ≠ 0', 'a ≠ b'], answer: 0 } },
+  chart: { nodes: [
+    { id: 's', k: 'start', x: 0, y: 0, t: 'はじめ', next: 'n1' },
+    { id: 'n1', k: 'proc', x: 0, y: 1.1, t: 'a ← 48\nb ← 18', next: 'n2' },
+    { id: 'n2', k: 'dec', x: 0, y: 2.45, t: '[[ア]]', yes: 'n3', yesDir: 'down', no: 'n4', noDir: 'right' },
+    { id: 'n3', k: 'proc', x: 0, y: 3.85, t: 'r ← a ％ b\na ← b\nb ← r', next: 'n2', via: { next: [[0, 4.8], [-1, 4.8], [-1, 1.82]] } },
+    { id: 'n4', k: 'io', x: 1.2, y: 5.4, t: 'a を表示', next: 'e' },
+    { id: 'e', k: 'end', x: 1.2, y: 6.4, t: 'おわり' },
+  ] },
+  qs: [
+    { type: 'blank', ask: ['ア'], text: '空欄 ア に入る条件として最も適当なものを選びなさい。',
+      hint: '繰り返しを「続ける」条件です。Yes で処理に進みます。',
+      explain: 'Yes のとき繰り返しの処理に進むので、ア は「続ける条件」＝ b（前回の余り）が 0 でない、b ≠ 0 です。b = 0 にすると最初から No になり、48 がそのまま表示されてしまいます。フローチャートの判断では「Yes がどちらに進むか」を必ず確認しましょう。' },
+    { type: 'output', text: 'このフローチャートを実行したとき、表示される値を選びなさい。',
+      options: ['6', '3', '12', '0'], answer: 0,
+      hint: '(a, b) は (48, 18) → (18, ?) → … と変わります。',
+      explain: '(48, 18) → 余り12 → (18, 12) → 余り6 → (12, 6) → 余り0 → (6, 0)。b = 0 になったので終了し、a = 6 を表示します。' },
+    { type: 'input', text: '処理「r ← a ％ b …」の箱は何回実行されるか答えなさい。', accept: ['3'],
+      hint: '前の小問のトレースを数えてみましょう。',
+      explain: '(48,18)→(18,12)、(18,12)→(12,6)、(12,6)→(6,0) の3回です。割り算を1回するたびに数がどんどん小さくなるので、大きな数でもすばやく求められるのが互除法のよいところです。' },
+    { type: 'purpose', text: '最初の値を a ← 18, b ← 48（大小を逆）にして実行するとどうなるか。最も適当なものを選びなさい。',
+      patch: { n1: 'a ← 18\nb ← 48' },
+      options: ['同じく 6 が表示される（繰り返しが1回増える）', '18 が表示される', '0 で割ろうとしてエラーになる', '繰り返しが終わらない'], answer: 0,
+      hint: '18 ％ 48 はいくつ？ そのあと a, b はどうなる？',
+      explain: '18 ％ 48 = 18 なので、1回目で a ← 48, b ← 18 と入れかわります。あとは元と同じ流れになり、6 が表示されます。大小の順を気にしなくてよい、よくできた手順です。' },
+  ] },
+
+// ------------------------------------------------------------
+{ id: 'd5', title: '素数はいくつ？', theme: '二重ループ', lv: 3,
+  text: '2 から 20 までの整数のうち、素数がいくつあるかを数えるフローチャートである。素数は「約数がちょうど2個（1と自分自身）の数」である。（％ は割り算の余りを表す）',
+  blanks: { 'ア': { options: ['yakusu = 2', 'yakusu = 1', 'yakusu > 2', 'd = 2'], answer: 0 } },
+  chart: { nodes: [
+    { id: 's', k: 'start', x: 0, y: 0, t: 'はじめ', next: 'n1' },
+    { id: 'n1', k: 'proc', x: 0, y: 1, t: 'kosu ← 0', next: 'L1' },
+    { id: 'L1', k: 'lp', x: 0, y: 2.05, name: 'ループ1', t: 'n を 2 から 20 まで 1 ずつ増やす', next: 'n2', end: 'L1e' },
+    { id: 'n2', k: 'proc', x: 0, y: 3.1, t: 'yakusu ← 0', next: 'L2' },
+    { id: 'L2', k: 'lp', x: 0, y: 4.15, name: 'ループ2', t: 'd を 1 から n まで 1 ずつ増やす', next: 'n3', end: 'L2e' },
+    { id: 'n3', k: 'dec', x: 0, y: 5.35, t: 'n ％ d = 0', yes: 'n4', yesDir: 'right', no: 'L2e', noDir: 'down' },
+    { id: 'n4', k: 'proc', x: 1.3, y: 5.35, t: 'yakusu ← yakusu + 1', next: 'L2e' },
+    { id: 'L2e', k: 'le', x: 0, y: 6.65, name: 'ループ2', start: 'L2', next: 'n5' },
+    { id: 'n5', k: 'dec', x: 0, y: 7.85, t: '[[ア]]', yes: 'n6', yesDir: 'right', no: 'L1e', noDir: 'down' },
+    { id: 'n6', k: 'proc', x: 1.3, y: 7.85, t: 'kosu ← kosu + 1', next: 'L1e' },
+    { id: 'L1e', k: 'le', x: 0, y: 9.15, name: 'ループ1', start: 'L1', next: 'n7' },
+    { id: 'n7', k: 'io', x: 0, y: 10.2, t: 'kosu を表示', next: 'e' },
+    { id: 'e', k: 'end', x: 0, y: 11.2, t: 'おわり' },
+  ] },
+  qs: [
+    { type: 'purpose', text: 'ループ2 が終わったとき、変数 yakusu は何を表しているか。最も適当なものを選びなさい。',
+      options: ['n の約数の個数', 'n の約数の合計', 'n 以下の素数の個数', 'n を d で割った余り'], answer: 0,
+      hint: 'yakusu に 1 を足すのは、どんなとき？',
+      explain: 'd を 1〜n まで動かし、n ％ d = 0（d で割り切れる＝ d は n の約数）のときに yakusu を1増やすので、n の約数の個数になります。yakusu ← 0 がループ1 の中にあるのは、n が変わるたびに数え直すためです。' },
+    { type: 'blank', ask: ['ア'], text: '空欄 ア に入る条件として最も適当なものを選びなさい。',
+      hint: '素数の定義を思い出しましょう。',
+      explain: '素数は約数がちょうど2個の数なので yakusu = 2 です。yakusu > 2 にすると、約数が3個以上の数（4, 6, 8, 9, …）＝素数でない数を数えてしまいます。d = 2 はループ2 が終わったあとの d の値を見ているだけで、n によって変わりません。' },
+    { type: 'input', text: 'このフローチャートを実行したとき、表示される値を答えなさい。', accept: ['8'],
+      hint: '2 から 20 までの素数を書き出してみましょう。',
+      explain: '2, 3, 5, 7, 11, 13, 17, 19 の8個です。' },
+    { type: 'input', text: '判断「n ％ d = 0」は全部で何回実行されるか答えなさい。', accept: ['209'],
+      hint: 'n = 2 のとき2回、n = 3 のとき3回、…。',
+      explain: '内側のループ2 は n 回まわるので、2 + 3 + … + 20 = 209 回です（1〜20 の和 210 から 1 を引く）。二重ループでは、内側の回数が外側の変数によって変わることがあります。' },
+  ] },
+
+// ------------------------------------------------------------
+{ id: 'd6', title: '合計点がいちばん高い人', theme: '二次元配列', lv: 3,
+  text: '3人の生徒の3科目の点数が二次元配列 Tokuten に入っている。Tokuten[i, j] は i 番の生徒の j 番の科目の点数である（添字は 0 から）。合計点が最も高い生徒の番号を表示するフローチャートを作った。',
+  figure: '        j=0  j=1  j=2\ni=0      70   82   65\ni=1      55   90   78\ni=2      92   88   60',
+  figureCap: 'Tokuten の中身',
+  blanks: { 'ア': { options: ['Tokuten[i, j]', 'Tokuten[j, i]', 'Tokuten[i, i]', 'Tokuten[j, j]'], answer: 0 } },
+  chart: { init: 'Tokuten = [[70, 82, 65], [55, 90, 78], [92, 88, 60]]', nodes: [
+    { id: 's', k: 'start', x: 0, y: 0, t: 'はじめ', next: 'n1' },
+    { id: 'n1', k: 'proc', x: 0, y: 1.1, t: 'best ← 0\nbango ← 0', next: 'L1' },
+    { id: 'L1', k: 'lp', x: 0, y: 2.3, name: 'ループ1', t: 'i を 0 から 2 まで 1 ずつ増やす', next: 'n2', end: 'L1e' },
+    { id: 'n2', k: 'proc', x: 0, y: 3.35, t: 'goukei ← 0', next: 'L2' },
+    { id: 'L2', k: 'lp', x: 0, y: 4.4, name: 'ループ2', t: 'j を 0 から 2 まで 1 ずつ増やす', next: 'n3', end: 'L2e' },
+    { id: 'n3', k: 'proc', x: 0, y: 5.45, t: 'goukei ← goukei + [[ア]]', next: 'L2e' },
+    { id: 'L2e', k: 'le', x: 0, y: 6.5, name: 'ループ2', start: 'L2', next: 'n4' },
+    { id: 'n4', k: 'dec', x: 0, y: 7.7, t: 'goukei > best', yes: 'n5', yesDir: 'right', no: 'L1e', noDir: 'down' },
+    { id: 'n5', k: 'proc', x: 1.3, y: 7.7, t: 'best ← goukei\nbango ← i', next: 'L1e' },
+    { id: 'L1e', k: 'le', x: 0, y: 9.05, name: 'ループ1', start: 'L1', next: 'n6' },
+    { id: 'n6', k: 'io', x: 0, y: 10.1, t: 'bango を表示', next: 'e' },
+    { id: 'e', k: 'end', x: 0, y: 11.1, t: 'おわり' },
+  ] },
+  qs: [
+    { type: 'blank', ask: ['ア'], text: '空欄 ア に入るものとして最も適当なものを選びなさい。',
+      hint: 'ループ1 で生徒 i を固定し、ループ2 で科目 j を動かしています。',
+      explain: '「i 番の生徒の j 番の科目」は Tokuten[i, j]。i を固定して j を 0〜2 と動かすと、表の1行（1人分）を横にたどれます。Tokuten[j, i] だと科目ごと（たて）に足してしまいます。' },
+    { type: 'output', text: 'このフローチャートを実行したとき、表示される値を選びなさい。',
+      options: ['2', '1', '0', '240'], answer: 0,
+      hint: '3人の合計点はそれぞれいくつ？ 表示するのは点数？番号？',
+      explain: '合計は 0番 217、1番 223、2番 240。最も高いのは 2番なので bango = 2 が表示されます。best（240）ではなく bango を表示している点に注意。' },
+    { type: 'purpose', text: '処理「goukei ← 0」を、ループ2 の中（処理 ア の箱の直前）に移動すると、表示される値はどうなるか。最も適当なものを選びなさい。',
+      options: ['1 になる', '2 のまま変わらない', '0 になる', '何も表示されない'], answer: 0,
+      hint: '毎回 goukei が 0 に戻ると、最後に残るのは？',
+      explain: '毎回 0 に戻ってから足すので、ループ2 が終わったとき goukei には最後の科目（j = 2）の点数だけが残ります。65, 78, 60 をくらべることになり、1 が表示されます。初期化の位置はとても大切です。' },
+    { type: 'input', text: 'このフローチャートを実行し終わったときの best の値を答えなさい。', accept: ['240'],
+      hint: 'best は「今までで最高の合計点」です。',
+      explain: 'best は 217 → 223 → 240 と更新され、最後は 240 です。' },
+  ] },
+
+// ------------------------------------------------------------
+{ id: 'd7', title: '平均点以上は何人？', theme: 'まちがい探し', lv: 2,
+  text: '配列 Data に5人の点数が入っている。平均点を求めたあと、平均点以上の人数を数えて表示したい。ところが、このフローチャートを実行すると 2 と表示された。',
+  blanks: { 'ア': { options: ['要素数(Data)', '4', 'goukei', 'Data[4]'], answer: 0 } },
+  chart: { nodes: [
+    { id: 's', k: 'start', x: 0, y: 0, t: 'はじめ', next: 'n1' },
+    { id: 'n1', k: 'proc', x: 0, y: 1.15, t: 'Data ← [80, 60, 75, 45, 90]\ngoukei ← 0', next: 'L1' },
+    { id: 'L1', k: 'lp', x: 0, y: 2.35, name: 'ループ1', t: 'i を 0 から 4 まで 1 ずつ増やす', next: 'n2', end: 'L1e' },
+    { id: 'n2', k: 'proc', x: 0, y: 3.4, t: 'goukei ← goukei + Data[i]', next: 'L1e' },
+    { id: 'L1e', k: 'le', x: 0, y: 4.45, name: 'ループ1', start: 'L1', next: 'n3' },
+    { id: 'n3', k: 'proc', x: 0, y: 5.6, t: 'heikin ← goukei / [[ア]]\nkosu ← 0', next: 'L2' },
+    { id: 'L2', k: 'lp', x: 0, y: 6.8, name: 'ループ2', t: 'j を 1 から 4 まで 1 ずつ増やす', next: 'n4', end: 'L2e' },
+    { id: 'n4', k: 'dec', x: 0, y: 8.0, t: 'Data[j] ≧ heikin', yes: 'n5', yesDir: 'right', no: 'L2e', noDir: 'down' },
+    { id: 'n5', k: 'proc', x: 1.35, y: 8.0, t: 'kosu ← kosu + 1', next: 'L2e' },
+    { id: 'L2e', k: 'le', x: 0, y: 9.3, name: 'ループ2', start: 'L2', next: 'n6' },
+    { id: 'n6', k: 'io', x: 0, y: 10.35, t: 'kosu を表示', next: 'e' },
+    { id: 'e', k: 'end', x: 0, y: 11.35, t: 'おわり' },
+  ] },
+  qs: [
+    { type: 'blank', ask: ['ア'], text: '平均点を求める処理の空欄 ア に入るものとして最も適当なものを選びなさい。',
+      hint: '平均＝合計 ÷ 人数。人数（要素の個数）はいくつ？',
+      explain: '平均は合計を人数でわります。人数は Data の要素数（5）なので 要素数(Data) です。4 は「最後の添字」で、人数ではありません。Data[4] は最後の人の点数です。' },
+    { type: 'node', text: 'このフローチャートには誤りが1か所ある。誤っている記号をタップして選びなさい。',
+      nodeAnswer: 'L2', patch: { L2: 'j を 0 から 4 まで 1 ずつ増やす' },
+      hint: '平均点は 70。平均点以上の人は何人いるはず？ 数えもれているのは誰？',
+      explain: 'ループ2 が j = 1 から始まっているため、Data[0]（80点）を調べていません。正しくは「j を 0 から 4 まで 1 ずつ増やす」。ループ1 と同じく、添字 0 から始める必要があります。' },
+    { type: 'input', text: '誤りを正しく直して実行したとき、表示される値を答えなさい。', accept: ['3'],
+      patch: { L2: 'j を 0 から 4 まで 1 ずつ増やす' },
+      hint: '平均点 70 以上の点数を数えましょう。',
+      explain: '合計 350 ÷ 5 = 70。70点以上は 80, 75, 90 の3人です。' },
+  ] },
+
+// ------------------------------------------------------------
+{ id: 'd8', title: 'サイコロで6が出るまで', theme: '乱数とシミュレーション', lv: 2,
+  text: 'サイコロを6の目が出るまで投げ続け、投げた回数を表示するシミュレーションである。乱数() は 0 以上 1 未満の小数をランダムに返し、整数(x) は x の小数点以下を切り捨てた値を返す。',
+  blanks: { 'ア': { options: ['整数(乱数() × 6) + 1', '整数(乱数() × 6)', '整数(乱数() × 7)', '乱数() × 6 + 1'], answer: 0 } },
+  chart: { nodes: [
+    { id: 's', k: 'start', x: 0, y: 0, t: 'はじめ', next: 'n1' },
+    { id: 'n1', k: 'proc', x: 0, y: 1.1, t: 'kaisu ← 0\nme ← 0', next: 'n2' },
+    { id: 'n2', k: 'dec', x: 0, y: 2.45, t: 'me ≠ 6', yes: 'n3', yesDir: 'down', no: 'n4', noDir: 'right' },
+    { id: 'n3', k: 'proc', x: 0, y: 3.75, t: 'me ← [[ア]]\nkaisu ← kaisu + 1', next: 'n2', via: { next: [[0, 4.5], [-1.15, 4.5], [-1.15, 1.82]] } },
+    { id: 'n4', k: 'io', x: 1.25, y: 5.1, t: 'kaisu を表示', next: 'e' },
+    { id: 'e', k: 'end', x: 1.25, y: 6.1, t: 'おわり' },
+  ] },
+  random: true,
+  qs: [
+    { type: 'blank', ask: ['ア'], text: '1〜6 の目が同じ確率で出るようにしたい。空欄 ア に入るものとして最も適当なものを選びなさい。',
+      hint: '乱数() × 6 は 0 以上 6 未満。切り捨てると？',
+      explain: '整数(乱数() × 6) は 0〜5 の整数になるので、1 を足して 1〜6。+1 がないと 0〜5 になり、6 が出ないので終わりません。整数( ) がないと 3.27… のような小数になり、ちょうど 6 にはほぼなりません。' },
+    { type: 'purpose', text: '表示される kaisu は何を表しているか。最も適当なものを選びなさい。',
+      options: ['6が出るまでに投げた回数（6が出た回もふくむ）', '6が出るまでに投げた回数（6が出た回はふくまない）', '6が出た回数', 'それまでに出た目の合計'], answer: 0,
+      hint: 'me ← … と kaisu ← kaisu + 1 は同じ箱の中。6 が出た回にも kaisu は増える？',
+      explain: '目を出すたびに kaisu を1増やし、そのあと判断で 6 かどうかを調べます。6 が出た回も kaisu は増えているので、「6が出た回をふくむ投げた回数」です。トレースで何度か実行してみましょう（🎲で再実行）。' },
+    { type: 'purpose', text: '処理の me ← 0 を me ← 6 に変えて実行するとどうなるか。最も適当なものを選びなさい。',
+      patch: { n1: 'kaisu ← 0\nme ← 6' },
+      options: ['一度も投げずに 0 が表示される', '1 が表示される', '繰り返しが終わらない', '変わらない'], answer: 0,
+      hint: '最初の判断「me ≠ 6」はどうなる？',
+      explain: '最初の判断で me ≠ 6 が No になるので、一度も繰り返さずに kaisu = 0 を表示します。「最初に判断する」繰り返しでは、初期値の決め方がとても大切です。me ← 0 は「まだ6ではない」状態にするための値です。' },
+    { type: 'purpose', text: 'このシミュレーションを何万回もくり返したとき、表示される kaisu の平均値はおよそいくつになるか。最も適当なものを選びなさい。',
+      options: ['6', '3.5', '1', '36'], answer: 0,
+      hint: '6 が出る確率は 1/6。平均すると何回に1回出る？',
+      explain: '1回あたり 6 が出る確率は 1/6 なので、平均すると 6 回に1回出ます。実際に何度もトレースして kaisu の値を記録し、平均をとってみると確かめられます（シミュレーションの考え方）。' },
+  ] },
+
+// ------------------------------------------------------------
+{ id: 'd9', title: '小さい順に並べる（バブルソート）', theme: '二重ループと配列', lv: 3,
+  text: '配列 Data の値を小さい順（昇順）に並べかえるフローチャートである。となりどうしをくらべ、前のほうが大きければ入れかえる。添字は 0 から始まる。',
+  blanks: { 'ア': { options: ['2 - i', '3 - i', '3', 'i'], answer: 0 } },
+  chart: { nodes: [
+    { id: 's', k: 'start', x: 0, y: 0, t: 'はじめ', next: 'n1' },
+    { id: 'n1', k: 'proc', x: 0, y: 1, t: 'Data ← [5, 3, 8, 1]', next: 'L1' },
+    { id: 'L1', k: 'lp', x: 0, y: 2.05, name: 'ループ1', t: 'i を 0 から 2 まで 1 ずつ増やす', next: 'L2', end: 'L1e' },
+    { id: 'L2', k: 'lp', x: 0, y: 3.15, name: 'ループ2', t: 'j を 0 から [[ア]] まで 1 ずつ増やす', next: 'n2', end: 'L2e' },
+    { id: 'n2', k: 'dec', x: 0, y: 4.45, t: 'Data[j] > Data[j + 1]', yes: 'n3', yesDir: 'right', no: 'L2e', noDir: 'down' },
+    { id: 'n3', k: 'proc', x: 1.5, y: 4.45, t: 't ← Data[j]\nData[j] ← Data[j + 1]\nData[j + 1] ← t', next: 'L2e' },
+    { id: 'L2e', k: 'le', x: 0, y: 6.0, name: 'ループ2', start: 'L2', next: 'L1e' },
+    { id: 'L1e', k: 'le', x: 0, y: 7.0, name: 'ループ1', start: 'L1', next: 'n4' },
+    { id: 'n4', k: 'io', x: 0, y: 8.0, t: 'Data を表示', next: 'e' },
+    { id: 'e', k: 'end', x: 0, y: 9.0, t: 'おわり' },
+  ] },
+  qs: [
+    { type: 'blank', ask: ['ア'], text: '空欄 ア に入るものとして最も適当なものを選びなさい。',
+      hint: 'Data[j + 1] が範囲外（添字4）にならない j の最大は？ 1周ごとに後ろから1つずつ確定します。',
+      explain: '要素は4個（添字 0〜3）。Data[j + 1] を使うので j は最大 2。さらに1周（i）ごとに最大値が後ろに確定するので、くらべる範囲を1つずつ減らして 2 - i です。3 - i だと i = 0 のとき Data[4] を読もうとしてエラーになります。' },
+    { type: 'output', text: 'ループ1 の1周目（i = 0）が終わった時点での Data として正しいものを選びなさい。',
+      options: ['[3, 5, 1, 8]', '[1, 3, 5, 8]', '[3, 5, 8, 1]', '[5, 3, 1, 8]'], answer: 0,
+      hint: 'j = 0, 1, 2 と順に、となりどうしをくらべて入れかえてみましょう。',
+      explain: '[5,3,8,1] → j=0: 5>3 入れかえ [3,5,8,1] → j=1: 5>8 No → j=2: 8>1 入れかえ [3,5,1,8]。最大の 8 がいちばん後ろに「浮かび上がる」のでバブル（泡）ソートとよばれます。' },
+    { type: 'input', text: '入れかえの処理（3行の箱）は全部で何回実行されるか答えなさい。', accept: ['4'],
+      hint: '1周目で2回。2周目、3周目は？ トレースで数えてもOK。',
+      explain: '1周目 2回（5↔3, 8↔1）、2周目 [3,5,1,8] で 5↔1 の1回、3周目 [3,1,5,8] で 3↔1 の1回、合わせて4回。最終的に [1, 3, 5, 8] になります。' },
+    { type: 'purpose', text: '判断を「Data[j] < Data[j + 1]」に変えるとどうなるか。最も適当なものを選びなさい。',
+      patch: { n2: 'Data[j] < Data[j + 1]' },
+      options: ['大きい順（降順）に並ぶ', '小さい順のまま変わらない', '何も入れかわらない', 'エラーになる'], answer: 0,
+      hint: '「前のほうが小さければ入れかえる」と、小さい値はどちらへ移動する？',
+      explain: '前のほうが小さいときに入れかえるので、小さい値がどんどん後ろへ移動し、[8, 5, 3, 1] の降順になります。' },
+  ] },
+];
+
+// 小問に通し番号をつける
+SETS.forEach((S, si) => S.qs.forEach((q, qi) => { q.id = S.id + '-' + (qi + 1); q.set = S.id; q.no = qi + 1; }));
+
+
+</script>
+<script>
+(function () {
+'use strict';
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const SMAP = Object.fromEntries(SETS.map(s => [s.id, s]));
+const QS = SETS.flatMap(s => s.qs);
+const QMAP = Object.fromEntries(QS.map(q => [q.id, q]));
+const setNo = id => SETS.findIndex(s => s.id === id) + 1;
+const TYPES = {
+  blank: { name: '空欄補充', icon: '✏️' }, purpose: { name: '考えて選ぶ', icon: '🔍' }, output: { name: '実行結果', icon: '🖥️' },
+  input: { name: '値を答える', icon: '🔢' }, node: { name: 'まちがい探し', icon: '🐞' },
+};
+const MARK = ['⓪', '①', '②', '③', '④', '⑤'];
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const today = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+
+// ---------------- 保存 ----------------
+const KEY = 'flow-yomitoki-v1';
+let S = { rec: {}, star: {}, days: {}, font: 1 };
+try { const t = localStorage.getItem(KEY); if (t) S = Object.assign(S, JSON.parse(t)); } catch (e) {}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+const needReview = id => { const r = S.rec[id]; return !!r && r.w > 0 && (r.last === 0 || r.st < 2); };
+const reviewIds = () => QS.filter(q => needReview(q.id)).map(q => q.id);
+const starIds = () => QS.filter(q => S.star[q.id]).map(q => q.id);
+document.documentElement.style.setProperty('--fs', S.font || 1);
+
+// ---------------- マスコット（ペンギン） ----------------
+function peng(mood, size) {
+  size = size || 64; mood = mood || 'normal';
+  let eyes;
+  if (mood === 'happy') eyes = '<path d="M33 44 Q39 37 45 44" stroke="#14324A" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M55 44 Q61 37 67 44" stroke="#14324A" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="30" cy="55" r="5" fill="#FF9AA2" opacity=".75"/><circle cx="70" cy="55" r="5" fill="#FF9AA2" opacity=".75"/>';
+  else if (mood === 'sad') eyes = '<circle cx="39" cy="45" r="5" fill="#14324A"/><circle cx="61" cy="45" r="5" fill="#14324A"/><path d="M31 35 L45 38" stroke="#14324A" stroke-width="3" stroke-linecap="round"/><path d="M69 35 L55 38" stroke="#14324A" stroke-width="3" stroke-linecap="round"/><path d="M78 30 q4 7 0 10 q-4 -3 0 -10z" fill="#7CC6F2"/>';
+  else if (mood === 'think') eyes = '<circle cx="41" cy="42" r="5" fill="#14324A"/><circle cx="63" cy="42" r="5" fill="#14324A"/><circle cx="42.5" cy="40.5" r="1.6" fill="#fff"/><circle cx="64.5" cy="40.5" r="1.6" fill="#fff"/>';
+  else eyes = '<circle cx="39" cy="44" r="5.5" fill="#14324A"/><circle cx="61" cy="44" r="5.5" fill="#14324A"/><circle cx="41" cy="42" r="1.8" fill="#fff"/><circle cx="63" cy="42" r="1.8" fill="#fff"/>';
+  return `<svg width="${size}" height="${size}" viewBox="0 0 100 100" aria-hidden="true">
+<ellipse cx="50" cy="58" rx="34" ry="38" fill="#1F6FA3"/>
+<ellipse cx="16" cy="62" rx="7" ry="18" fill="#1A5F8C" transform="rotate(18 16 62)"/><ellipse cx="84" cy="62" rx="7" ry="18" fill="#1A5F8C" transform="rotate(-18 84 62)"/>
+<path d="M50 30 C30 30 24 46 26 60 C28 80 38 90 50 90 C62 90 72 80 74 60 C76 46 70 30 50 30Z" fill="#fff"/>
+<path d="M50 22 C40 22 36 30 37 34 C42 30 58 30 63 34 C64 30 60 22 50 22Z" fill="#1F6FA3"/>
+${eyes}
+<path d="M44 52 L56 52 L50 59 Z" fill="#FFB703"/>
+<ellipse cx="40" cy="95" rx="7" ry="3" fill="#FFB703"/><ellipse cx="60" cy="95" rx="7" ry="3" fill="#FFB703"/>
+<path d="M30 20 q20 -14 40 0" stroke="#7CD3F7" stroke-width="5" fill="none" stroke-linecap="round"/>
+</svg>`;
+}
+$('#logoOwl').innerHTML = peng('normal', 38);
+
+// ---------------- フローチャート描画 ----------------
+const CW = 200, RH = 82, PAD = 26;
+const tw = s => { let w = 0; for (const ch of String(s)) w += /[\x20-\x7e]/.test(ch) ? 8.3 : 14; return w; };
+function blankWidthText(set, t) {
+  // 空欄は一番長い選択肢の幅で計算（レイアウトを固定するため）
+  return t.replace(/\[\[(.+?)\]\]/g, (m, l) => { const b = set.blanks && set.blanks[l]; if (!b) return 'XXXX'; return b.options.reduce((a, o) => tw(o) > tw(a) ? o : a, '') + '　'; });
+}
+function nodeSize(set, n, txt) {
+  const t = blankWidthText(set, txt);
+  const lines = t.split('\n'); const mw = Math.max(...lines.map(tw)) + (/\[\[/.test(txt) ? 40 : 0);
+  switch (n.k) {
+    case 'start': case 'end': return { w: Math.max(110, mw + 44), h: 38 };
+    case 'proc': return { w: Math.max(150, mw + 32), h: 22 * lines.length + 20 };
+    case 'io': return { w: Math.max(150, mw + 56), h: 42 };
+    case 'dec': return { w: Math.max(160, mw * 1.6 + 54), h: 68 };
+    case 'lp': return { w: Math.max(190, mw + 44), h: 56 };
+    case 'le': return { w: 150, h: 40 };
+  }
+  return { w: 150, h: 40 };
+}
+function labelHTML(set, txt, opt, n) {
+  const parts = txt.split(/(\[\[[^\]]+\]\])/).map(p => {
+    const m = p.match(/^\[\[(.+)\]\]$/);
+    if (!m) return esc(p);
+    const l = m[1], b = set.blanks && set.blanks[l];
+    const asked = opt.ask && opt.ask.includes(l);
+    let pick = null, cls = 'fb2';
+    if (asked) { pick = opt.picks ? opt.picks[l] : null; if (pick != null && opt.checked) cls += pick === b.answer ? ' ok' : ' ng'; }
+    else if (!opt.fillAll && opt.hide && opt.hide.includes(l)) pick = null;
+    else if (opt.fillAll || (b && !asked)) { pick = b ? b.answer : null; cls += ' given'; }
+    if (pick != null && b) return `<span class="${cls} filled"><span class="bl">${esc(l)}</span>${esc(b.options[pick])}</span>`;
+    return `<span class="${cls}">${esc(l)}</span>`;
+  }).join('');
+  const body = parts.replace(/←/g, '<span class="ar">←</span>');
+  if (n.k === 'lp') return `<span class="lpn">${esc(n.name)}</span><span>${body}</span>`;
+  if (n.k === 'le') return `<span class="lpn" style="font-size:13px">${esc(n.name)}</span>`;
+  return `<span>${body.replace(/\n/g, '<br>')}</span>`;
+}
+function shapeSVG(n, x, y, w, h) {
+  const x0 = x - w / 2, y0 = y - h / 2, x1 = x + w / 2, y1 = y + h / 2, c = 12;
+  switch (n.k) {
+    case 'start': case 'end': return `<rect class="sh" x="${x0}" y="${y0}" width="${w}" height="${h}" rx="${h / 2}"/>`;
+    case 'proc': return `<rect class="sh" x="${x0}" y="${y0}" width="${w}" height="${h}" rx="4"/>`;
+    case 'io': return `<polygon class="sh" points="${x0 + 14},${y0} ${x1},${y0} ${x1 - 14},${y1} ${x0},${y1}"/>`;
+    case 'dec': return `<polygon class="sh" points="${x},${y0} ${x1},${y} ${x},${y1} ${x0},${y}"/>`;
+    case 'lp': return `<polygon class="sh" points="${x0 + c},${y0} ${x1 - c},${y0} ${x1},${y0 + c} ${x1},${y1} ${x0},${y1} ${x0},${y0 + c}"/>`;
+    case 'le': return `<polygon class="sh" points="${x0},${y0} ${x1},${y0} ${x1},${y1 - c} ${x1 - c},${y1} ${x0 + c},${y1} ${x0},${y1 - c}"/>`;
+  }
+}
+function renderChart(set, opt) {
+  opt = opt || {};
+  const nodes = set.chart.nodes;
+  const G = {};
+  nodes.forEach(n => {
+    const txt = FLOW.nodeText(n, opt.patch, null);
+    const sz = nodeSize(set, n, txt);
+    G[n.id] = { n, txt, x: n.x * CW, y: n.y * RH, w: sz.w, h: sz.h };
+  });
+  const port = (g, side) => {
+    const sk = g.n.k === 'io' ? 7 : 0;
+    if (side === 'top') return { x: g.x, y: g.y - g.h / 2 };
+    if (side === 'bottom' || side === 'down') return { x: g.x, y: g.y + g.h / 2 };
+    if (side === 'right') return { x: g.x + g.w / 2 - sk, y: g.y };
+    if (side === 'left') return { x: g.x - g.w / 2 + sk, y: g.y };
+  };
+  const edges = [];
+  nodes.forEach(n => {
+    const add = (to, dir, via, inSide, label) => { if (to) edges.push({ from: n.id, to, dir: dir || 'down', via: via || null, inSide, label }); };
+    if (n.k === 'dec') { add(n.yes, n.yesDir, n.via && n.via.yes, n.yesIn, 'Yes'); add(n.no, n.noDir, n.via && n.via.no, n.noIn, 'No'); }
+    else if (n.k !== 'end') add(n.next, n.nextDir, n.via && n.via.next, n.nextIn, null);
+  });
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  const grow = (x, y) => { minX = Math.min(minX, x); maxX = Math.max(maxX, x); minY = Math.min(minY, y); maxY = Math.max(maxY, y); };
+  Object.values(G).forEach(g => { grow(g.x - g.w / 2, g.y - g.h / 2); grow(g.x + g.w / 2, g.y + g.h / 2); });
+  const paths = edges.map(e => {
+    const a = G[e.from], b = G[e.to];
+    const p0 = port(a, e.dir);
+    let inSide = e.inSide;
+    if (!inSide) inSide = (e.dir === 'right' && Math.abs(a.y - b.y) < 1 && !e.via) ? 'left' : (e.dir === 'left' && Math.abs(a.y - b.y) < 1 && !e.via) ? 'right' : 'top';
+    const pe = port(b, inSide);
+    let pts = [p0];
+    if (e.via) e.via.forEach(v => pts.push({ x: v[0] * CW, y: v[1] * RH }));
+    else if (e.dir === 'down' && Math.abs(p0.x - pe.x) > 1 && inSide === 'top') { const my = pe.y - 18; pts.push({ x: p0.x, y: my }, { x: pe.x, y: my }); }
+    pts.push(pe);
+    const out = [pts[0]];
+    for (let i = 1; i < pts.length; i++) {
+      const A = out[out.length - 1], B = pts[i];
+      if (Math.abs(A.x - B.x) > .5 && Math.abs(A.y - B.y) > .5) {
+        const first = i === 1, last = i === pts.length - 1;
+        if (first && (e.dir === 'right' || e.dir === 'left')) out.push({ x: B.x, y: A.y });
+        else if (last && inSide === 'top') out.push({ x: B.x, y: A.y });
+        else out.push({ x: A.x, y: B.y });
+      }
+      out.push(B);
+    }
+    out.forEach(p => grow(p.x, p.y));
+    let lab = '';
+    if (e.label) {
+      const lx = e.dir === 'down' ? p0.x + 8 : e.dir === 'right' ? p0.x + 8 : p0.x - 30;
+      const ly = e.dir === 'down' ? p0.y + 15 : p0.y - 7;
+      lab = `<text class="el ${e.label === 'Yes' ? 'y' : 'n'}" x="${lx}" y="${ly}">${e.label}</text>`;
+    }
+    return `<path class="eg" d="M${out.map(p => p.x.toFixed(1) + ',' + p.y.toFixed(1)).join(' L')}" marker-end="url(#ah)"/>${lab}`;
+  });
+  const vx = minX - PAD, vy = minY - PAD, vw = maxX - minX + PAD * 2, vh = maxY - minY + PAD * 2;
+  const ns = nodes.map(n => {
+    const g = G[n.id];
+    let cls = 'nd k-' + n.k;
+    if (opt.select) cls += ' sel';
+    if (opt.pick === n.id) cls += ' pick';
+    if (opt.right === n.id) cls += ' right';
+    if (opt.wrong === n.id) cls += ' wrong';
+    if (opt.cur === n.id) cls += opt.err ? ' errn' : ' cur';
+    if (opt.patch && opt.patch[n.id] != null && opt.showPatch) cls += ' patched';
+    const act = opt.select ? ` data-act="picknode" data-n="${n.id}" role="button" tabindex="0"` : '';
+    const fo = `<foreignObject x="${g.x - g.w / 2}" y="${g.y - g.h / 2}" width="${g.w}" height="${g.h}"><div xmlns="http://www.w3.org/1999/xhtml" class="lb k-${n.k}">${labelHTML(set, g.txt, opt, n)}</div></foreignObject>`;
+    return `<g class="${cls}" data-node="${n.id}"${act}>${shapeSVG(n, g.x, g.y, g.w, g.h)}${fo}</g>`;
+  });
+  return `<div class="chartwrap"><svg class="chart" viewBox="${vx} ${vy} ${vw} ${vh}" style="width:100%;min-width:${Math.round(vw * .78)}px;max-width:${Math.round(vw * 1.08)}px" xmlns="http://www.w3.org/2000/svg">
+  <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#4C7C99"/></marker></defs>
+  ${paths.join('')}${ns.join('')}</svg></div>`;
+}
+const fillOf = set => { const f = {}; Object.entries(set.blanks || {}).forEach(([k, b]) => { f[k] = b.options[b.answer]; }); return f; };
+
+// ---------------- 状態 ----------------
+let view = 'home';
+let Q = null;
+let pendingRestore = null;
+function toast(msg) { const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 1900); }
+function go(v) { view = v; render(); window.scrollTo(0, 0); }
+
+function newCur(q) {
+  const set = SMAP[q.set];
+  const c = { picks: {}, choice: null, input: '', node: null, checked: false, ok: null, hint: false };
+  if (q.options) c.order = shuffle(q.options.map((_, i) => i));
+  if (q.type === 'blank') { c.bord = {}; q.ask.forEach(l => { c.picks[l] = null; c.bord[l] = shuffle(set.blanks[l].options.map((_, i) => i)); }); }
+  return c;
+}
+function startSession(ids, title) {
+  if (!ids.length) { toast('出題できる問題がありません'); return; }
+  Q = { ids, i: 0, title, results: [] };
+  Q.cur = newCur(QMAP[ids[0]]);
+  go('quiz');
+}
+const setIds = sid => SMAP[sid].qs.map(q => q.id);
+function omakase() {
+  // まだ正解していない小問が多い大問を優先してランダムに1題
+  const score = s => s.qs.filter(q => !(S.rec[q.id] && S.rec[q.id].last)).length;
+  const max = Math.max(...SETS.map(score));
+  const cand = max > 0 ? SETS.filter(s => score(s) === max) : SETS;
+  const s = cand[Math.floor(Math.random() * cand.length)];
+  startSession(setIds(s.id), `大問${setNo(s.id)} ${s.title}`);
+}
+const byOrder = ids => ids.slice().sort((a, b) => QS.findIndex(q => q.id === a) - QS.findIndex(q => q.id === b));
+function record(id, ok) {
+  const r = S.rec[id] || { n: 0, c: 0, st: 0, w: 0 };
+  const wasReview = needReview(id);
+  r.n++; r.t = Date.now();
+  if (ok) { r.c++; r.st++; } else { r.w++; r.st = 0; }
+  r.last = ok ? 1 : 0; S.rec[id] = r;
+  const d = today(); S.days[d] = (S.days[d] || 0) + 1;
+  save();
+  if (wasReview && ok && r.st >= 2) setTimeout(() => toast('🎉 2回連続正解！復習リストから卒業'), 300);
+}
+
+// ---------------- ホーム ----------------
+function vHome() {
+  const done = QS.filter(q => S.rec[q.id]).length;
+  let n = 0, c = 0; Object.values(S.rec).forEach(r => { n += r.n; c += r.c; });
+  const rv = reviewIds().length, st = starIds().length, td = S.days[today()] || 0;
+  const tips = ['矢印を指でたどりながら読もう。分かれ道（ひし形）では Yes と No のどちらに進むかを必ず確認！',
+    '「←」は代入、ひし形の中の「=」は「等しいか」だよ。',
+    'ループ端（六角形）は、上の六角形から下の六角形までが繰り返す部分だよ。',
+    'まちがえた小問は「復習」に入るよ。2回連続で正解すると卒業！',
+    '答えたあとは「トレース」で、今どの記号にいるかを確かめてみよう。'];
+  const h = new Date().getHours(); const hi = h < 11 ? 'おはよう！' : h < 18 ? 'こんにちは！' : 'こんばんは！';
+  return `<div class="fade">
+  <section class="card hero">
+    <div class="owl">${peng('normal', 92)}</div>
+    <div style="flex:1;min-width:0">
+      <h1>フローチャートを「たどって読む」力をきたえよう</h1>
+      <div class="bubble">${hi} ${esc(tips[Math.floor(Math.random() * tips.length)])}</div>
+      <div class="stats">
+        <span class="stat">解いた小問<b>${done}</b> / ${QS.length}</span>
+        <span class="stat">正答率<b>${n ? Math.round(c / n * 100) : '-'}</b>${n ? '%' : ''}</span>
+        <span class="stat">今日<b>${td}</b>問</span>
+      </div>
+    </div>
+  </section>
+  <div class="acts three">
+    <button class="act o" data-act="omakase"><span class="ic">🎯</span><span class="nm">おまかせ1題</span><span class="ds">まだ解けていない大問から出題</span></button>
+    <button class="act m" data-act="review" ${rv ? '' : 'disabled'}><span class="ic">🔁</span><span class="nm">復習する</span><span class="ds">${rv ? 'まちがえた小問にもう一度' : 'まちがえた小問はまだなし'}</span>${rv ? `<span class="badge">${rv}</span>` : ''}</button>
+    <button class="act y" data-act="stars" ${st ? '' : 'disabled'}><span class="ic">⭐</span><span class="nm">チェックした小問</span><span class="ds">${st ? '★をつけた小問を解く' : '問題画面の☆で登録'}</span>${st ? `<span class="badge" style="color:#B58500">${st}</span>` : ''}</button>
+  </div>
+  <h2 class="sec">総合問題 <span class="pill">大問${SETS.length}題・小問${QS.length}問</span></h2>
+  <div class="units">${SETS.map((s, i) => {
+    const ok = s.qs.filter(q => S.rec[q.id] && S.rec[q.id].c > 0).length;
+    return `<button class="unit" data-act="set" data-s="${s.id}">
+      <span class="ui">${i + 1}</span>
+      <span style="flex:1;min-width:0"><span class="un">${esc(s.title)}</span><span class="us" style="display:block">${esc(s.theme)}　${'★'.repeat(s.lv)}</span>
+      <span class="bar" style="display:block"><i style="width:${ok / s.qs.length * 100}%"></i></span>
+      <span class="cnt" style="display:block">正解した小問 ${ok} / ${s.qs.length}</span></span>
+    </button>`;
+  }).join('')}</div>
+  <h2 class="sec">もっと</h2>
+  <div class="links">
+    <button class="lnk" data-act="guide"><span class="ic">📘</span><span><b>記号ガイド・読むコツ</b><small>プログラム表記との対応つき</small></span></button>
+    <button class="lnk" data-act="records"><span class="ic">📊</span><span><b>記録</b><small>大問ごとの正答率・小問一覧</small></span></button>
+    <button class="lnk" data-act="savepage"><span class="ic">💾</span><span><b>記録のセーブ</b><small>ファイルに保存・読みこみ</small></span></button>
+  </div>
+  <p class="note">※ 記録はこの端末のブラウザに保存されます。共用のパソコンなどで記録が消えてしまう場合は、「記録のセーブ」でファイルに保存しておくと、次回つづきから始められます。</p>
+  </div>`;
+}
+
+// ---------------- 問題 ----------------
+function vQuiz() {
+  const id = Q.ids[Q.i], q = QMAP[id], c = Q.cur, set = SMAP[q.set];
+  // この小問より後の小問でたずねる空欄は、答えを見せずに空欄のままにする
+  const hide = set.qs.filter(x => x.no > q.no && x.type === 'blank').flatMap(x => x.ask);
+  const copt = { ask: q.type === 'blank' ? q.ask : [], picks: c.picks, checked: c.checked, hide };
+  if (q.type === 'node') {
+    copt.select = !c.checked;
+    if (!c.checked) copt.pick = c.node;
+    else { copt.right = q.nodeAnswer; if (c.node !== q.nodeAnswer) copt.wrong = c.node; }
+  }
+  const pct = (Q.i + (c.checked ? 1 : 0)) / Q.ids.length * 100;
+  return `<div class="fade">
+  <div class="qtop">
+    <button class="xbtn" data-act="quit" aria-label="やめる">✕</button>
+    <div class="prog"><i style="width:${pct}%"></i></div>
+    <span class="qnum">${Q.i + 1} / ${Q.ids.length}</span>
+    <button class="star ${S.star[id] ? 'on' : ''}" data-act="star" title="あとで見直す（★チェック）">${S.star[id] ? '★' : '☆'}</button>
+  </div>
+  <div class="qgrid">
+    <section class="card qcard">
+      <div class="tags"><span class="tag big">大問${setNo(set.id)}</span><span class="tag">${esc(set.theme)}</span><span class="tag">${'★'.repeat(set.lv)}</span></div>
+      <div class="qtitle">${esc(set.title)}</div>
+      <p class="qtext">${esc(set.text)}</p>
+      ${set.figure ? `<div class="fig mono"><span class="cap">${esc(set.figureCap || '')}</span>${esc(set.figure)}</div>` : ''}
+      ${renderChart(set, copt)}
+      ${q.type === 'node' && !c.checked ? '<p class="note" style="margin:6px 2px 0">👆 記号をタップして選びます（横にスクロールできます）</p>' : ''}
+    </section>
+    <section class="card acard" id="acard">
+      <div class="tags"><span class="tag big">小問 ${q.no} / ${set.qs.length}</span><span class="tag">${TYPES[q.type].icon} ${TYPES[q.type].name}</span>${needReview(id) ? '<span class="tag rv">復習</span>' : ''}</div>
+      <p class="qq">${esc(q.text)}</p>
+      ${answerUI(q, c, set)}
+      ${c.checked ? feedback(q, c, set) : `
+        ${c.hint ? `<div class="hintbox">💡 ${esc(q.hint)}</div>` : ''}
+        <div class="btnrow">
+          ${q.hint && !c.hint ? '<button class="btn ghost sm" data-act="hint">💡 ヒント</button>' : ''}
+          <button class="btn pri" data-act="check">答え合わせ</button>
+        </div>`}
+    </section>
+  </div></div>`;
+}
+function answerUI(q, c, set) {
+  const dis = c.checked ? 'disabled' : '';
+  if (q.type === 'blank') {
+    return q.ask.map(l => { const b = set.blanks[l]; return `<div class="bgroup"><div class="bhead"><span class="bx">${esc(l)}</span></div><div class="opts">` +
+      c.bord[l].map((oi, pos) => {
+        let cls = 'opt';
+        if (c.checked) { if (oi === b.answer) cls += ' ok'; else if (c.picks[l] === oi) cls += ' ng'; }
+        else if (c.picks[l] === oi) cls += ' on';
+        const res = c.checked ? (oi === b.answer ? '<span class="res">⭕</span>' : c.picks[l] === oi ? '<span class="res">❌</span>' : '') : '';
+        return `<button class="${cls}" data-act="pickblank" data-l="${esc(l)}" data-o="${oi}" ${dis}><span class="mk">${MARK[pos]}</span><span class="ot mono">${esc(b.options[oi])}</span>${res}</button>`;
+      }).join('') + '</div></div>'; }).join('');
+  }
+  if (q.type === 'purpose' || q.type === 'output') {
+    return `<div class="opts">` + c.order.map((oi, pos) => {
+      let cls = 'opt';
+      if (c.checked) { if (oi === q.answer) cls += ' ok'; else if (c.choice === oi) cls += ' ng'; }
+      else if (c.choice === oi) cls += ' on';
+      const res = c.checked ? (oi === q.answer ? '<span class="res">⭕</span>' : c.choice === oi ? '<span class="res">❌</span>' : '') : '';
+      return `<button class="${cls}" data-act="pickopt" data-o="${oi}" ${dis}><span class="mk">${MARK[pos]}</span><span class="ot${q.type === 'output' ? ' mono' : ''}">${esc(q.options[oi])}</span>${res}</button>`;
+    }).join('') + '</div>';
+  }
+  if (q.type === 'input') {
+    const st = c.checked ? (c.ok ? 'ok' : 'ng') : '';
+    return `<div class="inbox"><input id="ans" class="${st}" type="text" inputmode="numeric" autocomplete="off" placeholder="ここに入力" value="${esc(c.input)}" ${dis}></div>`;
+  }
+  if (q.type === 'node') {
+    const n = c.node && set.chart.nodes.find(x => x.id === c.node);
+    return `<div class="linepick">${n ? `えらんだ記号：<b>${esc(n.k === 'le' ? n.name + '（終端）' : n.k === 'lp' ? n.name + '（始端）' : FLOW.nodeText(n, null, null).split('\n')[0])}</b>` : '👈 フローチャートの記号をタップ'}</div>`;
+  }
+  return '';
+}
+const PRAISE = ['正解！', 'すばらしい！', 'よくたどれたね！', 'バッチリ！', 'その調子！'];
+const ENC = ['おしい！', 'もう一歩！', 'ここで覚えよう！', 'トレースで確かめよう！'];
+function feedback(q, c, set) {
+  const ok = c.ok;
+  let ans = '';
+  if (!ok) {
+    if (q.type === 'blank') ans = '正解：' + q.ask.map(l => `${l} <code class="mono">${esc(set.blanks[l].options[set.blanks[l].answer])}</code>`).join('　');
+    else if (q.type === 'input') ans = `正解：<code class="mono">${esc(q.accept[0])}</code>`;
+    else if (q.type === 'node') { const n = set.chart.nodes.find(x => x.id === q.nodeAnswer); ans = `正解：<b>${esc(n.k === 'lp' ? n.name + '（始端）' : n.t)}</b>（緑の記号）`; }
+    else ans = `正解：${esc(q.options[q.answer])}`;
+  }
+  const last = Q.i === Q.ids.length - 1;
+  return `<div class="fb ${ok ? 'ok' : 'ng'} pop" id="fb">
+    <div class="fbhead">${peng(ok ? 'happy' : 'sad', 54)}<div>${ok ? PRAISE[Math.floor(Math.random() * PRAISE.length)] : ENC[Math.floor(Math.random() * ENC.length)]}<small>${ok ? (needReview(q.id) ? 'あと1回正解で復習リストから卒業' : '') : 'この小問は「復習」に追加されました'}</small></div></div>
+    ${ans ? `<div class="correct-ans">${ans}</div>` : ''}
+    <div class="exp"><span class="lb">📝 解説</span>${esc(q.explain)}</div>
+  </div>
+  <div class="btnrow">
+    <button class="btn mint" data-act="trace">▶ トレースで確かめる</button>
+    <button class="btn nav" data-act="next">${last ? '結果を見る' : '次の小問へ →'}</button>
+  </div>`;
+}
+function check() {
+  const q = QMAP[Q.ids[Q.i]], c = Q.cur, set = SMAP[q.set];
+  let ok;
+  if (q.type === 'blank') {
+    if (q.ask.some(l => c.picks[l] == null)) { toast('すべての空欄をえらんでね'); return; }
+    ok = q.ask.every(l => c.picks[l] === set.blanks[l].answer);
+  } else if (q.type === 'purpose' || q.type === 'output') {
+    if (c.choice == null) { toast('選択肢をえらんでね'); return; }
+    ok = c.choice === q.answer;
+  } else if (q.type === 'input') {
+    const el = $('#ans'); if (el) c.input = el.value;
+    const v = c.input.replace(/[０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0)).replace(/[−ー－]/g, '-').replace(/\s/g, '');
+    if (!v) { toast('答えを入力してね'); return; }
+    ok = q.accept.includes(v);
+  } else if (q.type === 'node') {
+    if (c.node == null) { toast('記号をタップしてえらんでね'); return; }
+    ok = c.node === q.nodeAnswer;
+  }
+  c.checked = true; c.ok = ok;
+  record(q.id, ok); Q.results.push({ id: q.id, ok });
+  render();
+  requestAnimationFrame(() => { const fb = $('#fb'); if (fb && window.innerWidth <= 900) fb.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+}
+function next() {
+  if (Q.i >= Q.ids.length - 1) { go('result'); return; }
+  const prevSet = QMAP[Q.ids[Q.i]].set;
+  Q.i++; Q.cur = newCur(QMAP[Q.ids[Q.i]]);
+  render();
+  if (QMAP[Q.ids[Q.i]].set !== prevSet || window.innerWidth > 900) window.scrollTo(0, 0);
+  else { const a = $('#acard'); if (a) a.scrollIntoView({ block: 'start' }); }
+}
+
+// ---------------- 結果 ----------------
+function vResult() {
+  const n = Q.results.length, ok = Q.results.filter(r => r.ok).length, rate = n ? ok / n : 0;
+  const msg = rate === 1 ? '全問正解！フローチャートマスター！' : rate >= .7 ? 'よくできました！まちがえた小問を見直そう' : rate >= .4 ? 'いい調子！トレースで流れを確かめよう' : 'まずは矢印を指でたどりながら、変数の値を書き出そう';
+  const wrong = [...new Set(Q.results.filter(r => !r.ok).map(r => r.id))];
+  return `<div class="fade"><section class="card result">
+    ${peng(rate >= .7 ? 'happy' : rate >= .4 ? 'normal' : 'think', 100)}
+    <div style="color:var(--sub);font-weight:700;margin-top:4px">${esc(Q.title)}</div>
+    <div class="score">${ok}<small> / ${n} 問正解</small></div>
+    <p style="font-weight:900;color:var(--navy);margin:10px 0 0">${msg}</p>
+    <div class="rlist">${Q.results.map(r => { const q = QMAP[r.id], s = SMAP[q.set]; return `<div class="ritem"><span class="${r.ok ? 'ok' : 'ng'}">${r.ok ? '⭕' : '❌'}</span><span class="rt">大問${setNo(s.id)} 小問${q.no}<br><small>${esc(s.title)}・${TYPES[q.type].name}</small></span><button class="btn ghost sm" data-act="one" data-id="${q.id}">もう一度</button></div>`; }).join('')}</div>
+    <div class="btnrow">
+      ${wrong.length ? `<button class="btn pri" data-act="retrywrong">まちがえた ${wrong.length} 問をもう一度</button>` : ''}
+      <button class="btn nav" data-act="omakase">おまかせ1題</button>
+      <button class="btn ghost" data-act="home">ホームへ</button>
+    </div>
+  </section></div>`;
+}
+
+// ---------------- 記録 ----------------
+function vRecords() {
+  let n = 0, c = 0; Object.values(S.rec).forEach(r => { n += r.n; c += r.c; });
+  const done = QS.filter(q => S.rec[q.id]).length;
+  const statusOf = id => { const r = S.rec[id]; if (!r) return ''; if (needReview(id)) return 'rv'; return r.last ? 'ok' : 'ng'; };
+  return `<div class="fade">
+  <div class="qtop"><button class="xbtn" data-act="home" aria-label="もどる">←</button><b style="color:var(--navy);font-size:1.1rem">記録</b></div>
+  <div class="rec-top">
+    <div class="card rbox"><div class="n">${done}<small style="font-size:.9rem;color:var(--sub)">/${QS.length}</small></div><div class="l">挑戦した小問</div></div>
+    <div class="card rbox"><div class="n">${n ? Math.round(c / n * 100) + '%' : '-'}</div><div class="l">正答率（のべ ${n} 回）</div></div>
+    <div class="card rbox"><div class="n">${reviewIds().length}</div><div class="l">復習待ち</div></div>
+    <div class="card rbox"><div class="n">${Object.keys(S.days).length}</div><div class="l">練習した日数</div></div>
+  </div>
+  <h2 class="sec">大問ごとの記録 <span class="pill">小問をタップで1問練習</span></h2>
+  <div class="legend"><span><i class="dot" style="background:var(--mint)"></i>正解</span><span><i class="dot" style="background:var(--orange)"></i>復習待ち</span><span><i class="dot" style="background:#D5E3EC"></i>未挑戦</span><span>★ チェック</span></div>
+  ${SETS.map((s, i) => {
+    let un = 0, uc = 0; s.qs.forEach(q => { const r = S.rec[q.id]; if (r) { un += r.n; uc += r.c; } });
+    return `<section class="card" style="padding:12px 14px;margin-bottom:10px">
+      <div class="urow"><span style="font-weight:900">大問${i + 1} ${esc(s.title)}</span><span class="ubar"><i style="width:${un ? uc / un * 100 : 0}%"></i></span><span class="pct">${un ? Math.round(uc / un * 100) + '%' : '<span style="color:var(--sub);font-weight:500">未挑戦</span>'}</span></div>
+      <div class="qlist">${s.qs.map(q => { const r = S.rec[q.id]; return `<button class="qi" data-act="one" data-id="${q.id}"><span class="dot ${statusOf(q.id)}"></span><span class="qt">小問${q.no}<br><small style="color:var(--sub);font-weight:500">${TYPES[q.type].name}${r ? `・${r.c}/${r.n}回正解` : ''}</small></span>${S.star[q.id] ? '<span class="st">★</span>' : ''}</button>`; }).join('')}</div>
+    </section>`;
+  }).join('')}
+  <div class="btnrow" style="margin-top:16px"><button class="btn ghost" data-act="savepage">💾 記録のセーブ・読みこみ</button></div>
+  </div>`;
+}
+
+// ---------------- セーブ ----------------
+const PREFIX = 'FYD1-';
+function encodeSave() { return PREFIX + btoa(unescape(encodeURIComponent(JSON.stringify({ v: 1, rec: S.rec, star: S.star, days: S.days })))); }
+function decodeSave(s) {
+  const m = String(s).replace(/\s/g, '').match(/FYD1-[A-Za-z0-9+/=]+/);
+  if (!m) { if (/YMD1-/.test(s)) throw new Error('これは「よみとき道場（プログラム）」のセーブデータです'); throw new Error('セーブデータが見つかりません'); }
+  let d; try { d = JSON.parse(decodeURIComponent(escape(atob(m[0].slice(PREFIX.length))))); } catch (e) { throw new Error('セーブデータがこわれているようです'); }
+  if (!d.rec) throw new Error('読みこめませんでした');
+  return d;
+}
+function vSave() {
+  return `<div class="fade">
+  <div class="qtop"><button class="xbtn" data-act="home" aria-label="もどる">←</button><b style="color:var(--navy);font-size:1.1rem">記録のセーブ・読みこみ</b></div>
+  <section class="card sel-sec">
+    <p class="sel-h">① 今の記録を保存する</p>
+    <p style="margin:0 0 4px;font-size:.92rem">「ファイルに保存」でセーブファイル（.txt）を作り、自分のフォルダに保存しておこう。</p>
+    <div class="btnrow" style="margin-top:8px"><button class="btn pri" data-act="filesave">💾 ファイルに保存</button><button class="btn ghost" data-act="copysave">📋 セーブコードをコピー</button></div>
+    <details style="margin-top:10px"><summary style="cursor:pointer;font-size:.85rem;color:var(--sub);font-weight:700">セーブコードを表示する（メモ帳などに貼りつけて保存することもできます）</summary>
+    <textarea class="code-area" readonly id="savecode" style="margin-top:8px">${esc(encodeSave())}</textarea></details>
+  </section>
+  <section class="card sel-sec">
+    <p class="sel-h">② 保存しておいた記録を読みこむ</p>
+    <p style="margin:0 0 4px;font-size:.92rem">保存したセーブファイルを選ぶか、セーブコードを貼りつけてください。</p>
+    <div class="btnrow" style="margin-top:8px"><label class="btn nav" style="text-align:center;cursor:pointer">📂 ファイルから読みこむ<input type="file" id="loadfile" accept=".txt,text/plain" hidden></label></div>
+    <details style="margin-top:10px"><summary style="cursor:pointer;font-size:.85rem;color:var(--sub);font-weight:700">セーブコードを貼りつけて読みこむ</summary>
+    <textarea class="code-area" id="loadcode" placeholder="FYD1- から始まるコードを貼りつけ" style="margin-top:8px"></textarea>
+    <div class="btnrow"><button class="btn ghost" data-act="loadsave">貼りつけたコードを読みこむ</button></div></details>
+    ${pendingRestore ? `<div class="hintbox" style="margin-top:12px"><b>このセーブデータには ${Object.keys(pendingRestore.rec).length} 問ぶんの記録があります。</b><br>どうしますか？
+      <div class="btnrow"><button class="btn mint sm" data-act="restore" data-m="merge">今の記録と合わせる</button><button class="btn ghost sm" data-act="restore" data-m="replace">置きかえる</button><button class="btn ghost sm" data-act="restore" data-m="cancel">やめる</button></div></div>` : ''}
+  </section>
+  <section class="card sel-sec">
+    <p class="sel-h">③ 記録を消す</p>
+    <div class="btnrow" style="margin-top:0">${S._askReset ? '<button class="btn sm" style="background:var(--red);color:#fff" data-act="reset" data-m="yes">本当に消す</button><button class="btn ghost sm" data-act="reset" data-m="no">やめる</button>' : '<button class="btn ghost sm" data-act="reset" data-m="ask">すべての記録を消す</button>'}</div>
+  </section></div>`;
+}
+
+// ---------------- ガイド ----------------
+function vGuide() {
+  const mini = (k, label) => {
+    const n = { k, name: 'ループ1' }; const w = k === 'dec' ? 120 : k === 'lp' ? 120 : 110, h = k === 'dec' ? 56 : k === 'lp' ? 44 : 36;
+    return `<svg class="mini" viewBox="${-w / 2 - 4} ${-h / 2 - 4} ${w + 8} ${h + 8}" width="${w + 8}" height="${h + 8}"><g class="nd k-${k}">${shapeSVG(n, 0, 0, w, h)}<text x="0" y="5" text-anchor="middle" class="mt">${esc(label)}</text></g></svg>`;
+  };
+  const rows = [
+    ['start', 'はじめ', '端子', 'フローチャートの「はじめ」と「おわり」。', '—'],
+    ['proc', 's ← s + i', '処理', '計算や代入。「←」は右の値を左の変数に入れる。上から順に実行。', 's = s + i'],
+    ['dec', 'i ≦ 10', '判断', '条件が成り立てば Yes、成り立たなければ No の矢印へ進む。中の「=」は「等しいか」を調べる。', 'もし i <= 10 ならば:'],
+    ['io', 's を表示', 'データ（入出力）', '値の表示や入力。', '表示する(s)'],
+    ['lp', 'i：1→5', 'ループ端（始端）', '上の六角形から下の六角形までを繰り返す。「i を 1 から 5 まで 1 ずつ増やす」のように書く。', 'i を 1 から 5 まで 1 ずつ\n増やしながら繰り返す:'],
+    ['le', 'ループ1', 'ループ端（終端）', '繰り返しの終わり。ここで変数を増やして始端にもどる。始端と同じ名前でペアにする。', '（字下げの終わり）'],
+  ];
+  const ex = { blanks: {}, chart: { nodes: [
+    { id: 's', k: 'start', x: 0, y: 0, t: 'はじめ', next: 'a' },
+    { id: 'a', k: 'proc', x: 0, y: 1, t: 's ← 0\ni ← 1', next: 'b' },
+    { id: 'b', k: 'dec', x: 0, y: 2.25, t: 'i ≦ 3', yes: 'c', yesDir: 'down', no: 'd', noDir: 'right' },
+    { id: 'c', k: 'proc', x: 0, y: 3.45, t: 's ← s + i\ni ← i + 1', next: 'b', via: { next: [[0, 4.15], [-0.95, 4.15], [-0.95, 1.62]] } },
+    { id: 'd', k: 'io', x: 1.1, y: 4.6, t: 's を表示', next: 'e' },
+    { id: 'e', k: 'end', x: 1.1, y: 5.55, t: 'おわり' } ] } };
+  const tips = [
+    ['指で矢印をたどる', '目で追うだけでなく、今いる記号を指でおさえながら進もう。トレース機能は今いる記号を黄色で示します。'],
+    ['変数の表をつくる', '紙に変数を横に並べ、処理を1つ通るたびに値を書きこもう。'],
+    ['ひし形では Yes の向きを確認', 'Yes が下に進むのか横に進むのかは、図によってちがいます。思いこみに注意。'],
+    ['もどる矢印＝繰り返し', '下から上へもどる矢印があれば、そこが繰り返し。何回まわるか、どこで抜けるかを確認しよう。'],
+    ['境界の値でためす', '「以上・以下」の条件は、ちょうどの値（例：18歳）で Yes になるか確かめよう。'],
+    ['プログラムに書きかえてみる', '記号の意味の表を使って、プログラム表記に書きかえると流れが整理できます。'],
+  ];
+  return `<div class="fade">
+  <div class="qtop"><button class="xbtn" data-act="home" aria-label="もどる">←</button><b style="color:var(--navy);font-size:1.1rem">記号ガイド・読むコツ</b></div>
+  <section class="card" style="padding:16px 18px"><div style="display:flex;gap:12px;align-items:center">${peng('normal', 60)}<div class="bubble">フローチャートは、処理の流れを記号と矢印で表した図だよ。記号の意味と、プログラム表記との対応をおさえよう。</div></div></section>
+  <h2 class="sec">記号の意味</h2>
+  <section class="card gwrap"><table class="gtable"><thead><tr><th>記号</th><th>名前</th><th>意味</th><th>プログラム表記では</th></tr></thead><tbody>
+  ${rows.map(r => `<tr><td>${mini(r[0], r[1])}</td><td style="font-weight:900;white-space:nowrap">${r[2]}</td><td style="font-size:.88rem">${esc(r[3])}</td><td><code class="mono" style="white-space:pre-wrap;font-size:.85rem">${esc(r[4])}</code></td></tr>`).join('')}
+  </tbody></table></section>
+  <h2 class="sec">読んでみよう：1 から 3 までの合計</h2>
+  <section class="card" style="padding:14px 16px">
+    <div class="guide2">
+      <div>${renderChart(ex, {})}</div>
+      <div><p style="margin:0 0 6px;font-size:.92rem">ひし形の Yes が下に進み、処理のあと<b>左の線で判断の上にもどる</b>ところが繰り返しです。i が 4 になると No へ進み、s = 6 を表示します。プログラム表記で書くと次のようになります。</p>
+      <pre class="fig mono" style="white-space:pre;color:#fff">s = 0
+i = 1
+i <= 3 の間繰り返す:
+│ s = s + i
+└ i = i + 1
+表示する(s)</pre></div>
+    </div>
+  </section>
+  <h2 class="sec">フローチャートを読む6つのコツ</h2>
+  <div class="tips">${tips.map((t, i) => `<div class="card tip"><h3><span class="tn">${i + 1}</span>${esc(t[0])}</h3><p>${esc(t[1])}</p></div>`).join('')}</div>
+  </div>`;
+}
+
+// ---------------- トレース ----------------
+let T = null;
+function openTrace() {
+  const q = QMAP[Q.ids[Q.i]];
+  T = { q, set: SMAP[q.set], which: q.patch ? 'patched' : 'orig', i: 0, playing: false, timer: null, speed: 650 };
+  runTrace(); document.body.style.overflow = 'hidden'; renderTrace();
+}
+function runTrace() {
+  T.patch = T.which === 'patched' ? T.q.patch : null;
+  T.res = FLOW.runChart(T.set.chart, { fill: fillOf(T.set), patch: T.patch, funcs: T.set.funcs });
+  T.i = 0;
+}
+function closeTrace() { stopPlay(); T = null; $('#ov').innerHTML = ''; document.body.style.overflow = ''; }
+function stopPlay() { if (T && T.timer) { clearInterval(T.timer); T.timer = null; } if (T) T.playing = false; }
+function togglePlay() {
+  if (T.playing) { stopPlay(); renderTrace(); return; }
+  if (T.i >= T.res.events.length - 1) T.i = 0;
+  T.playing = true;
+  T.timer = setInterval(() => { if (T.i < T.res.events.length - 1) { T.i++; renderTrace(); } else { stopPlay(); renderTrace(); } }, T.speed);
+  renderTrace();
+}
+function varHTML(name, v, pv) {
+  const fv = x => typeof x === 'string' ? '"' + esc(x) + '"' : esc(DNCL.fmt(x));
+  const changed = JSON.stringify(v) !== JSON.stringify(pv);
+  if (Array.isArray(v) && v.length && Array.isArray(v[0])) {
+    const cols = Math.max(...v.map(r => r.length));
+    let h = `<table class="grid2"><tr><th></th>${Array.from({ length: cols }, (_, j) => `<th>${j}</th>`).join('')}</tr>`;
+    v.forEach((row, i) => { h += `<tr><th>${i}</th>` + row.map((x, j) => `<td class="${pv && pv[i] && pv[i][j] !== x ? 'chg' : ''}">${fv(x)}</td>`).join('') + '</tr>'; });
+    return `<div class="var${changed ? ' chg' : ''}"><span class="vn">${esc(name)}</span>${h}</table></div>`;
+  }
+  if (Array.isArray(v)) return `<div class="var${changed ? ' chg' : ''}"><span class="vn">${esc(name)}</span><span class="arr">${v.map((x, i) => `<span class="cell"><span class="ix">${i}</span><span class="cv${pv && pv[i] !== x ? ' chg' : ''}">${fv(x)}</span></span>`).join('')}</span></div>`;
+  return `<div class="var${changed ? ' chg' : ''}"><span class="vn">${esc(name)}</span><span class="vv">${fv(v)}</span></div>`;
+}
+function renderTrace() {
+  if (!T) return;
+  const ev = T.res.events[T.i], prev = T.i > 0 ? T.res.events[T.i - 1] : null, N = T.res.events.length, q = T.q;
+  const out = T.res.out.slice(0, ev.outLen);
+  const noteCls = ev.error ? 'e' : ev.cond === true ? 't' : ev.cond === false ? 'f' : '';
+  const sw = q.patch ? `<div class="tswitch"><button class="chip ${T.which === 'patched' ? 'on' : ''}" data-act="tsw" data-w="patched">✏️ 変更後のフローチャート</button><button class="chip ${T.which === 'orig' ? 'on' : ''}" data-act="tsw" data-w="orig">📄 元のフローチャート</button></div>` : '';
+  const sc = $('#trchart'); const keep = sc ? { l: sc.scrollLeft, t: sc.scrollTop } : null;
+  $('#ov').innerHTML = `<div class="ov" data-act="ovbg"><div class="tr" role="dialog" aria-label="トレース">
+    <div class="tr-h"><div class="tt">▶ トレース：大問${setNo(T.set.id)} ${esc(T.set.title)}<small>記号を1つずつたどって、変数と表示の変化を確かめよう${T.set.random ? '（乱数を使うので実行するたびに結果が変わります）' : ''}</small></div><button class="xbtn" style="background:transparent;border-color:#5aa5cf;color:#fff" data-act="tclose" aria-label="閉じる">✕</button></div>
+    <div class="tr-b">
+      <div>${sw}<div class="tr-code" id="trchart">${renderChart(T.set, { fillAll: true, patch: T.patch, showPatch: true, cur: ev.node, err: ev.error })}</div></div>
+      <div>
+        <div class="tnote ${noteCls}"><span class="stp">${ev.end ? '終了' : (T.i + 1) + '/' + (N - 1)}</span><span>${esc(ev.note)}</span></div>
+        <div class="vh">📦 変数</div>
+        <div class="vlist">${ev.snap.order.length ? ev.snap.order.map(k => varHTML(k, ev.snap.vars[k], prev ? prev.snap.vars[k] : undefined)).join('') : '<div class="empty-state" style="padding:8px">まだ変数はありません</div>'}</div>
+        <div class="vh">🖥️ 表示</div>
+        <div class="console">${out.length ? out.map((l, i) => `<div class="ln${ev.show && i === out.length - 1 ? ' new' : ''}">${esc(l)}</div>`).join('') : '<span class="empty">（まだ何も表示されていません）</span>'}</div>
+      </div>
+    </div>
+    <div class="tr-c">
+      <button class="cb" data-act="tfirst" title="最初へ">⏮</button>
+      <button class="cb" data-act="tprev" title="1つもどる">◀</button>
+      <button class="cb main" data-act="tnext">1つすすむ ▶</button>
+      <button class="cb play ${T.playing ? 'on' : ''}" data-act="tplay" title="自動再生">${T.playing ? '⏸' : '⏵'}</button>
+      <button class="cb" data-act="tlast" title="最後へ">⏭</button>
+      ${T.set.random ? '<button class="cb" data-act="trerun" title="もう一度実行（乱数が変わる）">🎲</button>' : ''}
+      <input type="range" min="0" max="${N - 1}" value="${T.i}" id="tslider" aria-label="ステップ">
+    </div>
+  </div></div>`;
+  const box = $('#trchart');
+  if (keep) { box.scrollLeft = keep.l; box.scrollTop = keep.t; }
+  const cur = box.querySelector('.nd.cur, .nd.errn');
+  if (cur) {
+    const br = box.getBoundingClientRect(), cr = cur.getBoundingClientRect();
+    if (cr.top < br.top + 10 || cr.bottom > br.bottom - 10) box.scrollTop += (cr.top + cr.height / 2) - (br.top + br.height / 2);
+    if (cr.left < br.left || cr.right > br.right) box.scrollLeft += (cr.left + cr.width / 2) - (br.left + br.width / 2);
+  }
+}
+
+// ---------------- 描画・操作 ----------------
+function render() {
+  const app = $('#app');
+  const V = { home: vHome, quiz: vQuiz, result: vResult, records: vRecords, guide: vGuide, savepage: vSave };
+  app.innerHTML = V[view]();
+}
+const ACT = {
+  home: () => { Q = null; go('home'); },
+  guide: () => go('guide'),
+  records: () => go('records'),
+  savepage: () => { pendingRestore = null; S._askReset = false; go('savepage'); },
+  font: () => {
+    const steps = [0.9, 1, 1.12, 1.25]; const i = steps.indexOf(S.font || 1);
+    S.font = steps[(i + 1) % steps.length]; save();
+    document.documentElement.style.setProperty('--fs', S.font);
+    toast('文字の大きさ：' + ['小', '標準', '大', '特大'][steps.indexOf(S.font)]);
+  },
+  omakase: () => omakase(),
+  review: () => startSession(byOrder(reviewIds()), '復習'),
+  stars: () => startSession(byOrder(starIds()), 'チェックした小問'),
+  set: el => { const s = SMAP[el.dataset.s]; startSession(setIds(s.id), `大問${setNo(s.id)} ${s.title}`); },
+  one: el => { const q = QMAP[el.dataset.id]; startSession([q.id], `大問${setNo(q.set)} 小問${q.no}`); },
+  quit: () => { if (Q.results.length) go('result'); else ACT.home(); },
+  star: () => { const id = Q.ids[Q.i]; if (S.star[id]) delete S.star[id]; else S.star[id] = 1; save(); render(); toast(S.star[id] ? '★ チェックしました' : 'チェックをはずしました'); },
+  hint: () => { Q.cur.hint = true; render(); },
+  pickblank: el => { if (Q.cur.checked) return; Q.cur.picks[el.dataset.l] = +el.dataset.o; render(); },
+  pickopt: el => { if (Q.cur.checked) return; Q.cur.choice = +el.dataset.o; render(); },
+  picknode: el => { if (Q.cur.checked) return; Q.cur.node = el.dataset.n; const sc = document.querySelector('.qcard .chartwrap'); const l = sc ? sc.scrollLeft : 0; render(); const sc2 = document.querySelector('.qcard .chartwrap'); if (sc2) sc2.scrollLeft = l; },
+  check: () => check(),
+  next: () => next(),
+  retrywrong: () => startSession(byOrder([...new Set(Q.results.filter(r => !r.ok).map(r => r.id))]), 'まちがえた小問'),
+  trace: () => openTrace(),
+  tclose: () => closeTrace(),
+  ovbg: (el, e) => { if (e.target === el) closeTrace(); },
+  tnext: () => { stopPlay(); if (T.i < T.res.events.length - 1) T.i++; renderTrace(); },
+  tprev: () => { stopPlay(); if (T.i > 0) T.i--; renderTrace(); },
+  tfirst: () => { stopPlay(); T.i = 0; renderTrace(); },
+  tlast: () => { stopPlay(); T.i = T.res.events.length - 1; renderTrace(); },
+  tplay: () => togglePlay(),
+  trerun: () => { stopPlay(); runTrace(); renderTrace(); toast('🎲 もう一度実行しました'); },
+  tsw: el => { stopPlay(); T.which = el.dataset.w; runTrace(); renderTrace(); },
+  filesave: async () => {
+    const d = new Date();
+    const stamp = d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0') + '_' + String(d.getHours()).padStart(2, '0') + String(d.getMinutes()).padStart(2, '0');
+    const filename = `フローよみとき道場_セーブ_${stamp}.txt`;
+    const done = QS.filter(q => S.rec[q.id]).length;
+    const text = `フローよみとき道場 セーブデータ\r\n保存日時：${d.toLocaleString('ja-JP')}\r\n挑戦した小問：${done} / ${QS.length}\r\n\r\n※ このファイルは「記録のセーブ」→「ファイルから読みこむ」で選んでください。\r\n※ 下の行は書きかえないでください。\r\n\r\n${encodeSave()}\r\n`;
+    let dl = null;
+    try { if (window.claude && window.claude.use) dl = await window.claude.use('downloads'); } catch (e) { dl = null; }
+    if (dl) {
+      try { await dl.save({ filename, data: text }); toast('💾 保存しました'); }
+      catch (e) {
+        if (e && e.code === 'declined') toast('保存をキャンセルしました');
+        else if (e && e.code === 'rate_limited') toast('少し待ってからもう一度おしてね');
+        else toast('⚠ ここでは保存できませんでした。「セーブコードをコピー」を使ってね');
+      }
+      return;
+    }
+    try {
+      const url = URL.createObjectURL(new Blob(['﻿' + text], { type: 'text/plain' }));
+      const a = document.createElement('a'); a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 2000);
+      toast('💾 保存しました（ダウンロードフォルダを確認してね）');
+    } catch (e) { toast('⚠ 保存できませんでした。「セーブコードをコピー」を使ってね'); }
+  },
+  copysave: async () => {
+    const ta = $('#savecode');
+    try { await navigator.clipboard.writeText(ta.value); toast('📋 コピーしました'); }
+    catch (e) { ta.closest('details').open = true; ta.focus(); ta.select(); toast('選択しました。Ctrl+C（長押し→コピー）でコピーしてね'); }
+  },
+  loadsave: () => { try { pendingRestore = decodeSave($('#loadcode').value); render(); } catch (e) { toast('⚠ ' + e.message); } },
+  restore: el => {
+    const m = el.dataset.m, d = pendingRestore;
+    if (m === 'cancel' || !d) { pendingRestore = null; render(); return; }
+    if (m === 'replace') { S.rec = d.rec || {}; S.star = d.star || {}; S.days = d.days || {}; }
+    else {
+      Object.entries(d.rec || {}).forEach(([id, r]) => { const a = S.rec[id]; if (!a || (r.t || 0) > (a.t || 0)) S.rec[id] = r; });
+      Object.assign(S.star, d.star || {});
+      Object.entries(d.days || {}).forEach(([k, v]) => { S.days[k] = Math.max(S.days[k] || 0, v); });
+    }
+    save(); pendingRestore = null; toast('✅ 記録を読みこみました'); go('home');
+  },
+  reset: el => {
+    const m = el.dataset.m;
+    if (m === 'ask') S._askReset = true; else if (m === 'no') S._askReset = false;
+    else { S.rec = {}; S.star = {}; S.days = {}; S._askReset = false; save(); toast('記録を消しました'); }
+    render();
+  },
+};
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]');
+  if (!el || el.disabled) return;
+  const f = ACT[el.dataset.act]; if (f) f(el, e);
+});
+document.addEventListener('input', e => {
+  if (e.target.id === 'ans' && Q) Q.cur.input = e.target.value;
+  if (e.target.id === 'tslider' && T) { stopPlay(); T.i = +e.target.value; renderTrace(); const s = $('#tslider'); if (s) s.focus(); }
+});
+document.addEventListener('change', e => {
+  if (e.target.id === 'loadfile') {
+    const f = e.target.files[0]; if (!f) return;
+    const rd = new FileReader();
+    rd.onload = () => { try { pendingRestore = decodeSave(String(rd.result)); render(); } catch (err) { toast('⚠ ' + err.message); } };
+    rd.readAsText(f); e.target.value = '';
+  }
+});
+document.addEventListener('keydown', e => {
+  if (T) {
+    if (e.key === 'ArrowRight') { e.preventDefault(); ACT.tnext(); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); ACT.tprev(); }
+    else if (e.key === 'Escape') closeTrace();
+    return;
+  }
+  if (e.key === 'Enter' && e.target.id === 'ans') { e.preventDefault(); check(); }
+  const g = e.target.closest && e.target.closest('[data-act=picknode]');
+  if (g && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); ACT.picknode(g); }
+});
+render();
+})();
+
+</script>
+</body>
+</html>
