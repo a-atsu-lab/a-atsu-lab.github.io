@@ -1738,9 +1738,10 @@ function encodeSave() {
   return 'YMD1-' + btoa(unescape(encodeURIComponent(data)));
 }
 function decodeSave(s) {
-  s = s.trim().replace(/\s/g, '');
-  if (!s.startsWith('YMD1-')) throw new Error('セーブコードの形式がちがいます');
-  const d = JSON.parse(decodeURIComponent(escape(atob(s.slice(5)))));
+  const m = String(s).replace(/\s/g, '').match(/YMD1-[A-Za-z0-9+/=]+/);
+  if (!m) throw new Error('セーブデータが見つかりません');
+  let d;
+  try { d = JSON.parse(decodeURIComponent(escape(atob(m[0].slice(5))))); } catch (e) { throw new Error('セーブデータがこわれているようです'); }
   if (!d.rec) throw new Error('読みこめませんでした');
   return d;
 }
@@ -1749,21 +1750,23 @@ function vSave() {
   return `<div class="fade">
   <div class="qtop"><button class="xbtn" data-act="home" aria-label="もどる">←</button><b style="color:var(--navy);font-size:1.1rem">記録のセーブ・読みこみ</b></div>
   <section class="card sel-sec">
-    <p class="sel-h">① 今の記録を書き出す</p>
-    <p style="margin:0 0 8px;font-size:.92rem">下のセーブコードをコピーして、メモ帳などに貼りつけて保存しておこう（自分のフォルダ・スマホのメモなど）。</p>
-    <textarea class="code-area" readonly id="savecode">${esc(code)}</textarea>
-    <div class="btnrow"><button class="btn pri" data-act="copysave">📋 コピーする</button></div>
+    <p class="sel-h">① 今の記録を保存する</p>
+    <p style="margin:0 0 4px;font-size:.92rem">「ファイルに保存」でセーブファイル（.txt）を作り、自分のフォルダに保存しておこう。</p>
+    <div class="btnrow" style="margin-top:8px"><button class="btn pri" data-act="filesave">💾 ファイルに保存</button><button class="btn ghost" data-act="copysave">📋 セーブコードをコピー</button></div>
+    <details style="margin-top:10px"><summary style="cursor:pointer;font-size:.85rem;color:var(--sub);font-weight:700">セーブコードを表示する（メモ帳などに貼りつけて保存することもできます）</summary>
+    <textarea class="code-area" readonly id="savecode" style="margin-top:8px">${esc(code)}</textarea></details>
   </section>
   <section class="card sel-sec">
     <p class="sel-h">② 保存しておいた記録を読みこむ</p>
-    <p style="margin:0 0 8px;font-size:.92rem">セーブコードを貼りつけるか、保存したテキストファイルを選んでください。</p>
-    <textarea class="code-area" id="loadcode" placeholder="YMD1- から始まるコードを貼りつけ"></textarea>
-    <div class="btnrow">
-      <label class="btn ghost" style="text-align:center;cursor:pointer">📂 ファイルから読みこむ<input type="file" id="loadfile" accept=".txt,text/plain" hidden></label>
-      <button class="btn nav" data-act="loadsave">読みこむ</button>
+    <p style="margin:0 0 4px;font-size:.92rem">保存したセーブファイルを選ぶか、セーブコードを貼りつけてください。</p>
+    <div class="btnrow" style="margin-top:8px">
+      <label class="btn nav" style="text-align:center;cursor:pointer">📂 ファイルから読みこむ<input type="file" id="loadfile" accept=".txt,text/plain" hidden></label>
     </div>
+    <details style="margin-top:10px"><summary style="cursor:pointer;font-size:.85rem;color:var(--sub);font-weight:700">セーブコードを貼りつけて読みこむ</summary>
+    <textarea class="code-area" id="loadcode" placeholder="YMD1- から始まるコードを貼りつけ" style="margin-top:8px"></textarea>
+    <div class="btnrow"><button class="btn ghost" data-act="loadsave">貼りつけたコードを読みこむ</button></div></details>
     ${pendingRestore ? `<div class="hintbox" style="margin-top:12px">
-      <b>このセーブコードには ${Object.keys(pendingRestore.rec).length} 問ぶんの記録があります。</b><br>どうしますか？
+      <b>このセーブデータには ${Object.keys(pendingRestore.rec).length} 問ぶんの記録があります。</b><br>どうしますか？
       <div class="btnrow"><button class="btn mint sm" data-act="restore" data-m="merge">今の記録と合わせる</button><button class="btn ghost sm" data-act="restore" data-m="replace">置きかえる</button><button class="btn ghost sm" data-act="restore" data-m="cancel">やめる</button></div></div>` : ''}
   </section>
   <section class="card sel-sec">
@@ -1952,7 +1955,33 @@ const ACT = {
   copysave: async () => {
     const ta = $('#savecode');
     try { await navigator.clipboard.writeText(ta.value); toast('📋 コピーしました'); }
-    catch (e) { ta.focus(); ta.select(); toast('選択しました。Ctrl+C（長押し→コピー）でコピーしてね'); }
+    catch (e) { ta.closest('details').open = true; ta.focus(); ta.select(); toast('選択しました。Ctrl+C（長押し→コピー）でコピーしてね'); }
+  },
+  filesave: async () => {
+    const d = new Date();
+    const stamp = d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0') + '_' + String(d.getHours()).padStart(2, '0') + String(d.getMinutes()).padStart(2, '0');
+    const filename = `よみとき道場_セーブ_${stamp}.txt`;
+    const done = QUESTIONS.filter(q => S.rec[q.id]).length;
+    const text = `よみとき道場 セーブデータ\r\n保存日時：${d.toLocaleString('ja-JP')}\r\n挑戦した問題：${done} / ${QUESTIONS.length}\r\n\r\n※ このファイルは「記録のセーブ」→「ファイルから読みこむ」で選んでください。\r\n※ 下の行は書きかえないでください。\r\n\r\n${encodeSave()}\r\n`;
+    // claude.ai 上では downloads 機能、それ以外ではふつうのダウンロード
+    let dl = null;
+    try { if (window.claude && window.claude.use) dl = await window.claude.use('downloads'); } catch (e) { dl = null; }
+    if (dl) {
+      try { await dl.save({ filename, data: text }); toast('💾 保存しました'); }
+      catch (e) {
+        if (e && e.code === 'declined') toast('保存をキャンセルしました');
+        else if (e && e.code === 'rate_limited') toast('少し待ってからもう一度おしてね');
+        else toast('⚠ ここでは保存できませんでした。「セーブコードをコピー」を使ってね');
+      }
+      return;
+    }
+    try {
+      const url = URL.createObjectURL(new Blob(['﻿' + text], { type: 'text/plain' }));
+      const a = document.createElement('a'); a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+      toast('💾 保存しました（ダウンロードフォルダを確認してね）');
+    } catch (e) { toast('⚠ 保存できませんでした。「セーブコードをコピー」を使ってね'); }
   },
   loadsave: () => {
     try { pendingRestore = decodeSave($('#loadcode').value); render(); }
@@ -1993,6 +2022,7 @@ document.addEventListener('change', e => {
     const rd = new FileReader();
     rd.onload = () => { try { pendingRestore = decodeSave(String(rd.result)); render(); } catch (err) { toast('⚠ ' + err.message); } };
     rd.readAsText(f);
+    e.target.value = '';
   }
 });
 document.addEventListener('keydown', e => {
