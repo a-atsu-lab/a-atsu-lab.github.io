@@ -28,7 +28,7 @@ const CATEGORIES = [
 //   title       : アプリ名
 //   url         : リンク先
 //   description : ひとこと説明
-//   category    : 上の CATEGORIES の name のどれか
+//   category    : 上の CATEGORIES の name を [ ] に並べる（複数OK・先頭がカードの色）
 //   icon        : 絵文字1つ
 //   added       : 追加日（"2026-11-02" の形。NEWマークに使います。空でもOK）
 const APPS = [
@@ -36,7 +36,7 @@ const APPS = [
     title: "データ運びゲーム",
     url: "https://a-atsu-lab.github.io/chache-game.html",
     description: "キャッシュメモリへのヒット率を実感するゲームです。",
-    category: "情報Ⅰ",
+    category: ["情報Ⅰ"],
     icon: "📚",
     added: "2026-11-03"
   },
@@ -44,7 +44,7 @@ const APPS = [
     title: "CPUシミュレーター",
     url: "https://a-atsu-lab.github.io/cpu-simulator.html",
     description: "CPUの動きを試せます。",
-    category: "情報Ⅰ",
+    category: ["情報Ⅰ"],
     icon: "📚",
     added: "2026-11-03"
   },
@@ -52,7 +52,7 @@ const APPS = [
     title: "論理回路シミュレーター",
     url: "https://a-atsu-lab.github.io/logic-circuit-simulator.html",
     description: "論理回路を作るアプリです。",
-    category: "情報Ⅰ",
+    category: ["情報Ⅰ"],
     icon: "💻",
     added: "2026-11-03"
   },
@@ -60,7 +60,7 @@ const APPS = [
     title: "センサロボ・チャレンジ",
     url: "https://a-atsu-lab.github.io/sensor-robo.html",
     description: "ビジュアルプログラミングのアプリです。",
-    category: "情報Ⅰ",
+    category: ["情報Ⅰ"],
     icon: "💻",
     added: "2026-11-02"
   },
@@ -68,7 +68,7 @@ const APPS = [
     title: "pystep",
     url: "https://a-atsu-lab.github.io/pystep.html",
     description: "Pythonの学習アプリです。Pythonだけでなく、共通テスト用の言語表記やフローチャートも表示できます。",
-    category: "情報Ⅰ",
+    category: ["情報Ⅰ", "プログラミング"],
     icon: "💻",
     added: "2026-11-03"
   },
@@ -76,7 +76,7 @@ const APPS = [
     title: "自販機ラボ",
     url: "https://a-atsu-lab.github.io/vending-machine.html",
     description: "自販機の故障を修理するというストーリーのプログラミング教材です。Pythonモードと共通テスト用言語モードがあります。共通テスト用でやってみてもいいと思います。（※授業では扱っていません）",
-    category: "情報Ⅰ",
+    category: ["情報Ⅰ", "プログラミング"],
     icon: "💻",
     added: "2026-11-03"
   },
@@ -84,7 +84,7 @@ const APPS = [
     title: "プロトメーカー",
     url: "https://a-atsu-lab.github.io/protomaker.html",
     description: "アプリの企画・デザインをして、AIへの指示文書を作成できるアプリです。",
-    category: "プログラミング",
+    category: ["プログラミング"],
     icon: "💻",
     added: "2026-11-03"
   },
@@ -92,7 +92,7 @@ const APPS = [
     title: "プログラムよみとき道場１",
     url: "https://a-atsu-lab.github.io/pro-yomitoki-v1",
     description: "共通テスト用の言語表記のプログラミング練習問題です。スマホでもできます。入試まで使ってください。B社の分析では、共通テストの情報Ⅰではプログラミングができるかで最も差が付くようです。近道はありません。とにかくプログラムを読みまくりましょう。そのうちできるようになります。",
-    category: "共通テスト対策",
+    category: ["共通テスト対策"],
     icon: "📝",
     added: "2026-11-04"
   }
