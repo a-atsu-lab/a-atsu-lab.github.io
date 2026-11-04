@@ -59,7 +59,9 @@
   }
   .card h2{font-size:18px; margin:0; line-height:1.4}
   .card p{margin:0; color:var(--sub); font-size:14px; flex:1}
-  .foot{display:flex; justify-content:space-between; align-items:center; margin-top:4px}
+  .foot{display:flex; justify-content:space-between; align-items:flex-end; gap:8px; margin-top:4px}
+  .cats{display:flex; flex-wrap:wrap; gap:4px}
+  .go{white-space:nowrap}
   .cat{font-size:12px; font-weight:700; color:var(--c); background:color-mix(in srgb, var(--c) 12%, white); padding:2px 10px; border-radius:999px}
   .go{font-size:13px; font-weight:700; color:var(--c)}
   .new{
@@ -100,6 +102,8 @@
   const cats = (typeof CATEGORIES !== "undefined") ? CATEGORIES : [];
   const apps = (typeof APPS !== "undefined") ? APPS : [];
   const colorOf = name => (cats.find(c => c.name === name) || {}).color || "#8A94A6";
+  // category は "情報Ⅰ" でも ["情報Ⅰ","プログラミング"] でもOK
+  const catsOf = a => (Array.isArray(a.category) ? a.category : [a.category]).filter(Boolean);
 
   document.getElementById("title").textContent = site.title || "アプリのひろば";
   document.getElementById("subtitle").textContent = site.subtitle || "";
@@ -118,8 +122,8 @@
   // 絞り込みボタン（アプリが1つ以上あるカテゴリだけ表示）
   let current = "すべて";
   const chipBox = document.getElementById("chips");
-  const used = cats.filter(c => apps.some(a => a.category === c.name));
-  const others = [...new Set(apps.map(a => a.category).filter(n => n && !cats.some(c => c.name === n)))];
+  const used = cats.filter(c => apps.some(a => catsOf(a).includes(c.name)));
+  const others = [...new Set(apps.flatMap(catsOf).filter(n => !cats.some(c => c.name === n)))];
   const chipList = [{name:"すべて",color:"#2B3A55"}, ...used, ...others.map(n => ({name:n,color:colorOf(n)}))];
   if (chipList.length > 2) {
     chipList.forEach(c => {
@@ -148,18 +152,18 @@
     });
     const q = search.value.trim().toLowerCase();
     const list = apps.filter(a =>
-      (current === "すべて" || a.category === current) &&
-      (!q || [a.title,a.description,a.category].join(" ").toLowerCase().includes(q))
+      (current === "すべて" || catsOf(a).includes(current)) &&
+      (!q || [a.title,a.description,...catsOf(a)].join(" ").toLowerCase().includes(q))
     );
     const grid = document.getElementById("grid");
     grid.innerHTML = list.length ? list.map(a => `
-      <a class="card" href="${esc(a.url || "#")}" target="_blank" rel="noopener" style="--c:${esc(colorOf(a.category))}">
+      <a class="card" href="${esc(a.url || "#")}" target="_blank" rel="noopener" style="--c:${esc(colorOf(current !== "すべて" ? current : catsOf(a)[0]))}">
         ${isNew(a) ? '<span class="new">NEW</span>' : ""}
         <div class="icon">${esc(a.icon || "✨")}</div>
         <h2>${esc(a.title)}</h2>
         <p>${esc(a.description)}</p>
         <div class="foot">
-          <span class="cat">${esc(a.category || "")}</span>
+          <span class="cats">${catsOf(a).map(n => `<span class="cat" style="--c:${esc(colorOf(n))}">${esc(n)}</span>`).join("")}</span>
           <span class="go">ひらく →</span>
         </div>
       </a>`).join("")
