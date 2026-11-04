@@ -1,0 +1,2014 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>よみとき道場｜共通テスト用プログラム表記 読解トレーニング</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=M+PLUS+1+Code:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFF7EC; --card:#fff; --ink:#2B2D42; --sub:#6B7280; --navy:#1F3864; --navy2:#2E4A7D;
+  --orange:#F28C28; --orange-d:#D9701A; --orange-l:#FFE9D3; --mint:#22A867; --mint-l:#DDF6E8;
+  --red:#E5484D; --red-l:#FDE3E4; --yellow:#FFD166; --yellow-l:#FFF3CF; --line:#EFE3D1;
+  --code-bg:#FFFDF8; --purple:#7C3AED; --fs:1;
+  --r:18px; --shadow:0 4px 0 rgba(43,45,66,.08), 0 8px 24px rgba(43,45,66,.06);
+}
+*{box-sizing:border-box}
+html{font-size:calc(16px * var(--fs))}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Meiryo",sans-serif;font-weight:500;line-height:1.7;
+  background-image:radial-gradient(#F3E3CB 1.2px, transparent 1.2px);background-size:22px 22px;-webkit-text-size-adjust:100%}
+button{font-family:inherit;font-weight:700;color:inherit;cursor:pointer;border:none;background:none;font-size:1rem}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--orange);outline-offset:2px}
+code,.mono{font-family:"M PLUS 1 Code",ui-monospace,monospace}
+
+/* header */
+.hdr{position:sticky;top:0;z-index:20;background:rgba(255,247,236,.92);backdrop-filter:blur(6px);border-bottom:2px solid var(--line)}
+.hdr-in{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:8px;padding:8px 14px}
+.logo{display:flex;align-items:center;gap:8px;font-weight:900;font-size:1.15rem;color:var(--navy)}
+.logo small{display:block;font-size:.62rem;color:var(--sub);font-weight:700;line-height:1.2}
+.logo .t{line-height:1.15}
+.hdr .sp{flex:1}
+.hbtn{display:flex;align-items:center;gap:4px;padding:6px 10px;border-radius:12px;font-size:.85rem;color:var(--navy)}
+.hbtn:hover{background:#fff}
+.hbtn .lb{display:inline}
+@media (max-width:560px){.hbtn .lb{display:none}.hbtn{font-size:1.1rem;padding:6px 8px}.logo small{display:none}}
+
+main{max-width:1180px;margin:0 auto;padding:16px 14px 80px}
+.card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);border:2px solid var(--line)}
+h2.sec{font-size:1.1rem;color:var(--navy);margin:26px 4px 10px;display:flex;align-items:center;gap:8px}
+h2.sec .pill{font-size:.75rem;background:var(--orange-l);color:var(--orange-d);padding:1px 10px;border-radius:99px}
+
+/* home */
+.hero{display:flex;gap:16px;align-items:center;padding:18px 20px}
+.hero .owl{flex:0 0 auto}
+.bubble{position:relative;background:var(--yellow-l);border:2px solid #F6DFA0;border-radius:16px;padding:10px 14px;font-weight:700}
+.bubble:before{content:"";position:absolute;left:-10px;top:22px;border:8px solid transparent;border-right-color:#F6DFA0}
+.hero h1{margin:0 0 4px;font-size:1.35rem;color:var(--navy);font-weight:900;line-height:1.35}
+.stats{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.stat{background:#F7F2EA;border-radius:12px;padding:4px 12px;font-size:.85rem;color:var(--sub)}
+.stat b{color:var(--ink);font-size:1.05rem;margin-left:4px}
+.acts{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:14px}
+@media (max-width:820px){.acts{grid-template-columns:repeat(2,1fr)}}
+.act{position:relative;text-align:left;padding:16px 16px 14px;border-radius:var(--r);color:#fff;box-shadow:0 5px 0 rgba(0,0,0,.18);transition:transform .08s}
+.act:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.18)}
+.act .ic{font-size:1.7rem;line-height:1}
+.act .nm{display:block;font-size:1.08rem;font-weight:900;margin-top:6px}
+.act .ds{display:block;font-size:.78rem;opacity:.92;font-weight:700}
+.act.o{background:var(--orange)} .act.n{background:var(--navy)} .act.m{background:var(--mint)} .act.y{background:#F2B705;color:#3b2c00}
+.badge{position:absolute;top:10px;right:12px;background:#fff;color:var(--red);border-radius:99px;font-size:.8rem;padding:0 9px;font-weight:900;min-width:26px;text-align:center}
+.act[disabled]{opacity:.55;cursor:default}
+.units{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.unit{display:flex;gap:12px;align-items:center;text-align:left;padding:14px;background:#fff;border-radius:var(--r);border:2px solid var(--line);box-shadow:var(--shadow);transition:transform .1s}
+.unit:hover{transform:translateY(-2px)}
+.unit .ui{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;font-size:1.5rem;flex:0 0 auto}
+.unit .un{font-weight:900;font-size:1rem}
+.unit .us{font-size:.75rem;color:var(--sub);font-weight:700;line-height:1.4}
+.unit .bar{height:7px;background:#F1E9DC;border-radius:9px;margin-top:6px;overflow:hidden}
+.unit .bar i{display:block;height:100%;border-radius:9px}
+.unit .cnt{font-size:.72rem;color:var(--sub);margin-top:2px}
+.links{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media (max-width:640px){.links{grid-template-columns:1fr}}
+.lnk{display:flex;align-items:center;gap:12px;text-align:left;padding:14px 16px;background:#fff;border:2px solid var(--line);border-radius:var(--r)}
+.lnk .ic{font-size:1.5rem}
+.lnk small{display:block;color:var(--sub);font-size:.75rem}
+.note{font-size:.8rem;color:var(--sub);margin:14px 6px 0}
+
+/* quiz */
+.qtop{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.xbtn{width:38px;height:38px;border-radius:12px;background:#fff;border:2px solid var(--line);font-size:1.1rem;flex:0 0 auto}
+.prog{flex:1;height:14px;background:#fff;border:2px solid var(--line);border-radius:99px;overflow:hidden}
+.prog i{display:block;height:100%;background:linear-gradient(90deg,var(--orange),#FFB15C);border-radius:99px;transition:width .3s}
+.qnum{font-weight:900;color:var(--navy);font-size:.95rem;white-space:nowrap}
+.star{width:38px;height:38px;border-radius:12px;background:#fff;border:2px solid var(--line);font-size:1.2rem;color:#C9BFAE;flex:0 0 auto}
+.star.on{color:#F2B705;border-color:#F6DFA0;background:var(--yellow-l)}
+.qgrid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:900px){.qgrid{grid-template-columns:minmax(0,1fr)}}
+.qcard{padding:16px 18px}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.tag{font-size:.72rem;font-weight:900;padding:2px 10px;border-radius:99px;background:#F4EEE4;color:var(--sub)}
+.qtitle{font-size:1.2rem;font-weight:900;color:var(--navy);margin:2px 0 6px}
+.qtext{margin:0 0 12px}
+.fig{background:#2B2D42;color:#fff;border-radius:12px;padding:10px 14px;margin:0 0 12px;font-size:.95rem;white-space:pre;line-height:1.5}
+.fig .cap{display:block;font-size:.7rem;color:#C8CCE0;font-family:"Zen Maru Gothic",sans-serif;margin-bottom:2px}
+.acard{padding:16px 18px;position:sticky;top:76px}
+@media (max-width:900px){.acard{position:static}}
+.alabel{font-size:.85rem;font-weight:900;color:var(--sub);margin:0 0 8px}
+
+/* code */
+@media (max-width:560px){.code{font-size:.86rem !important}}
+.code{background:var(--code-bg);border:2px solid #EADFCB;border-radius:14px;padding:10px 0;overflow-x:auto;font-family:"M PLUS 1 Code",ui-monospace,monospace;font-size:.95rem;line-height:1.55}
+.cl{display:flex;align-items:stretch;min-height:1.9em;padding-right:14px;white-space:pre;position:relative}
+.cl .no{flex:0 0 auto;width:3.4em;text-align:right;padding-right:.7em;color:#B6A98F;font-size:.82em;user-select:none;display:flex;align-items:center;justify-content:flex-end}
+.cl .g{flex:0 0 auto;width:1.5em;border-left:2px solid #C9BBA0;margin-left:.15em}
+.cl .g.end{border-bottom:2px solid #C9BBA0;margin-bottom:.45em;border-bottom-left-radius:3px}
+.cl .tx{display:block;align-self:center;white-space:pre;padding-left:.2em}
+.cl.sel{cursor:pointer}
+.cl.sel:hover{background:#FFF1DD}
+.cl.pick{background:#FFE3BF}
+.cl.pick .no{color:var(--orange-d);font-weight:700}
+.cl.right{background:var(--mint-l)} .cl.right .no{color:var(--mint);font-weight:700}
+.cl.wrong{background:var(--red-l)} .cl.wrong .no{color:var(--red);font-weight:700}
+.cl.hl{background:#FFE7A8}
+.cl.hl:before{content:"▶";position:absolute;left:4px;top:50%;transform:translateY(-50%);color:var(--orange-d);font-size:.7em}
+.cl.errl{background:var(--red-l)}
+.k{color:var(--navy);font-weight:700} .s{color:#1E7A46} .nmb{color:#C2410C} .fn{color:var(--purple);font-weight:600} .v{color:#2B2D42}
+.blank{display:inline-flex;align-items:center;justify-content:center;min-width:3.2em;padding:0 .5em;margin:0 .15em;border:2px dashed var(--orange);border-radius:8px;background:#FFF4E6;color:var(--orange-d);font-weight:700;height:1.6em;font-family:"Zen Maru Gothic",sans-serif}
+.blank.filled{border-style:solid;background:#FFE8CC;color:var(--ink);font-family:"M PLUS 1 Code",monospace;font-weight:400}
+.blank.filled .bl{font-family:"Zen Maru Gothic";font-size:.7em;color:var(--orange-d);font-weight:900;margin-right:.4em}
+.blank.ok{border-color:var(--mint);background:var(--mint-l)} .blank.ng{border-color:var(--red);background:var(--red-l)}
+
+/* answer UI */
+.bgroup{margin-bottom:14px}
+.bhead{display:flex;align-items:center;gap:8px;font-weight:900;margin-bottom:6px}
+.bhead .bx{display:inline-grid;place-items:center;width:1.9em;height:1.9em;border-radius:8px;border:2px solid var(--orange);color:var(--orange-d);background:#FFF4E6}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{display:flex;gap:10px;align-items:flex-start;text-align:left;padding:10px 12px;background:#fff;border:2px solid var(--line);border-radius:14px;font-weight:700;transition:transform .06s,border-color .1s;box-shadow:0 3px 0 #EFE3D1}
+.opt:hover{border-color:#F3C48F}
+.opt:active{transform:translateY(2px);box-shadow:0 1px 0 #EFE3D1}
+.opt .mk{flex:0 0 auto;font-size:1.15rem;line-height:1.35;color:var(--orange-d)}
+.opt .ot{flex:1;min-width:0;word-break:break-all}
+.opt .ot.mono{font-weight:400;font-size:.92rem;line-height:1.6}
+.opt.on{border-color:var(--orange);background:#FFF4E6;box-shadow:0 3px 0 #F3C48F}
+.opt.ok{border-color:var(--mint);background:var(--mint-l);box-shadow:0 3px 0 #A9E3C4}
+.opt.ng{border-color:var(--red);background:var(--red-l);box-shadow:0 3px 0 #F4B4B6}
+.opt[disabled]{cursor:default}
+.opt .res{flex:0 0 auto;font-size:1rem}
+.inbox{display:flex;gap:8px}
+.inbox input{flex:1;min-width:0;font-size:1.4rem;padding:10px 14px;border-radius:14px;border:2px solid var(--line);font-family:"M PLUS 1 Code",monospace;background:#fff;color:var(--ink)}
+.inbox input.ok{border-color:var(--mint);background:var(--mint-l)} .inbox input.ng{border-color:var(--red);background:var(--red-l)}
+.linepick{padding:12px;border:2px dashed var(--line);border-radius:14px;text-align:center;color:var(--sub);font-weight:700}
+.linepick b{color:var(--orange-d);font-size:1.3rem}
+.btnrow{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.btn{flex:1;min-width:140px;padding:12px 16px;border-radius:14px;font-weight:900;font-size:1rem;box-shadow:0 4px 0 rgba(0,0,0,.15);transition:transform .06s}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.15)}
+.btn.pri{background:var(--orange);color:#fff}
+.btn.nav{background:var(--navy);color:#fff}
+.btn.mint{background:var(--mint);color:#fff}
+.btn.ghost{background:#fff;border:2px solid var(--line);box-shadow:0 3px 0 #EFE3D1;color:var(--navy)}
+.btn.sm{flex:0 0 auto;min-width:0;padding:8px 12px;font-size:.88rem}
+.hintbox{margin-top:12px;background:var(--yellow-l);border:2px solid #F6DFA0;border-radius:14px;padding:10px 12px;font-size:.92rem}
+.fb{margin-top:16px;border-radius:16px;padding:14px;border:2px solid}
+.fb.ok{background:var(--mint-l);border-color:#A9E3C4}
+.fb.ng{background:var(--red-l);border-color:#F4B4B6}
+.fbhead{display:flex;align-items:center;gap:10px;font-size:1.3rem;font-weight:900}
+.fb.ok .fbhead{color:#16834F} .fb.ng .fbhead{color:#C2353A}
+.fbhead small{display:block;font-size:.8rem;color:var(--sub);font-weight:700}
+.exp{background:#fff;border-radius:12px;padding:10px 12px;margin-top:10px;font-size:.95rem}
+.exp .lb{font-weight:900;color:var(--navy);font-size:.85rem;display:block;margin-bottom:2px}
+.correct-ans{font-size:.92rem;margin-top:8px}
+.correct-ans code{background:#fff;padding:1px 6px;border-radius:6px}
+.pop{animation:pop .35s ease}
+@keyframes pop{0%{transform:scale(.6);opacity:0}70%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+.shake{animation:shake .35s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+/* result */
+.result{padding:24px;text-align:center}
+.score{font-size:3rem;font-weight:900;color:var(--navy);line-height:1}
+.score small{font-size:1.2rem;color:var(--sub)}
+.rlist{text-align:left;margin-top:18px;display:flex;flex-direction:column;gap:8px}
+.ritem{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:#FBF7F1;border:2px solid var(--line)}
+.ritem .ok{color:var(--mint);font-weight:900;font-size:1.2rem}
+.ritem .ng{color:var(--red);font-weight:900;font-size:1.2rem}
+.ritem .rt{flex:1;font-weight:700}
+.ritem small{color:var(--sub)}
+
+/* select */
+.sel-sec{padding:16px 18px;margin-bottom:14px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:7px 14px;border-radius:99px;background:#fff;border:2px solid var(--line);font-size:.9rem;font-weight:700;color:var(--sub)}
+.chip.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.sel-h{font-weight:900;color:var(--navy);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center}
+.sel-h button{font-size:.78rem;color:var(--orange-d)}
+
+/* records */
+.rec-top{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media (max-width:700px){.rec-top{grid-template-columns:repeat(2,1fr)}}
+.rbox{padding:14px;text-align:center}
+.rbox .n{font-size:1.8rem;font-weight:900;color:var(--navy);line-height:1.2}
+.rbox .l{font-size:.78rem;color:var(--sub);font-weight:700}
+.urow{display:grid;grid-template-columns:9em 1fr 4.5em;gap:10px;align-items:center;padding:6px 0}
+.urow .ubar{height:14px;background:#F1E9DC;border-radius:9px;overflow:hidden;position:relative}
+.urow .ubar i{position:absolute;left:0;top:0;bottom:0;border-radius:9px}
+.urow .pct{text-align:right;font-weight:900;font-size:.9rem}
+.qlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}
+.qi{display:flex;align-items:center;gap:8px;text-align:left;padding:8px 10px;background:#fff;border:2px solid var(--line);border-radius:12px;font-size:.88rem}
+.qi .dot{width:12px;height:12px;border-radius:50%;flex:0 0 auto;background:#E5DCCD}
+.qi .dot.ok{background:var(--mint)} .qi .dot.ng{background:var(--red)} .qi .dot.rv{background:var(--orange)}
+.qi .qt{flex:1;font-weight:700}
+.qi .st{color:#F2B705}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.78rem;color:var(--sub);margin:4px 2px 10px}
+.legend span{display:flex;align-items:center;gap:4px}
+.legend .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+
+/* guide */
+.gtable{width:100%;border-collapse:separate;border-spacing:0;font-size:.92rem}
+.gtable th,.gtable td{padding:9px 10px;border-bottom:2px solid #F3EADC;text-align:left;vertical-align:top}
+.gtable th{background:#F7F1E7;color:var(--navy);font-weight:900;font-size:.82rem}
+.gtable td code{font-size:.88rem;white-space:pre-wrap}
+.gtable td.py code{color:#3776AB}
+.gwrap{overflow-x:auto;padding:4px}
+.tips{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.tip{padding:14px 16px}
+.tip .tn{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--orange);color:#fff;font-weight:900;margin-right:6px}
+.tip h3{margin:0 0 6px;font-size:1rem;color:var(--navy);display:flex;align-items:center}
+.tip p{margin:0;font-size:.9rem}
+
+/* save */
+textarea.code-area{width:100%;min-height:110px;font-family:"M PLUS 1 Code",monospace;font-size:.8rem;border:2px solid var(--line);border-radius:12px;padding:10px;background:#FFFDF8;color:var(--ink);word-break:break-all}
+
+/* trace overlay */
+.ov{position:fixed;inset:0;z-index:50;background:rgba(43,45,66,.55);display:flex;align-items:stretch;justify-content:center;padding:14px}
+@media (max-width:700px){.ov{padding:0}}
+.tr{background:var(--bg);width:100%;max-width:1180px;border-radius:20px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+@media (max-width:700px){.tr{border-radius:0}}
+.tr-h{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--navy);color:#fff}
+.tr-h .tt{font-weight:900;flex:1;line-height:1.3}
+.tr-h .tt small{display:block;font-size:.72rem;color:#CAD5EA;font-weight:700}
+.tr-h button{color:#fff}
+.tr-b{flex:1;overflow:auto;display:grid;align-content:start;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:14px;padding:14px}
+@media (max-width:900px){.tr-b{grid-template-columns:minmax(0,1fr);gap:10px;padding:10px}}
+.tr-code{max-height:100%;overflow:auto}
+@media (max-width:900px){.tr-code{max-height:38vh}}
+.tnote{display:flex;gap:10px;align-items:flex-start;background:#fff;border:2px solid var(--line);border-radius:14px;padding:10px 12px;font-weight:700;min-height:62px}
+.tnote .stp{flex:0 0 auto;font-size:.72rem;background:var(--orange);color:#fff;border-radius:99px;padding:1px 9px;margin-top:3px}
+.tnote.t{border-color:#A9E3C4;background:var(--mint-l)} .tnote.f{border-color:#F4B4B6;background:var(--red-l)}
+.tnote.e{border-color:var(--red);background:var(--red-l);color:#B42318}
+.vlist{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.vh{font-size:.8rem;font-weight:900;color:var(--sub);margin:12px 2px 4px}
+.var{background:#fff;border:2px solid var(--line);border-radius:12px;padding:6px 10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.var .vn{font-family:"M PLUS 1 Code",monospace;font-weight:700;color:var(--navy);min-width:4em}
+.var .vv{font-family:"M PLUS 1 Code",monospace;font-size:1.05rem}
+.var.chg{border-color:var(--orange);background:#FFF4E6}
+.arr{display:flex;flex-wrap:wrap;gap:3px}
+.cell{display:flex;flex-direction:column;align-items:center;min-width:2.4em}
+.cell .ix{font-size:.62rem;color:var(--sub);font-family:"M PLUS 1 Code",monospace}
+.cell .cv{border:2px solid #E3D6C0;border-radius:6px;padding:0 6px;min-width:2.4em;text-align:center;font-family:"M PLUS 1 Code",monospace;background:#FFFDF8;font-size:.92rem}
+.cell .cv.chg{border-color:var(--orange);background:#FFE3BF;font-weight:700}
+.grid2{border-collapse:collapse;font-family:"M PLUS 1 Code",monospace;font-size:.88rem}
+.grid2 td,.grid2 th{border:2px solid #E3D6C0;padding:1px 7px;text-align:center;background:#FFFDF8;min-width:2.4em}
+.grid2 th{background:transparent;border:none;color:var(--sub);font-size:.65rem;font-weight:400}
+.grid2 td.chg{border-color:var(--orange);background:#FFE3BF;font-weight:700}
+.console{background:#1E2235;color:#E7F6E9;border-radius:12px;padding:10px 12px;font-family:"M PLUS 1 Code",monospace;font-size:.92rem;min-height:56px;max-height:180px;overflow:auto;white-space:pre-wrap}
+.console .ln.new{color:#FFD166}
+.console .empty{color:#7F8AA8}
+.tr-c{display:flex;align-items:center;gap:8px;padding:10px 14px;background:#fff;border-top:2px solid var(--line);flex-wrap:wrap}
+.tr-c .cb{width:48px;height:44px;border-radius:12px;background:#F4EEE4;font-size:1.05rem}
+.tr-c .cb.main{background:var(--orange);color:#fff;width:auto;padding:0 18px;flex:1;max-width:240px}
+.tr-c .cb.play.on{background:var(--mint);color:#fff}
+.tr-c input[type=range]{flex:1;min-width:100px;accent-color:var(--orange)}
+.tr-c .sp{flex:1}
+.tswitch{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:99px;font-weight:700;z-index:80;box-shadow:0 8px 20px rgba(0,0,0,.2);animation:pop .3s}
+.empty-state{text-align:center;padding:30px 16px;color:var(--sub)}
+.fade{animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<header class="hdr"><div class="hdr-in">
+  <button class="logo" data-act="home" aria-label="ホームへ"><span id="logoOwl"></span><span class="t">よみとき道場<small>共通テスト用プログラム表記 読解トレーニング</small></span></button>
+  <span class="sp"></span>
+  <button class="hbtn" data-act="guide" title="表記ガイド">📘<span class="lb">表記ガイド</span></button>
+  <button class="hbtn" data-act="records" title="記録">📊<span class="lb">記録</span></button>
+  <button class="hbtn" data-act="font" title="文字の大きさ">🔠<span class="lb">文字サイズ</span></button>
+</div></header>
+<main id="app"></main>
+<div id="ov"></div>
+<script>
+// 共通テスト用プログラム表記 ミニ実行エンジン（トレース用）
+(function (G) {
+  class DError extends Error { constructor(msg, line) { super(msg); this.line = line; } }
+  class StepLimit extends Error {}
+
+  const toHalf = s => s.replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0));
+  const OPS2 = ['**', '==', '!=', '>=', '<='];
+  const OPS1 = ['>', '<', '+', '-', '*', '/', '÷', '%', '％', '(', ')', '[', ']', ',', '=', '×', '≧', '≦', '≠'];
+  const ID_RE = /^[A-Za-z_぀-ヿ㐀-鿿Ａ-Ｚａ-ｚ][A-Za-z0-9_぀-ヿ㐀-鿿]*/u;
+
+  function tokenize(s, line) {
+    const toks = []; let i = 0;
+    while (i < s.length) {
+      const c = s[i];
+      if (c === ' ' || c === '\t' || c === '　') { i++; continue; }
+      if (c === '"' || c === '「') {
+        const close = c === '"' ? '"' : '」'; let j = i + 1;
+        while (j < s.length && s[j] !== close) j++;
+        if (j >= s.length) throw new DError('文字列の " が閉じていません', line);
+        toks.push({ t: 'str', v: s.slice(i + 1, j) }); i = j + 1; continue;
+      }
+      if (/[0-9０-９]/.test(c)) {
+        const m = s.slice(i).match(/^[0-9０-９]+(\.[0-9]+)?/);
+        toks.push({ t: 'num', v: Number(toHalf(m[0])) }); i += m[0].length; continue;
+      }
+      const two = s.substr(i, 2);
+      if (OPS2.includes(two)) { toks.push({ t: 'op', v: two }); i += 2; continue; }
+      if (OPS1.includes(c)) {
+        let v = c;
+        if (v === '％') v = '%'; if (v === '×') v = '*'; if (v === '≧') v = '>='; if (v === '≦') v = '<='; if (v === '≠') v = '!=';
+        toks.push({ t: 'op', v }); i++; continue;
+      }
+      const m = s.slice(i).match(ID_RE);
+      if (m) { toks.push({ t: 'id', v: m[0] }); i += m[0].length; continue; }
+      throw new DError('読めない文字があります: ' + c, line);
+    }
+    return toks;
+  }
+
+  function Parser(toks, line) {
+    let p = 0;
+    const peek = () => toks[p];
+    const isOp = v => toks[p] && toks[p].t === 'op' && toks[p].v === v;
+    const isId = v => toks[p] && toks[p].t === 'id' && toks[p].v === v;
+    const expect = v => { if (!isOp(v)) throw new DError(`「${v}」が必要です`, line); p++; };
+    function expr() { return or(); }
+    function or() { let a = and(); while (isId('or')) { p++; a = { t: 'bin', op: 'or', a, b: and() }; } return a; }
+    function and() { let a = not(); while (isId('and')) { p++; a = { t: 'bin', op: 'and', a, b: not() }; } return a; }
+    function not() { if (isId('not')) { p++; return { t: 'un', op: 'not', a: not() }; } return cmp(); }
+    function cmp() {
+      const a = add();
+      const k = peek();
+      if (k && k.t === 'op' && ['==', '!=', '>', '<', '>=', '<='].includes(k.v)) { p++; return { t: 'bin', op: k.v, a, b: add() }; }
+      return a;
+    }
+    function add() {
+      let a = mul();
+      while (isOp('+') || isOp('-')) { const op = toks[p++].v; a = { t: 'bin', op, a, b: mul() }; }
+      return a;
+    }
+    function mul() {
+      let a = unary();
+      while (isOp('*') || isOp('/') || isOp('÷') || isOp('%')) { const op = toks[p++].v; a = { t: 'bin', op, a, b: unary() }; }
+      return a;
+    }
+    function unary() { if (isOp('-')) { p++; return { t: 'un', op: '-', a: unary() }; } return pow(); }
+    function pow() { const a = post(); if (isOp('**')) { p++; return { t: 'bin', op: '**', a, b: unary() }; } return a; }
+    function post() {
+      let a = prim();
+      for (;;) {
+        if (isOp('[')) { p++; const idx = [expr()]; while (isOp(',')) { p++; idx.push(expr()); } expect(']'); a = { t: 'idx', a, idx }; }
+        else if (isOp('(') && a.t === 'var') { p++; const args = []; if (!isOp(')')) { args.push(expr()); while (isOp(',')) { p++; args.push(expr()); } } expect(')'); a = { t: 'call', name: a.name, args }; }
+        else break;
+      }
+      return a;
+    }
+    function prim() {
+      const k = toks[p];
+      if (!k) throw new DError('式が途中で終わっています', line);
+      if (k.t === 'num' || k.t === 'str') { p++; return { t: 'lit', v: k.v }; }
+      if (k.t === 'id') { p++; return { t: 'var', name: k.v }; }
+      if (isOp('(')) { p++; const e = expr(); expect(')'); return e; }
+      if (isOp('[')) { p++; const items = []; if (!isOp(']')) { items.push(expr()); while (isOp(',')) { p++; items.push(expr()); } } expect(']'); return { t: 'arr', items }; }
+      throw new DError('式の書き方がおかしいところがあります', line);
+    }
+    return { expr, done: () => p >= toks.length, rest: () => toks.slice(p) };
+  }
+
+  function parseExpr(s, line) {
+    const ps = Parser(tokenize(s, line), line);
+    const e = ps.expr();
+    if (!ps.done()) throw new DError('式の後ろに余分なものがあります', line);
+    return e;
+  }
+
+  function parseProgram(src) {
+    const raw = src.replace(/\r/g, '').split('\n');
+    const lines = raw.map((s, i) => {
+      const m = s.match(/^( *)(.*)$/);
+      return { no: i + 1, ind: Math.floor(m[1].length / 2), text: m[2].trim() };
+    });
+    let i = 0;
+    function block(level) {
+      const out = [];
+      while (i < lines.length) {
+        const L = lines[i];
+        if (L.text === '') { i++; continue; }
+        if (L.ind < level) break;
+        if (L.ind > level) throw new DError('字下げ（インデント）がおかしいです', L.no);
+        out.push(stmt(level));
+      }
+      return out;
+    }
+    function body(level, no) {
+      const b = block(level + 1);
+      if (b.length === 0) throw new DError('ブロックの中身がありません', no);
+      return b;
+    }
+    function stmt(level) {
+      const L = lines[i]; const t = L.text; let m;
+      if ((m = t.match(/^もし (.+) ならば[:：]$/))) {
+        i++;
+        const br = [{ cond: parseExpr(m[1], L.no), condText: m[1], line: L.no, body: body(level, L.no) }];
+        let els = null, elseLine = null;
+        while (i < lines.length && lines[i].ind === level) {
+          const t2 = lines[i].text; let m2;
+          if ((m2 = t2.match(/^そうでなくもし (.+) ならば[:：]$/))) { const no = lines[i].no; i++; br.push({ cond: parseExpr(m2[1], no), condText: m2[1], line: no, body: body(level, no) }); }
+          else if (/^そうでなければ[:：]$/.test(t2)) { elseLine = lines[i].no; i++; els = body(level, elseLine); break; }
+          else break;
+        }
+        return { k: 'if', line: L.no, br, els, elseLine };
+      }
+      if ((m = t.match(/^(\S+) を (.+?) から (.+?) まで (.+?) ずつ(増やし|減らし)ながら繰り返す[:：]$/))) {
+        i++;
+        return { k: 'for', line: L.no, v: m[1], from: parseExpr(m[2], L.no), to: parseExpr(m[3], L.no), step: parseExpr(m[4], L.no), toText: m[3], inc: m[5] === '増やし', body: body(level, L.no) };
+      }
+      if ((m = t.match(/^(.+) の間繰り返す[:：]$/))) {
+        i++;
+        return { k: 'while', line: L.no, cond: parseExpr(m[1], L.no), condText: m[1], body: body(level, L.no) };
+      }
+      if (/^(そうでなくもし|そうでなければ)/.test(t)) throw new DError('「もし」がないのに「そうでなければ」があります', L.no);
+      i++;
+      const toks = tokenize(t, L.no);
+      let depth = 0, eq = -1;
+      toks.forEach((k, j) => {
+        if (k.t !== 'op') return;
+        if (k.v === '(' || k.v === '[') depth++;
+        else if (k.v === ')' || k.v === ']') depth--;
+        else if (k.v === '=' && depth === 0 && eq < 0) eq = j;
+      });
+      if (eq >= 0) {
+        const lp = Parser(toks.slice(0, eq), L.no); const lhs = lp.expr();
+        if (!lp.done() || (lhs.t !== 'var' && lhs.t !== 'idx')) throw new DError('代入の左側がおかしいです', L.no);
+        const rp = Parser(toks.slice(eq + 1), L.no); const rhs = rp.expr();
+        if (!rp.done()) throw new DError('式の後ろに余分なものがあります', L.no);
+        return { k: 'assign', line: L.no, lhs, rhs, lhsText: t.split('=')[0].trim() };
+      }
+      const ep = Parser(toks, L.no); const e = ep.expr();
+      if (!ep.done()) throw new DError('この行は読めません', L.no);
+      return { k: 'expr', line: L.no, e };
+    }
+    const prog = block(0);
+    return { prog, lines };
+  }
+
+  // ---------- 値の表示 ----------
+  function fmt(v) {
+    if (typeof v === 'number') return Number.isInteger(v) ? String(v) : String(+v.toPrecision(10));
+    if (typeof v === 'string') return v;
+    if (typeof v === 'boolean') return v ? '真' : '偽';
+    if (Array.isArray(v)) return '[' + v.map(x => typeof x === 'string' ? '"' + x + '"' : fmt(x)).join(', ') + ']';
+    return String(v);
+  }
+  const clone = v => Array.isArray(v) ? v.map(clone) : v;
+
+  // ---------- 実行 ----------
+  function makeRunner(funcs) {
+    const env = { vars: {}, order: [], out: [] };
+    const builtins = Object.assign({
+      '要素数': a => { if (Array.isArray(a) || typeof a === 'string') return a.length; throw new Error('要素数() には配列を渡します'); },
+      '整数': x => Math.trunc(x),
+      '乱数': () => Math.random(),
+    }, funcs || {});
+    let curLine = 0;
+    const err = msg => new DError(msg, curLine);
+
+    function ev(n) {
+      switch (n.t) {
+        case 'lit': return n.v;
+        case 'var':
+          if (n.name === 'true' || n.name === '真') return true;
+          if (n.name === 'false' || n.name === '偽') return false;
+          if (!(n.name in env.vars)) throw err(`変数「${n.name}」にまだ値が入っていません`);
+          return env.vars[n.name];
+        case 'arr': return n.items.map(ev);
+        case 'idx': {
+          let b = ev(n.a);
+          for (const ie of n.idx) {
+            const k = ev(ie);
+            if (!Array.isArray(b) && typeof b !== 'string') throw err('配列ではないものに添字をつけています');
+            if (!Number.isInteger(k) || k < 0 || k >= b.length) throw err(`添字 ${fmt(k)} は範囲外です（0〜${b.length - 1}）`);
+            b = b[k];
+          }
+          return b;
+        }
+        case 'call': {
+          const f = builtins[n.name];
+          if (n.name === '表示する') return undefined;
+          if (!f) throw err(`関数「${n.name}」は定義されていません`);
+          return f(...n.args.map(ev));
+        }
+        case 'un': { const a = ev(n.a); return n.op === 'not' ? !a : -a; }
+        case 'bin': {
+          if (n.op === 'and') return ev(n.a) && ev(n.b);
+          if (n.op === 'or') return ev(n.a) || ev(n.b);
+          const a = ev(n.a), b = ev(n.b);
+          switch (n.op) {
+            case '+': return (typeof a === 'string' || typeof b === 'string') ? fmt(a) + fmt(b) : a + b;
+            case '-': return a - b;
+            case '*': return a * b;
+            case '/': if (b === 0) throw err('0で割ろうとしました'); return a / b;
+            case '÷': if (b === 0) throw err('0で割ろうとしました'); return Math.floor(a / b);
+            case '%': if (b === 0) throw err('0で割ろうとしました'); return a - Math.floor(a / b) * b;
+            case '**': return a ** b;
+            case '==': return a === b;
+            case '!=': return a !== b;
+            case '>': return a > b; case '<': return a < b; case '>=': return a >= b; case '<=': return a <= b;
+          }
+        }
+      }
+      throw err('計算できない式です');
+    }
+    function setVar(name, v) { if (!(name in env.vars)) env.order.push(name); env.vars[name] = v; }
+    function assign(lhs, v) {
+      if (lhs.t === 'var') { setVar(lhs.name, clone(v)); return lhs.name; }
+      let b = ev(lhs.a);
+      const ks = lhs.idx.map(ev);
+      for (let j = 0; j < ks.length; j++) {
+        const k = ks[j];
+        if (!Array.isArray(b)) throw err('配列ではないものに添字をつけています');
+        if (!Number.isInteger(k) || k < 0 || k >= b.length) throw err(`添字 ${fmt(k)} は範囲外です（0〜${b.length - 1}）`);
+        if (j === ks.length - 1) b[k] = clone(v); else b = b[k];
+      }
+      return lhs.a.name;
+    }
+    const tf = c => c ? '成り立つ（真）' : '成り立たない（偽）';
+
+    function* runBlock(stmts) { for (const s of stmts) yield* runStmt(s); }
+    function* runStmt(s) {
+      curLine = s.line;
+      if (s.k === 'assign') {
+        const v = ev(s.rhs); const name = assign(s.lhs, v);
+        yield { line: s.line, note: `${s.lhsText} に ${typeof v === 'string' ? '"' + v + '"' : fmt(v)} を代入`, ch: name };
+      } else if (s.k === 'expr') {
+        if (s.e.t === 'call' && s.e.name === '表示する') {
+          const text = s.e.args.map(a => fmt(ev(a))).join('');
+          env.out.push(text);
+          yield { line: s.line, note: `「${text}」を表示`, show: true };
+        } else { ev(s.e); yield { line: s.line, note: '関数を実行' }; }
+      } else if (s.k === 'if') {
+        for (const b of s.br) {
+          curLine = b.line;
+          const c = ev(b.cond);
+          yield { line: b.line, note: `条件 ${b.condText} は ${tf(c)}`, cond: !!c };
+          if (c) { yield* runBlock(b.body); return; }
+        }
+        if (s.els) { yield { line: s.elseLine, note: 'どの条件も成り立たないので「そうでなければ」へ' }; yield* runBlock(s.els); }
+      } else if (s.k === 'while') {
+        for (;;) {
+          curLine = s.line;
+          const c = ev(s.cond);
+          yield { line: s.line, note: `条件 ${s.condText} は ${tf(c)}` + (c ? ' → 中を実行' : ' → 繰り返し終了'), cond: !!c };
+          if (!c) break;
+          yield* runBlock(s.body);
+        }
+      } else if (s.k === 'for') {
+        curLine = s.line;
+        const from = ev(s.from), to = ev(s.to), step = ev(s.step);
+        setVar(s.v, from);
+        for (;;) {
+          curLine = s.line;
+          const v = env.vars[s.v];
+          const go = s.inc ? v <= to : v >= to;
+          yield { line: s.line, note: go ? `${s.v} = ${fmt(v)}（${s.toText} = ${fmt(to)} まで）→ 中を実行` : `${s.v} = ${fmt(v)} は ${fmt(to)} を${s.inc ? '超えた' : '下回った'} → 繰り返し終了`, ch: s.v, cond: go };
+          if (!go) break;
+          yield* runBlock(s.body);
+          setVar(s.v, env.vars[s.v] + (s.inc ? step : -step));
+        }
+      }
+    }
+    return { env, runBlock };
+  }
+
+  function snapshot(env) {
+    const o = {}; env.order.forEach(k => { o[k] = clone(env.vars[k]); });
+    return { order: env.order.slice(), vars: o };
+  }
+
+  function trace(src, funcs, opt) {
+    opt = Object.assign({ maxRecord: 1500, maxSteps: 400000 }, opt || {});
+    const { prog } = parseProgram(src);
+    const R = makeRunner(funcs);
+    const events = []; let steps = 0, skipped = 0, status = 'done', error = null;
+    try {
+      for (const e of R.runBlock(prog)) {
+        steps++;
+        if (events.length < opt.maxRecord) events.push(Object.assign(e, { snap: snapshot(R.env), outLen: R.env.out.length }));
+        else skipped++;
+        if (steps >= opt.maxSteps) { status = 'limit'; break; }
+      }
+    } catch (e) { status = 'error'; error = e; }
+    if (skipped > 0 || status !== 'done') {
+      const note = status === 'limit' ? `${steps.toLocaleString()} ステップを超えても終わりません（無限ループの可能性）`
+        : status === 'error' ? 'エラー：' + error.message
+        : `…途中の ${skipped.toLocaleString()} ステップは省略…　実行終了`;
+      events.push({ line: status === 'error' ? error.line : null, note, snap: snapshot(R.env), outLen: R.env.out.length, end: true, error: status === 'error' });
+    } else {
+      events.push({ line: null, note: '実行終了', snap: snapshot(R.env), outLen: R.env.out.length, end: true });
+    }
+    return { events, out: R.env.out, status, error, steps };
+  }
+
+  G.DNCL = { parseProgram, trace, fmt, tokenize, DError };
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>
+// 問題データ
+// type: blank(空欄補充) / purpose(何をする？) / output(実行結果を選ぶ) / input(値を答える) / line(まちがい探し)
+const UNITS = [
+  { id: 'kihon', name: '順次・分岐', sub: '代入・計算・もし〜ならば', color: '#4EA8DE', icon: '🔀' },
+  { id: 'loop', name: '繰り返し', sub: '〜の間／増やしながら', color: '#2BB673', icon: '🔁' },
+  { id: 'array', name: '配列', sub: '添字・合計・最大値・探索', color: '#F28C28', icon: '🧺' },
+  { id: 'func', name: '関数', sub: '要素数・乱数・整数・説明つき関数', color: '#9B5DE5', icon: '🎲' },
+  { id: 'nest', name: '二重ループ', sub: '繰り返しの中の繰り返し', color: '#E5484D', icon: '🌀' },
+  { id: 'grid', name: '二次元配列', sub: '表[行, 列] を読む', color: '#00A6A6', icon: '🧮' },
+  { id: 'mix', name: '総合（共テ風）', sub: '探索・集計・おつり など', color: '#1F3864', icon: '🏆' },
+];
+
+const QUESTIONS = [
+// ===================== 順次・分岐 =====================
+{ id: 'k1', unit: 'kihon', lv: 1, type: 'output',
+  title: '商と余り',
+  text: '次のプログラムを実行したとき、表示されるものを選びなさい。',
+  src: `x = 7
+y = 3
+z = x ÷ y
+w = x ％ y
+表示する(z, "と", w)`,
+  options: ['2と1', '2.333…と1', '1と2', '2と0'], answer: 0,
+  hint: '「÷」は商の整数部分、「％」は余りです。',
+  explain: '7 ÷ 3 は「商の整数部分」なので 2、7 ％ 3 は「余り」なので 1 です。表示する( ) の中を「,」で区切ると、つなげて表示されるので「2と1」になります。小数になる割り算は「/」を使います。',
+  expect: '2と1' },
+
+{ id: 'k2', unit: 'kihon', lv: 1, type: 'blank',
+  title: '偶数か奇数か',
+  text: '変数 n の値が偶数なら「〜は偶数」、奇数なら「〜は奇数」と表示したい。空欄 ア に入るものを選びなさい。',
+  src: `n = 14
+もし [[ア]] ならば:
+  表示する(n, "は偶数")
+そうでなければ:
+  表示する(n, "は奇数")`,
+  blanks: [{ label: 'ア', options: ['n ％ 2 == 0', 'n ÷ 2 == 0', 'n ％ 2 == 1', 'n / 2 == 0'], answer: 0 }],
+  hint: '2で割った「余り」に注目しましょう。',
+  explain: '偶数は「2で割った余りが0」の数です。n ％ 2 == 0 が正解。n ÷ 2 は商（14なら7）なので0にはなりません。n ％ 2 == 1 だと奇数のときに「偶数」と表示されてしまいます。',
+  expect: '14は偶数' },
+
+{ id: 'k3', unit: 'kihon', lv: 1, type: 'output',
+  title: '成績の判定',
+  text: '次のプログラムを実行したとき、表示されるものを選びなさい。',
+  src: `tensu = 68
+もし tensu >= 80 ならば:
+  hyoka = "A"
+そうでなくもし tensu >= 60 ならば:
+  hyoka = "B"
+そうでなくもし tensu >= 40 ならば:
+  hyoka = "C"
+そうでなければ:
+  hyoka = "D"
+表示する(hyoka)`,
+  options: ['A', 'B', 'C', 'D'], answer: 1,
+  hint: '条件は上から順に調べ、最初に成り立ったところだけを実行します。',
+  explain: '68 >= 80 は偽、68 >= 60 は真なので hyoka = "B" を実行し、残りの「そうでなくもし」「そうでなければ」は調べずに飛ばします。68 >= 40 も真ですが、すでに B に決まっているので C にはなりません。',
+  expect: 'B' },
+
+{ id: 'k4', unit: 'kihon', lv: 1, type: 'purpose',
+  title: '3行の意味',
+  text: '次のプログラムの (03)〜(05) 行目は何をしているか。最も適当なものを選びなさい。',
+  src: `a = 5
+b = 9
+t = a
+a = b
+b = t
+表示する(a, " ", b)`,
+  options: ['a と b の値を入れかえている', 'a と b を両方とも 9 にしている', 'a と b の合計を t に入れている', 'a と b を両方とも 5 にしている'], answer: 0,
+  hint: '1行ずつ、a・b・t の値を書き出してみましょう。',
+  explain: 't = a で a の値（5）を t に避難させ、a = b で a を 9 に、b = t で b を 5 にしています。変数 t を使わずに a = b、b = a とすると、両方 9 になってしまいます。値の入れかえ（スワップ）は整列のプログラムでよく出てきます。',
+  expect: '9 5' },
+
+{ id: 'k5', unit: 'kihon', lv: 2, type: 'blank',
+  title: 'うるう年の判定',
+  text: '西暦 nen がうるう年かどうかを判定したい。うるう年は「4で割り切れて100で割り切れない年」または「400で割り切れる年」である。空欄 ア に入るものを選びなさい。',
+  src: `nen = 2024
+もし [[ア]] ならば:
+  表示する(nen, "年はうるう年")
+そうでなければ:
+  表示する(nen, "年は平年")`,
+  blanks: [{ label: 'ア', options: ['(nen ％ 4 == 0 and nen ％ 100 != 0) or nen ％ 400 == 0', 'nen ％ 4 == 0 or nen ％ 100 != 0 or nen ％ 400 == 0', '(nen ％ 4 == 0 or nen ％ 100 != 0) and nen ％ 400 == 0', 'nen ％ 4 != 0 and nen ％ 100 == 0'], answer: 0 }],
+  hint: '「〜かつ〜」は and、「または」は or です。文章の区切りとカッコを対応させましょう。',
+  explain: '「4で割り切れる かつ 100で割り切れない」をカッコでひとまとめにし、それと「400で割り切れる」を or でつなぎます。割り切れる＝余りが0（％ 〜 == 0）、割り切れない＝余りが0でない（!= 0）です。2024年ではほかの選択肢でも「うるう年」と出ることがありますが、1900年（平年）や2023年でためすとちがいが分かります。',
+  expect: '2024年はうるう年' },
+
+{ id: 'k6', unit: 'kihon', lv: 2, type: 'line',
+  title: '送料無料のはずが…',
+  text: 'ある店では「1000円以上の買い物で送料無料、それ以外は送料500円」である。次のプログラムで kakaku が 1000 のとき、正しく動かなかった。誤っている行を選びなさい（行番号をタップ）。',
+  src: `kakaku = 1000
+もし kakaku > 1000 ならば:
+  souryou = 0
+そうでなければ:
+  souryou = 500
+goukei = kakaku + souryou
+表示する("支払いは", goukei, "円")`,
+  fixed: `kakaku = 1000
+もし kakaku >= 1000 ならば:
+  souryou = 0
+そうでなければ:
+  souryou = 500
+goukei = kakaku + souryou
+表示する("支払いは", goukei, "円")`,
+  lineAnswer: 2,
+  hint: '「以上」はその数をふくみます。1000 > 1000 は真？偽？',
+  explain: '(02) の kakaku > 1000 では、1000円ちょうどのとき偽になり送料500円がかかってしまいます。「1000円以上」なので kakaku >= 1000 が正解です。「以上・以下」は >=・<=、「より大きい・未満」は >・< です。境界の値でためすのがバグ発見のコツ。',
+  expect: '支払いは1500円' },
+
+// ===================== 繰り返し =====================
+{ id: 'l1', unit: 'loop', lv: 1, type: 'input',
+  title: '2ずつ増やす合計',
+  text: '次のプログラムを実行したとき、表示される値を答えなさい。',
+  src: `goukei = 0
+i を 1 から 9 まで 2 ずつ増やしながら繰り返す:
+  goukei = goukei + i
+表示する(goukei)`,
+  accept: ['25'],
+  hint: 'i は 1, 3, 5, … と変わります。いくつまで？',
+  explain: 'i は 1, 3, 5, 7, 9 と変わり、goukei には 1+3+5+7+9 = 25 がたまります。「〜まで」の値（9）もふくむ点に注意。',
+  expect: '25' },
+
+{ id: 'l2', unit: 'loop', lv: 2, type: 'purpose',
+  title: '2026 をくずす',
+  text: '次のプログラムは何をするプログラムか。最も適当なものを選びなさい。',
+  src: `n = 2026
+kotae = 0
+n > 0 の間繰り返す:
+  kotae = kotae + n ％ 10
+  n = n ÷ 10
+表示する(kotae)`,
+  options: ['n の各位の数字の和を求める', 'n の桁数を求める', 'n の数字を逆の順に並べた数を求める', 'n を10で割った余りを求める'], answer: 0,
+  hint: 'n ％ 10 は「一の位」、n ÷ 10 は「一の位を切り捨てた数」です。',
+  explain: 'n ％ 10 で一の位を取り出して kotae に足し、n ÷ 10 で一の位を消す、を n が 0 になるまで繰り返します。2026 なら 6+2+0+2 = 10 が表示されます。桁数を求めるなら kotae = kotae + 1 になります。',
+  expect: '10' },
+
+{ id: 'l3', unit: 'loop', lv: 1, type: 'blank',
+  title: '3の倍数はいくつ？',
+  text: '1から20までの整数のうち、3の倍数の個数を数えて表示したい。空欄 ア に入るものを選びなさい。',
+  src: `kosu = 0
+i を 1 から 20 まで 1 ずつ増やしながら繰り返す:
+  もし [[ア]] ならば:
+    kosu = kosu + 1
+表示する(kosu, "個")`,
+  blanks: [{ label: 'ア', options: ['i ％ 3 == 0', 'i ÷ 3 == 0', 'kosu ％ 3 == 0', 'i ％ 3 == 1'], answer: 0 }],
+  hint: '調べたいのは、繰り返しで変わっていく i のほうです。',
+  explain: '3の倍数は「3で割った余りが0」。繰り返しの中で 1〜20 と変わるのは i なので i ％ 3 == 0 です。kosu ％ 3 は「数えた個数」を調べてしまいます。結果は「6個」（3, 6, 9, 12, 15, 18）。',
+  expect: '6個' },
+
+{ id: 'l4', unit: 'loop', lv: 2, type: 'output',
+  title: '倍々ゲーム',
+  text: '次のプログラムを実行したとき、表示されるものを選びなさい。',
+  src: `x = 1
+kaisu = 0
+x < 100 の間繰り返す:
+  x = x * 2
+  kaisu = kaisu + 1
+表示する(kaisu, "回で", x)`,
+  options: ['7回で128', '6回で64', '7回で64', '8回で256'], answer: 0,
+  hint: '条件を調べるのは、繰り返しの「最初」だけ。x が 64 のときどうなる？',
+  explain: 'x は 2, 4, 8, 16, 32, 64, 128 と7回変わります。x = 64 のとき 64 < 100 は真なのでもう1回実行して 128 になり、そこで条件が偽になって終了します。「100を超えた最初の値」が残る点がポイントです。',
+  expect: '7回で128' },
+
+{ id: 'l5', unit: 'loop', lv: 1, type: 'blank',
+  title: 'カウントダウン',
+  text: '5, 4, 3, 2, 1 と1行ずつ表示したあと「発射！」と表示したい。空欄 ア に入るものを選びなさい。',
+  src: `[[ア]]
+  表示する(i)
+表示する("発射！")`,
+  blanks: [{ label: 'ア', options: ['i を 5 から 1 まで 1 ずつ減らしながら繰り返す:', 'i を 1 から 5 まで 1 ずつ増やしながら繰り返す:', 'i を 5 から 0 まで 1 ずつ減らしながら繰り返す:', 'i を 5 から 1 まで 1 ずつ増やしながら繰り返す:'], answer: 0 }],
+  hint: '大きい数から小さい数へ変えるときは「減らしながら」。最後に表示するのは？',
+  explain: '5 から 1 まで「減らしながら」が正解。「0 まで」だと 0 も表示されます。「5 から 1 まで増やしながら」は最初から 5 > 1 なので一度も実行されません。',
+  expect: '5\n4\n3\n2\n1\n発射！' },
+
+{ id: 'l6', unit: 'loop', lv: 2, type: 'input',
+  title: '何回まわる？',
+  text: '次のプログラムを実行したとき、表示される値を答えなさい。',
+  src: `kaisu = 0
+i を 0 から 20 まで 4 ずつ増やしながら繰り返す:
+  kaisu = kaisu + 1
+表示する(kaisu)`,
+  accept: ['6'],
+  hint: 'i の値を全部書き出してみましょう。0 から始まります。',
+  explain: 'i は 0, 4, 8, 12, 16, 20 の6通り。20 ÷ 4 = 5 回と考えがちですが、0 の回もあるので 6 回です（植木算と同じ）。',
+  expect: '6' },
+
+{ id: 'l7', unit: 'loop', lv: 2, type: 'purpose',
+  title: '終わらない？',
+  text: '1から10までの合計を求めようとして次のプログラムを作った。実行するとどうなるか。最も適当なものを選びなさい。',
+  src: `n = 1
+goukei = 0
+n <= 10 の間繰り返す:
+  goukei = goukei + n
+表示する(goukei)`,
+  options: ['繰り返しが終わらず、何も表示されない', '55 が表示される', '10 が表示される', '1 が表示される'], answer: 0,
+  hint: '繰り返しの中で n の値は変わっていますか？',
+  explain: '繰り返しの中で n が変わらないので、n <= 10 はずっと真のまま。無限ループになります。goukei = goukei + n のあとに n = n + 1 を入れる必要があります。「〜の間繰り返す」では、条件にかかわる変数を中で変えているかを必ず確認しましょう。',
+  noTrace: false },
+
+// ===================== 配列 =====================
+{ id: 'a1', unit: 'array', lv: 1, type: 'input',
+  title: '添字は0から',
+  text: '次のプログラムを実行したとき、表示される値を答えなさい。',
+  src: `Data = [3, 8, 5, 1, 9]
+表示する(Data[1] + Data[3])`,
+  accept: ['9'],
+  hint: 'Data[0] が 3 です。',
+  explain: '添字は 0 から始まるので Data[1] = 8、Data[3] = 1。8 + 1 = 9 です。「1番目と3番目」と思って 3 + 5 = 8 としないように注意。',
+  expect: '9' },
+
+{ id: 'a2', unit: 'array', lv: 1, type: 'blank',
+  title: '平均点を求める',
+  text: '配列 Tokuten の点数の平均を表示したい。空欄 ア に入るものを選びなさい。',
+  src: `Tokuten = [72, 85, 64, 90, 59]
+goukei = 0
+i を 0 から [[ア]] まで 1 ずつ増やしながら繰り返す:
+  goukei = goukei + Tokuten[i]
+heikin = goukei / 要素数(Tokuten)
+表示する("平均は", heikin, "点")`,
+  blanks: [{ label: 'ア', options: ['要素数(Tokuten) - 1', '要素数(Tokuten)', 'Tokuten[4]', '要素数(Tokuten) + 1'], answer: 0 }],
+  hint: '要素が5個のとき、最後の添字はいくつ？',
+  explain: '要素数(Tokuten) は 5 ですが、添字は 0〜4 なので最後は 要素数(Tokuten) - 1。「要素数(Tokuten)」まで回すと Tokuten[5] を読もうとしてエラーになります。合計 370 ÷ 5 で「平均は74点」。',
+  expect: '平均は74点' },
+
+{ id: 'a3', unit: 'array', lv: 2, type: 'blank',
+  title: '最大値を探す',
+  text: '配列 Data の中で最も大きい値を表示したい。空欄 ア・イ に入るものを選びなさい。',
+  src: `Data = [41, 67, 23, 88, 54, 70]
+saidai = Data[0]
+i を 1 から 要素数(Data) - 1 まで 1 ずつ増やしながら繰り返す:
+  もし [[ア]] ならば:
+    [[イ]]
+表示する(saidai)`,
+  blanks: [
+    { label: 'ア', options: ['Data[i] > saidai', 'Data[i] < saidai', 'Data[i] > Data[0]', 'i > saidai'], answer: 0 },
+    { label: 'イ', options: ['saidai = Data[i]', 'Data[i] = saidai', 'saidai = i', 'saidai = saidai + 1'], answer: 0 }],
+  hint: '「今までの最大」saidai と、今見ている Data[i] をくらべます。',
+  explain: 'まず先頭 Data[0] を「仮の最大」にして、2番目以降と順にくらべます。今見ている値 Data[i] のほうが大きければ saidai を Data[i] に更新します。Data[i] > Data[0] だと、いつも先頭とくらべてしまい最後に見つかった「41より大きい値」が残ります。saidai = i は添字（場所）を入れてしまいます。',
+  expect: '88' },
+
+{ id: 'a4', unit: 'array', lv: 1, type: 'purpose',
+  title: '何を数えている？',
+  text: '次のプログラムは何を表示するか。最も適当なものを選びなさい。',
+  src: `Tokuten = [55, 78, 62, 40, 91, 60]
+kosu = 0
+i を 0 から 要素数(Tokuten) - 1 まで 1 ずつ増やしながら繰り返す:
+  もし Tokuten[i] >= 60 ならば:
+    kosu = kosu + 1
+表示する(kosu)`,
+  options: ['60点以上の人数', '60点以上の人の点数の合計', '60点未満の人数', '最高点'], answer: 0,
+  hint: 'kosu に足しているのは何ですか？',
+  explain: '条件 Tokuten[i] >= 60 が成り立つたびに kosu に 1 を足すので「60点以上の人数」です（この例では 78, 62, 91, 60 の4人）。合計なら kosu = kosu + Tokuten[i] になります。',
+  expect: '4' },
+
+{ id: 'a5', unit: 'array', lv: 2, type: 'purpose',
+  title: '前と後ろを…',
+  text: '次のプログラムは配列 Data に対して何をしているか。最も適当なものを選びなさい。',
+  src: `Data = [1, 2, 3, 4, 5]
+n = 要素数(Data)
+i を 0 から n ÷ 2 - 1 まで 1 ずつ増やしながら繰り返す:
+  t = Data[i]
+  Data[i] = Data[n - 1 - i]
+  Data[n - 1 - i] = t
+表示する(Data)`,
+  options: ['要素の並びを逆順にする', '要素を小さい順に並べかえる', '先頭と末尾の要素だけを入れかえる', 'すべての要素を1つずつ後ろにずらす'], answer: 0,
+  hint: 'i = 0 のとき、n - 1 - i はいくつ？ i = 1 のときは？',
+  explain: 'i = 0 では Data[0] と Data[4]、i = 1 では Data[1] と Data[3] を入れかえます。前と後ろから順に入れかえるので逆順 [5, 4, 3, 2, 1] になります。半分（n ÷ 2 回）で止めるのがポイント。最後まで回すと2回入れかわって元に戻ってしまいます。',
+  expect: '[5, 4, 3, 2, 1]' },
+
+{ id: 'a6', unit: 'array', lv: 2, type: 'input',
+  title: '前の値を使う',
+  text: '次のプログラムを実行したとき、表示される値を答えなさい。',
+  src: `Data = [0, 0, 0, 0, 0]
+i を 1 から 4 まで 1 ずつ増やしながら繰り返す:
+  Data[i] = Data[i - 1] + i
+表示する(Data[4])`,
+  accept: ['10'],
+  hint: 'Data[1], Data[2], … と順番に値を書き込んでいきましょう。',
+  explain: 'Data[1] = 0+1 = 1、Data[2] = 1+2 = 3、Data[3] = 3+3 = 6、Data[4] = 6+4 = 10。1つ前の要素を使って次の要素を求めています（1〜i の合計が並ぶ）。',
+  expect: '10' },
+
+{ id: 'a7', unit: 'array', lv: 2, type: 'blank',
+  title: '名簿から探す',
+  text: '配列 Meibo の中から sagasu と同じ名前を探し、見つかればその添字を、見つからなければ「見つかりません」と表示したい。空欄 ア に入るものを選びなさい。',
+  src: `Meibo = ["さとう", "すずき", "たかはし", "たなか", "いとう"]
+sagasu = "たなか"
+basho = -1
+i を 0 から 要素数(Meibo) - 1 まで 1 ずつ増やしながら繰り返す:
+  もし [[ア]] ならば:
+    basho = i
+もし basho == -1 ならば:
+  表示する("見つかりません")
+そうでなければ:
+  表示する(sagasu, "さんの添字は", basho)`,
+  blanks: [{ label: 'ア', options: ['Meibo[i] == sagasu', 'Meibo[i] != sagasu', 'i == sagasu', 'basho == sagasu'], answer: 0 }],
+  hint: 'i は添字（数）、Meibo[i] は名前（文字列）です。',
+  explain: 'i 番目の名前 Meibo[i] と sagasu をくらべます。basho の最初の値 -1 は「まだ見つかっていない」という目印。添字に -1 はないので、最後に basho が -1 のままなら見つからなかったと分かります（線形探索）。',
+  expect: 'たなかさんの添字は3' },
+
+{ id: 'a8', unit: 'array', lv: 2, type: 'line',
+  title: '正の数を数えたい',
+  text: '配列 Data の中の正の数（0より大きい数）の個数を表示したいが、1 と表示されてしまった。原因となっている行を選びなさい（行番号をタップ）。',
+  src: `Data = [4, -2, 7, 0, -5, 3]
+i を 0 から 要素数(Data) - 1 まで 1 ずつ増やしながら繰り返す:
+  kosu = 0
+  もし Data[i] > 0 ならば:
+    kosu = kosu + 1
+表示する(kosu)`,
+  fixed: `Data = [4, -2, 7, 0, -5, 3]
+kosu = 0
+i を 0 から 要素数(Data) - 1 まで 1 ずつ増やしながら繰り返す:
+  もし Data[i] > 0 ならば:
+    kosu = kosu + 1
+表示する(kosu)`,
+  lineAnswer: 3,
+  hint: '繰り返しの「中」に書いた行は、毎回実行されます。',
+  explain: '(03) の kosu = 0 が繰り返しの中にあるため、毎回 0 にもどってしまいます。最後の Data[5] = 3 の分だけが残って 1 になります。初期化は繰り返しの「前」に書くのが正解（正しくは 3 個）。',
+  expect: '1' },
+
+// ===================== 関数 =====================
+{ id: 'f1', unit: 'func', lv: 1, type: 'purpose',
+  title: 'サイコロを作る',
+  text: '関数 乱数() は 0 以上 1 未満の小数をランダムに返し、関数 整数(x) は x の小数点以下を切り捨てた値を返す。次のプログラムで表示される可能性のある値の範囲として正しいものを選びなさい。',
+  src: `me = 整数(乱数() * 6) + 1
+表示する(me)`,
+  options: ['1〜6 の整数', '0〜5 の整数', '0〜6 の整数', '1〜7 の整数'], answer: 0,
+  hint: '乱数() * 6 は 0 以上 6 未満。切り捨てるといくつからいくつ？',
+  explain: '乱数() * 6 は 0 以上 6 未満（最大でも 5.999…）。整数( ) で切り捨てると 0〜5、それに 1 を足して 1〜6 になります。「整数(乱数() * n)」で 0〜n−1 の整数が作れる、は定番の形です。',
+  random: true },
+
+{ id: 'f2', unit: 'func', lv: 1, type: 'blank',
+  title: 'コイン投げ100回',
+  text: 'コインを100回投げて表が出た回数を数えるシミュレーションを作りたい。表の出る確率が 1/2 になるように、空欄 ア に入るものを選びなさい（乱数() は 0 以上 1 未満の小数を返す）。',
+  src: `omote = 0
+i を 1 から 100 まで 1 ずつ増やしながら繰り返す:
+  もし [[ア]] ならば:
+    omote = omote + 1
+表示する("表は", omote, "回")`,
+  blanks: [{ label: 'ア', options: ['乱数() < 0.5', '乱数() < 0.2', '整数(乱数() * 2) == 2', '乱数() > 1'], answer: 0 }],
+  hint: '0〜1 の数直線のうち、半分の長さになる範囲は？',
+  explain: '乱数() は 0 以上 1 未満に均等に散らばるので、0.5 未満になる確率は 1/2 です。整数(乱数() * 2) は 0 か 1 なので 2 にはなりません。乱数() > 1 は絶対に成り立ちません。何回か実行して、だいたい50回前後になることをトレースで確かめてみましょう。',
+  random: true },
+
+{ id: 'f3', unit: 'func', lv: 1, type: 'output',
+  title: '切り捨てと四捨五入',
+  text: '関数 整数(x) は x の小数点以下を切り捨てた値を返す。次のプログラムを実行したとき、表示されるものを選びなさい。',
+  src: `x = 7.8
+y = 整数(x)
+z = 整数(x + 0.5)
+表示する(y, "と", z)`,
+  options: ['7と8', '8と8', '7と7', '8と9'], answer: 0,
+  hint: '7.8 + 0.5 = 8.3 を切り捨てると？',
+  explain: '整数(7.8) = 7。整数(7.8 + 0.5) = 整数(8.3) = 8。0.5 を足してから切り捨てると「四捨五入」になります（7.3 なら 整数(7.8) = 7）。',
+  expect: '7と8' },
+
+{ id: 'f4', unit: 'func', lv: 2, type: 'blank',
+  title: 'おみくじ',
+  text: '配列 Kuji の中から1つをランダムに選んで表示したい。どの要素も同じ確率で選ばれるように、空欄 ア に入るものを選びなさい。',
+  src: `Kuji = ["大吉", "中吉", "小吉", "吉", "凶"]
+bango = [[ア]]
+表示する(Kuji[bango])`,
+  blanks: [{ label: 'ア', options: ['整数(乱数() * 要素数(Kuji))', '整数(乱数() * 要素数(Kuji)) + 1', '整数(乱数() * (要素数(Kuji) - 1))', '乱数() * 要素数(Kuji)'], answer: 0 }],
+  hint: '添字として使える整数は 0〜4 です。',
+  explain: '整数(乱数() * 5) は 0〜4 の整数になり、ちょうど添字の範囲です。+1 すると 1〜5 になり、Kuji[5] でエラー＆「大吉」が出なくなります。(要素数 - 1) をかけると 0〜3 で「凶」が出ません。整数( ) がないと小数の添字になってしまいます。',
+  random: true },
+
+{ id: 'f5', unit: 'func', lv: 2, type: 'input',
+  title: '説明つきの関数',
+  text: '関数 最大値(a, b) は、a と b のうち大きいほうの値を返す。次のプログラムを実行したとき、表示される値を答えなさい。',
+  src: `Data = [12, 45, 7, 30]
+m = Data[0]
+i を 1 から 要素数(Data) - 1 まで 1 ずつ増やしながら繰り返す:
+  m = 最大値(m, Data[i])
+表示する(m)`,
+  funcs: { '最大値': (a, b) => Math.max(a, b) },
+  accept: ['45'],
+  hint: 'm がどう変わっていくか追いましょう。12 → ? → ? → ?',
+  explain: 'm は 最大値(12, 45) = 45、最大値(45, 7) = 45、最大値(45, 30) = 45 と変わり、最後は配列全体の最大値 45 になります。共通テストでは、このように「はたらきだけ説明された関数」がよく登場します。中身が分からなくても説明どおりに値を置きかえれば読めます。',
+  expect: '45' },
+
+{ id: 'f6', unit: 'func', lv: 2, type: 'purpose',
+  title: '判定(n) を使う',
+  text: '関数 判定(n) は、n が素数ならば 1 を、素数でなければ 0 を返す。次のプログラムは何を表示するか。最も適当なものを選びなさい。',
+  src: `kotae = 0
+n を 1 から 20 まで 1 ずつ増やしながら繰り返す:
+  kotae = kotae + 判定(n)
+表示する(kotae)`,
+  funcs: { '判定': n => { if (n < 2) return 0; for (let d = 2; d * d <= n; d++) if (n % d === 0) return 0; return 1; } },
+  options: ['1から20までの素数の個数', '1から20までの素数の合計', '20以下で最大の素数', '20が素数かどうか（1か0）'], answer: 0,
+  hint: '判定(n) が返すのは 1 か 0。それを足し合わせると？',
+  explain: '素数なら 1、そうでなければ 0 を足していくので、kotae は「素数の個数」になります（2, 3, 5, 7, 11, 13, 17, 19 の8個）。合計なら kotae = kotae + n を「もし判定(n) == 1 ならば」の中で行う形になります。',
+  expect: '8' },
+
+{ id: 'f7', unit: 'func', lv: 3, type: 'purpose',
+  title: '的あてシミュレーション',
+  text: '乱数() は 0 以上 1 未満の小数をランダムに返す。次のプログラムで表示される値は、およそ何に近い値か。最も適当なものを選びなさい。',
+  src: `atari = 0
+kaisu = 10000
+i を 1 から kaisu まで 1 ずつ増やしながら繰り返す:
+  x = 乱数()
+  y = 乱数()
+  もし x * x + y * y < 1 ならば:
+    atari = atari + 1
+表示する(4 * atari / kaisu)`,
+  options: ['円周率 π（約3.14）', '1', '2の平方根（約1.41）', '0.5'], answer: 0,
+  hint: '1辺1の正方形の中に点を打っています。x² + y² < 1 はどんな形の内側？',
+  explain: '(x, y) は1辺1の正方形の中のランダムな点。x² + y² < 1 は半径1の円（の4分の1）の内側です。面積の比は π/4 : 1 なので、atari / kaisu ≒ π/4、それを4倍すると π に近づきます（モンテカルロ法）。「モデル化とシミュレーション」ともつながる題材です。',
+  random: true },
+
+// ===================== 二重ループ =====================
+{ id: 'n1', unit: 'nest', lv: 1, type: 'input',
+  title: '何回足される？',
+  text: '次のプログラムを実行したとき、表示される値を答えなさい。',
+  src: `kaisu = 0
+i を 1 から 3 まで 1 ずつ増やしながら繰り返す:
+  j を 1 から 4 まで 1 ずつ増やしながら繰り返す:
+    kaisu = kaisu + 1
+表示する(kaisu)`,
+  accept: ['12'],
+  hint: '外側1回につき、内側は何回まわる？',
+  explain: '外側の i が1つ進むごとに、内側の j が 1〜4 の4回まわります。外側は3回なので 3 × 4 = 12 回です。',
+  expect: '12' },
+
+{ id: 'n2', unit: 'nest', lv: 1, type: 'output',
+  title: 'かけ算表の順番',
+  text: '次のプログラムを実行したとき、上から5番目に表示されるものを選びなさい。',
+  src: `i を 1 から 3 まで 1 ずつ増やしながら繰り返す:
+  j を 1 から 3 まで 1 ずつ増やしながら繰り返す:
+    表示する(i, "×", j, "=", i * j)`,
+  options: ['2×2=4', '2×1=2', '1×5=5', '3×2=6'], answer: 0,
+  hint: '内側の j が先に 1, 2, 3 と全部まわってから、i が1つ進みます。',
+  explain: '表示の順番は 1×1, 1×2, 1×3, 2×1, 2×2, … です。内側（j）が「速く回る針」、外側（i）が「ゆっくり回る針」と考えると分かりやすいです。時計の分と時のような関係です。',
+  expect: '1×1=1\n1×2=2\n1×3=3\n2×1=2\n2×2=4\n2×3=6\n3×1=3\n3×2=6\n3×3=9' },
+
+{ id: 'n3', unit: 'nest', lv: 2, type: 'blank',
+  title: '星の三角形',
+  text: '次のような実行結果になるように、空欄 ア に入るものを選びなさい。',
+  figure: '★\n★★\n★★★\n★★★★',
+  src: `i を 1 から 4 まで 1 ずつ増やしながら繰り返す:
+  gyo = ""
+  j を 1 から [[ア]] まで 1 ずつ増やしながら繰り返す:
+    gyo = gyo + "★"
+  表示する(gyo)`,
+  blanks: [{ label: 'ア', options: ['i', '4', 'j', '4 - i'], answer: 0 }],
+  hint: '1行目は1個、2行目は2個…。行番号にあたる変数は？',
+  explain: 'i 行目に i 個の★を並べたいので、内側を 1 から i までまわします。4 にすると毎行4個の四角形に、4 - i にすると 3, 2, 1, 0 個の逆三角形になります。内側の範囲に外側の変数を使うと、形が変わるのがポイントです。',
+  expect: '★\n★★\n★★★\n★★★★' },
+
+{ id: 'n4', unit: 'nest', lv: 2, type: 'input',
+  title: '総当たり戦',
+  text: '次のプログラムを実行したとき、表示される値を答えなさい。',
+  src: `kaisu = 0
+i を 0 から 4 まで 1 ずつ増やしながら繰り返す:
+  j を i + 1 から 4 まで 1 ずつ増やしながら繰り返す:
+    kaisu = kaisu + 1
+表示する(kaisu)`,
+  accept: ['10'],
+  hint: 'i = 0 のとき内側は4回、i = 1 のときは？ i = 4 のときは？',
+  explain: '内側の回数は i = 0 で4回、1 で3回、2 で2回、3 で1回、4 で0回（5 から 4 までは実行されない）。合計 4+3+2+1+0 = 10。5人で総当たり戦をするときの試合数（同じ組み合わせを2回数えない）と同じです。',
+  expect: '10' },
+
+{ id: 'n5', unit: 'nest', lv: 2, type: 'purpose',
+  title: 'ペアでくらべる',
+  text: '次のプログラムは何を調べるプログラムか。最も適当なものを選びなさい。',
+  src: `Data = [3, 7, 2, 7, 5]
+n = 要素数(Data)
+kekka = "なし"
+i を 0 から n - 2 まで 1 ずつ増やしながら繰り返す:
+  j を i + 1 から n - 1 まで 1 ずつ増やしながら繰り返す:
+    もし Data[i] == Data[j] ならば:
+      kekka = "あり"
+表示する(kekka)`,
+  options: ['同じ値の要素が2つ以上あるかどうか', '値が小さい順に並んでいるかどうか', '7 という値が含まれているかどうか', '隣り合う要素が等しいかどうか'], answer: 0,
+  hint: 'Data[i] と Data[j] は「隣どうし」だけ？ それとも全部の組み合わせ？',
+  explain: 'i と j（i より後ろ）の全部の組み合わせで値をくらべ、等しいペアが1つでもあれば kekka を「あり」にします。つまり重複があるかどうかの判定です。隣どうしだけなら Data[i] と Data[i + 1] をくらべる1重のループで済みます。',
+  expect: 'あり' },
+
+{ id: 'n6', unit: 'nest', lv: 3, type: 'blank',
+  title: 'バブルソート',
+  text: '配列 Data を小さい順（昇順）に並べかえたい。空欄 ア・イ に入るものを選びなさい。',
+  src: `Data = [5, 2, 8, 1, 4]
+n = 要素数(Data)
+i を 0 から n - 2 まで 1 ずつ増やしながら繰り返す:
+  j を 0 から [[ア]] まで 1 ずつ増やしながら繰り返す:
+    もし [[イ]] ならば:
+      t = Data[j]
+      Data[j] = Data[j + 1]
+      Data[j + 1] = t
+表示する(Data)`,
+  blanks: [
+    { label: 'ア', options: ['n - 2 - i', 'n - 1 - i', 'n - 1', 'i'], answer: 0 },
+    { label: 'イ', options: ['Data[j] > Data[j + 1]', 'Data[j] < Data[j + 1]', 'Data[i] > Data[j]', 'Data[j] > Data[j - 1]'], answer: 0 }],
+  hint: 'Data[j + 1] が範囲外にならない j の最大は？ 1周ごとに後ろから1つずつ確定します。',
+  explain: '隣どうし Data[j] と Data[j + 1] をくらべ、前のほうが大きければ入れかえます（イ）。1周するごとに最大値が後ろに確定するので、i 周目は後ろの i 個をくらべなくてよく、j + 1 が n - 1 - i を超えないよう j は n - 2 - i まで（ア）。n - 1 - i だと i = 0 のとき Data[5] を読もうとしてエラーになります。',
+  expect: '[1, 2, 4, 5, 8]' },
+
+{ id: 'n7', unit: 'nest', lv: 2, type: 'input',
+  title: '2つのサイコロ',
+  text: '次のプログラムを実行したとき、表示される値を答えなさい。',
+  src: `kosu = 0
+a を 1 から 6 まで 1 ずつ増やしながら繰り返す:
+  b を 1 から 6 まで 1 ずつ増やしながら繰り返す:
+    もし a + b == 7 ならば:
+      kosu = kosu + 1
+表示する(kosu)`,
+  accept: ['6'],
+  hint: '(a, b) の組で、和が7になるのは？',
+  explain: '(1,6) (2,5) (3,4) (4,3) (5,2) (6,1) の6通り。二重ループは「すべての組み合わせを調べる」ときの基本の形です。36通りのうち6通りなので、確率は 1/6 と分かります。',
+  expect: '6' },
+
+// ===================== 二次元配列 =====================
+{ id: 'g1', unit: 'grid', lv: 1, type: 'output',
+  title: '[行, 列] を読む',
+  text: '二次元配列 Hyo の要素は Hyo[行, 列] で表し、行・列とも添字は 0 から始まる。次のプログラムを実行したとき、表示されるものを選びなさい。',
+  src: `Hyo = [[3, 1, 4], [1, 5, 9], [2, 6, 5]]
+表示する(Hyo[1, 2])`,
+  options: ['9', '6', '1', '5'], answer: 0,
+  hint: '[3, 1, 4] が 0 行目です。1行目はどれ？',
+  explain: 'Hyo を表にすると 0行目 3 1 4／1行目 1 5 9／2行目 2 6 5。Hyo[1, 2] は「1行目の2列目」なので 9 です。Hyo[2, 1]（2行目の1列目）なら 6。前が行、後ろが列です。',
+  expect: '9' },
+
+{ id: 'g2', unit: 'grid', lv: 1, type: 'blank',
+  title: '一人ずつの合計',
+  text: 'Tokuten[i, j] には、i 番の生徒の j 番の科目の点数が入っている（生徒3人・科目4つ）。生徒ごとの合計点を表示したい。空欄 ア に入るものを選びなさい。',
+  src: `Tokuten = [[70, 82, 65, 90], [55, 60, 78, 81], [92, 88, 95, 70]]
+i を 0 から 2 まで 1 ずつ増やしながら繰り返す:
+  goukei = 0
+  j を 0 から 3 まで 1 ずつ増やしながら繰り返す:
+    goukei = goukei + [[ア]]
+  表示する(i, "番の合計は", goukei)`,
+  blanks: [{ label: 'ア', options: ['Tokuten[i, j]', 'Tokuten[j, i]', 'Tokuten[i, i]', 'Tokuten[j, j]'], answer: 0 }],
+  hint: '生徒（行）は i、科目（列）は j です。',
+  explain: '「i 番の生徒の j 番の科目」なので Tokuten[i, j]。i を固定して j を 0〜3 と動かすと、1行（1人分）を横にたどれます。Tokuten[j, i] だと j = 3 のとき行がないのでエラーになります。goukei = 0 が外側のループの中にあるのは、生徒が変わるたびに合計をリセットするためです。',
+  expect: '0番の合計は307\n1番の合計は274\n2番の合計は345' },
+
+{ id: 'g3', unit: 'grid', lv: 2, type: 'purpose',
+  title: 'たてに足すと？',
+  text: 'Tokuten[i, j] には、i 番の生徒の j 番の科目の点数が入っている（生徒3人・科目4つ）。次のプログラムは何を表示するか。最も適当なものを選びなさい。',
+  src: `Tokuten = [[70, 82, 65, 90], [55, 60, 78, 81], [92, 88, 95, 70]]
+j を 0 から 3 まで 1 ずつ増やしながら繰り返す:
+  goukei = 0
+  i を 0 から 2 まで 1 ずつ増やしながら繰り返す:
+    goukei = goukei + Tokuten[i, j]
+  表示する(goukei)`,
+  options: ['科目ごとの合計点', '生徒ごとの合計点', '全員・全科目の合計点', '科目ごとの最高点'], answer: 0,
+  hint: '外側で固定されているのは j（科目）。内側で動くのは？',
+  explain: '外側で科目 j を固定し、内側で生徒 i を 0〜2 と動かすので、表を「たて」にたどって科目ごとの合計を求めています（最初は 70+55+92 = 217）。ループの外側と内側を入れかえると、たどる向きが変わります。',
+  expect: '217\n230\n238\n241' },
+
+{ id: 'g4', unit: 'grid', lv: 1, type: 'blank',
+  title: '空席はいくつ？',
+  text: '3行4列の座席表 Seki で、Seki[i, j] が 1 なら座っている、0 なら空席を表す。空席の数を表示したい。空欄 ア に入るものを選びなさい。',
+  src: `Seki = [[1, 0, 1, 1], [0, 0, 1, 0], [1, 1, 1, 0]]
+aki = 0
+i を 0 から 2 まで 1 ずつ増やしながら繰り返す:
+  j を 0 から [[ア]] まで 1 ずつ増やしながら繰り返す:
+    もし Seki[i, j] == 0 ならば:
+      aki = aki + 1
+表示する("空席は", aki, "席")`,
+  blanks: [{ label: 'ア', options: ['3', '4', '2', '要素数(Seki) - 1'], answer: 0 }],
+  hint: '4列あるとき、列の添字は 0 から？まで。',
+  explain: '列は4つなので添字は 0〜3。j は 3 までです。4 にすると Seki[i, 4] でエラー、2 だと右端の列を数えません。要素数(Seki) は「行の数」の 3 なので、要素数(Seki) - 1 は 2 です。空席は5席。',
+  expect: '空席は5席' },
+
+{ id: 'g5', unit: 'grid', lv: 2, type: 'input',
+  title: 'ななめに足す',
+  text: '次のプログラムを実行したとき、表示される値を答えなさい。',
+  src: `M = [[2, 7, 6], [9, 5, 1], [4, 3, 8]]
+s = 0
+i を 0 から 2 まで 1 ずつ増やしながら繰り返す:
+  s = s + M[i, i]
+表示する(s)`,
+  accept: ['15'],
+  hint: 'M[0, 0], M[1, 1], M[2, 2] はどこ？',
+  explain: '行と列が同じ M[i, i] は、左上から右下へのななめ（対角線）です。2 + 5 + 8 = 15。M はたて・横・ななめのどれを足しても 15 になる魔方陣です。',
+  expect: '15' },
+
+{ id: 'g6', unit: 'grid', lv: 2, type: 'output',
+  title: 'いちばん売れたのは？',
+  text: 'Uriage[i, j] には、i 番の店の j 日目の売上個数が入っている（2店・3日間）。次のプログラムを実行したとき、表示されるものを選びなさい。',
+  src: `Uriage = [[120, 340, 210], [450, 90, 300]]
+mx = Uriage[0, 0]
+gyo = 0
+retsu = 0
+i を 0 から 1 まで 1 ずつ増やしながら繰り返す:
+  j を 0 から 2 まで 1 ずつ増やしながら繰り返す:
+    もし Uriage[i, j] > mx ならば:
+      mx = Uriage[i, j]
+      gyo = i
+      retsu = j
+表示する(gyo, ",", retsu)`,
+  options: ['1,0', '0,1', '1,2', '0,0'], answer: 0,
+  hint: 'いちばん大きい値はどこにある？ 表示しているのは値ではなく…',
+  explain: '最大値 450 を探しながら、その場所（行 gyo・列 retsu）も記録しています。450 は Uriage[1, 0] なので「1,0」＝ 1番の店の0日目。値ではなく添字を表示している点に注意です。',
+  expect: '1,0' },
+
+{ id: 'g7', unit: 'grid', lv: 2, type: 'line',
+  title: '九九の表を作りたい',
+  text: '3×3 の二次元配列 Kuku に、Kuku[i, j] が (i + 1) × (j + 1) になるように九九の表を作りたい（Kuku[2, 2] は 9 になるはず）。しかし 4 と表示された。誤っている行を選びなさい（行番号をタップ）。',
+  src: `Kuku = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+i を 0 から 2 まで 1 ずつ増やしながら繰り返す:
+  j を 0 から 2 まで 1 ずつ増やしながら繰り返す:
+    Kuku[i, j] = i * j
+表示する(Kuku[2, 2])`,
+  fixed: `Kuku = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+i を 0 から 2 まで 1 ずつ増やしながら繰り返す:
+  j を 0 から 2 まで 1 ずつ増やしながら繰り返す:
+    Kuku[i, j] = (i + 1) * (j + 1)
+表示する(Kuku[2, 2])`,
+  lineAnswer: 4,
+  hint: '添字は 0 から、九九は 1 から。そのずれをどこで調整する？',
+  explain: '添字は 0〜2 ですが、九九の数は 1〜3。(04) を Kuku[i, j] = (i + 1) * (j + 1) にする必要があります。i * j のままだと 0行目・0列目がすべて 0 になり、Kuku[2, 2] は 2 × 2 = 4 になります。',
+  expect: '4' },
+
+// ===================== 総合 =====================
+{ id: 'm1', unit: 'mix', lv: 3, type: 'blank',
+  title: '二分探索',
+  text: '小さい順に並んだ配列 Data から sagasu を探し、その添字を表示したい（見つからなければ -1）。空欄 ア・イ に入るものを選びなさい。',
+  src: `Data = [3, 8, 12, 17, 25, 31, 40, 52]
+sagasu = 31
+hidari = 0
+migi = 要素数(Data) - 1
+basho = -1
+hidari <= migi and basho == -1 の間繰り返す:
+  aida = (hidari + migi) ÷ 2
+  もし Data[aida] == sagasu ならば:
+    basho = aida
+  そうでなくもし Data[aida] < sagasu ならば:
+    [[ア]]
+  そうでなければ:
+    [[イ]]
+表示する(basho)`,
+  blanks: [
+    { label: 'ア', options: ['hidari = aida + 1', 'migi = aida - 1', 'hidari = aida - 1', 'migi = aida + 1'], answer: 0 },
+    { label: 'イ', options: ['migi = aida - 1', 'hidari = aida + 1', 'hidari = aida - 1', 'migi = aida + 1'], answer: 0 }],
+  hint: '真ん中の値が探す値より小さい → 探す値は真ん中より右？左？',
+  explain: 'Data[aida] < sagasu なら、探す値は真ん中より右にあるので左端を hidari = aida + 1 に（ア）。大きければ左にあるので右端を migi = aida - 1 に（イ）。毎回範囲が半分になるので、要素が多いほど線形探索より速くなります。この例では aida = 3 → 5 で見つかり 5 を表示。※ sagasu の値によっては、まちがった選択肢でもたまたま見つかることがあります。sagasu を 8 や 52 に変えて考えてみましょう。',
+  expect: '5' },
+
+{ id: 'm2', unit: 'mix', lv: 2, type: 'output',
+  title: 'サイコロの記録',
+  text: 'サイコロを10回投げた結果が配列 Kekka に入っている。次のプログラムを実行したとき、表示されるものを選びなさい。',
+  src: `Kekka = [3, 1, 4, 1, 5, 2, 6, 5, 3, 5]
+Kaisu = [0, 0, 0, 0, 0, 0, 0]
+i を 0 から 要素数(Kekka) - 1 まで 1 ずつ増やしながら繰り返す:
+  me = Kekka[i]
+  Kaisu[me] = Kaisu[me] + 1
+表示する(Kaisu[5])`,
+  options: ['3', '5', '2', '1'], answer: 0,
+  hint: 'Kaisu[me] は「出た目 me の回数」。5 が出たのは何回？',
+  explain: '出た目 me をそのまま添字に使い、Kaisu[me] を1増やしています。Kaisu[5] は「5の目が出た回数」で 3 です。Kaisu の要素が7個（添字 0〜6）なのは、目の数 1〜6 をそのまま添字にするため（Kaisu[0] は使わない）。度数分布表を作る定番の形です。',
+  expect: '3' },
+
+{ id: 'm3', unit: 'mix', lv: 3, type: 'blank',
+  title: '開票速報',
+  text: '配列 Tokuhyo には、投票された候補者の番号（0, 1, 2）が入っている。得票数が最も多い候補者の名前を表示したい。空欄 ア に入るものを選びなさい。',
+  src: `Tokuhyo = [2, 0, 1, 2, 2, 1, 0, 2, 1, 1, 1]
+Kohosha = ["Aさん", "Bさん", "Cさん"]
+Hyo = [0, 0, 0]
+i を 0 から 要素数(Tokuhyo) - 1 まで 1 ずつ増やしながら繰り返す:
+  Hyo[Tokuhyo[i]] = Hyo[Tokuhyo[i]] + 1
+tobaku = 0
+k を 1 から 2 まで 1 ずつ増やしながら繰り返す:
+  もし [[ア]] ならば:
+    tobaku = k
+表示する(Kohosha[tobaku], "が当選")`,
+  blanks: [{ label: 'ア', options: ['Hyo[k] > Hyo[tobaku]', 'Hyo[k] > tobaku', 'Tokuhyo[k] > Tokuhyo[tobaku]', 'Hyo[k] < Hyo[tobaku]'], answer: 0 }],
+  hint: 'tobaku は「今いちばん票が多い候補者の番号」。くらべるのは票数どうし。',
+  explain: '(05) で Hyo = [2, 5, 4] と集計されます。tobaku は「今トップの候補者の番号」なので、くらべるのは票数 Hyo[k] と Hyo[tobaku]。Hyo[k] > tobaku だと票数と番号をくらべてしまい、Cさんになってしまいます。配列の添字に配列の値を使う Hyo[Tokuhyo[i]] は、内側から順に読みましょう。',
+  expect: 'Bさんが当選' },
+
+{ id: 'm4', unit: 'mix', lv: 2, type: 'output',
+  title: '素数かどうか',
+  text: '次のプログラムを実行したとき、表示されるものを選びなさい。',
+  src: `n = 91
+sosu = 1
+i を 2 から n - 1 まで 1 ずつ増やしながら繰り返す:
+  もし n ％ i == 0 ならば:
+    sosu = 0
+もし sosu == 1 ならば:
+  表示する(n, "は素数")
+そうでなければ:
+  表示する(n, "は素数ではない")`,
+  options: ['91は素数ではない', '91は素数', '何も表示されない', '7'], answer: 0,
+  hint: '91 は 7 で割り切れる？',
+  explain: '91 = 7 × 13 なので i = 7 のとき余りが0になり sosu = 0 になります。sosu は「素数かもしれない」という旗（フラグ）で、割り切れる数が1つでも見つかると 0 に倒れます。一度 0 になったら、その後 1 に戻らないのがポイントです。',
+  expect: '91は素数ではない' },
+
+{ id: 'm5', unit: 'mix', lv: 3, type: 'blank',
+  title: 'まわりのマスを数える',
+  text: '二次元配列 Ban の (y, x) = (1, 1) のマスについて、まわり8マスにある 1 の個数を数えたい（自分自身は数えない）。空欄 ア に入るものを選びなさい。',
+  src: `Ban = [[0, 1, 0], [1, 1, 0], [0, 0, 1]]
+y = 1
+x = 1
+kosu = 0
+dy を -1 から 1 まで 1 ずつ増やしながら繰り返す:
+  dx を -1 から 1 まで 1 ずつ増やしながら繰り返す:
+    もし [[ア]] ならば:
+      kosu = kosu + Ban[y + dy, x + dx]
+表示する(kosu)`,
+  blanks: [{ label: 'ア', options: ['not (dy == 0 and dx == 0)', 'dy == 0 and dx == 0', 'dy != 0 and dx != 0', 'dy == dx'], answer: 0 }],
+  hint: 'dy と dx が両方 0 のときが「自分自身」です。',
+  explain: 'dy・dx を -1〜1 で動かすと、自分を中心とした 3×3 の9マスをたどれます。自分自身（dy == 0 and dx == 0）だけを除きたいので not( ) をつけます。dy != 0 and dx != 0 だとななめ4マスだけになります。ライフゲームなどのシミュレーションで使う形で、答えは 3。',
+  expect: '3' },
+
+{ id: 'm6', unit: 'mix', lv: 3, type: 'blank',
+  title: 'おつりの硬貨',
+  text: '763円のおつりを、できるだけ少ない枚数の硬貨（500, 100, 50, 10, 5, 1円）で支払うときの枚数を求めたい。空欄 ア・イ に入るものを選びなさい。',
+  src: `Kouka = [500, 100, 50, 10, 5, 1]
+otsuri = 763
+maisu = 0
+i を 0 から 要素数(Kouka) - 1 まで 1 ずつ増やしながら繰り返す:
+  maisu = maisu + [[ア]]
+  otsuri = [[イ]]
+表示する(maisu, "枚")`,
+  blanks: [
+    { label: 'ア', options: ['otsuri ÷ Kouka[i]', 'otsuri ％ Kouka[i]', 'Kouka[i] ÷ otsuri', '1'], answer: 0 },
+    { label: 'イ', options: ['otsuri ％ Kouka[i]', 'otsuri ÷ Kouka[i]', 'otsuri - Kouka[i]', 'Kouka[i] ％ otsuri'], answer: 0 }],
+  hint: '763円のうち、500円玉は何枚？ 残りはいくら？',
+  explain: '大きい硬貨から順に「何枚使えるか＝商（÷）」を足し、「残りの金額＝余り（％）」を次に回します。763 → 500円1枚（残り263）→ 100円2枚（63）→ 50円1枚（13）→ 10円1枚（3）→ 5円0枚 → 1円3枚 で合計8枚。',
+  expect: '8枚' },
+];
+
+
+
+</script>
+<script>
+(function () {
+'use strict';
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const QMAP = Object.fromEntries(QUESTIONS.map(q => [q.id, q]));
+const UMAP = Object.fromEntries(UNITS.map(u => [u.id, u]));
+const TYPES = {
+  blank: { name: '空欄補充', icon: '✏️' }, purpose: { name: '何をする？', icon: '🔍' }, output: { name: '実行結果', icon: '🖥️' },
+  input: { name: '値を答える', icon: '🔢' }, line: { name: 'まちがい探し', icon: '🐞' },
+};
+const MARK = ['⓪', '①', '②', '③', '④', '⑤'];
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const today = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+
+// ---------------- 保存 ----------------
+const KEY = 'yomitoki-dojo-v1';
+let S = { rec: {}, star: {}, days: {}, font: 1 };
+try { const t = localStorage.getItem(KEY); if (t) S = Object.assign(S, JSON.parse(t)); } catch (e) {}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+const needReview = id => { const r = S.rec[id]; return !!r && r.w > 0 && (r.last === 0 || r.st < 2); };
+const reviewIds = () => QUESTIONS.filter(q => needReview(q.id)).map(q => q.id);
+const starIds = () => QUESTIONS.filter(q => S.star[q.id]).map(q => q.id);
+document.documentElement.style.setProperty('--fs', S.font || 1);
+
+// ---------------- マスコット ----------------
+function owl(mood, size) {
+  size = size || 64; mood = mood || 'normal';
+  let eyes;
+  if (mood === 'happy') eyes = '<path d="M29 46 Q37 36 45 46" stroke="#2B2D42" stroke-width="4.5" fill="none" stroke-linecap="round"/><path d="M55 46 Q63 36 71 46" stroke="#2B2D42" stroke-width="4.5" fill="none" stroke-linecap="round"/><circle cx="27" cy="58" r="5" fill="#FF9AA2" opacity=".7"/><circle cx="73" cy="58" r="5" fill="#FF9AA2" opacity=".7"/>';
+  else if (mood === 'sad') eyes = '<circle cx="37" cy="45" r="12" fill="#fff"/><circle cx="63" cy="45" r="12" fill="#fff"/><circle cx="37" cy="49" r="5.5" fill="#2B2D42"/><circle cx="63" cy="49" r="5.5" fill="#2B2D42"/><path d="M26 31 L44 35" stroke="#7A4A1E" stroke-width="3.5" stroke-linecap="round"/><path d="M74 31 L56 35" stroke="#7A4A1E" stroke-width="3.5" stroke-linecap="round"/><path d="M80 30 q4 7 0 10 q-4 -3 0 -10z" fill="#7CC6F2"/>';
+  else if (mood === 'think') eyes = '<circle cx="37" cy="45" r="12" fill="#fff"/><circle cx="63" cy="45" r="12" fill="#fff"/><circle cx="40" cy="41" r="5.5" fill="#2B2D42"/><circle cx="66" cy="41" r="5.5" fill="#2B2D42"/><circle cx="41.5" cy="39.5" r="1.8" fill="#fff"/><circle cx="67.5" cy="39.5" r="1.8" fill="#fff"/>';
+  else eyes = '<circle cx="37" cy="45" r="12" fill="#fff"/><circle cx="63" cy="45" r="12" fill="#fff"/><circle cx="38" cy="46" r="6" fill="#2B2D42"/><circle cx="62" cy="46" r="6" fill="#2B2D42"/><circle cx="40" cy="44" r="2" fill="#fff"/><circle cx="64" cy="44" r="2" fill="#fff"/>';
+  return `<svg width="${size}" height="${size}" viewBox="0 0 100 100" aria-hidden="true">
+<path d="M20 30 L27 9 L41 23 Z" fill="#C8752F"/><path d="M80 30 L73 9 L59 23 Z" fill="#C8752F"/>
+<ellipse cx="50" cy="58" rx="35" ry="38" fill="#E8964A"/>
+<ellipse cx="17" cy="64" rx="8" ry="17" fill="#D07F37" transform="rotate(12 17 64)"/><ellipse cx="83" cy="64" rx="8" ry="17" fill="#D07F37" transform="rotate(-12 83 64)"/>
+<ellipse cx="50" cy="72" rx="22" ry="21" fill="#FFE3BF"/>
+<path d="M40 70 q3 3 6 0 M54 70 q3 3 6 0 M47 79 q3 3 6 0" stroke="#F0C48F" stroke-width="2" fill="none"/>
+${eyes}
+<path d="M45 55 L55 55 L50 63 Z" fill="#FFB703"/>
+<ellipse cx="40" cy="95" rx="6" ry="3" fill="#FFB703"/><ellipse cx="60" cy="95" rx="6" ry="3" fill="#FFB703"/>
+</svg>`;
+}
+$('#logoOwl').innerHTML = owl('normal', 38);
+
+// ---------------- コード表示 ----------------
+const KW_RE = /("[^"]*"|「[^」]*」)|(\d+(?:\.\d+)?)|(そうでなくもし|そうでなければ|もし|ならば|の間繰り返す|ずつ増やしながら繰り返す|ずつ減らしながら繰り返す|を|から|まで|\b(?:and|or|not)\b)|([A-Za-z_぀-ヿ㐀-鿿][A-Za-z0-9_぀-ヿ㐀-鿿]*(?=\())|([A-Za-z_][A-Za-z0-9_]*)/g;
+function hl(t) {
+  let out = '', last = 0, m;
+  KW_RE.lastIndex = 0;
+  while ((m = KW_RE.exec(t))) {
+    out += esc(t.slice(last, m.index));
+    const cls = m[1] ? 's' : m[2] ? 'nmb' : m[3] ? 'k' : m[4] ? 'fn' : 'v';
+    out += `<span class="${cls}">${esc(m[0])}</span>`;
+    last = KW_RE.lastIndex;
+  }
+  return out + esc(t.slice(last));
+}
+function lineHTML(text, opt) {
+  // 空欄 [[ア]] の処理
+  return text.split(/(\[\[[^\]]+\]\])/).map(part => {
+    const m = part.match(/^\[\[(.+)\]\]$/);
+    if (!m) return hl(part);
+    const label = m[1];
+    const bi = (opt.blanks || []).findIndex(b => b.label === label);
+    const b = opt.blanks && opt.blanks[bi];
+    const pk = opt.picks ? opt.picks[bi] : null;
+    if (b && pk != null) {
+      let st = '';
+      if (opt.checked) st = pk === b.answer ? ' ok' : ' ng';
+      return `<span class="blank filled${st}"><span class="bl">${esc(label)}</span>${hl(b.options[pk])}</span>`;
+    }
+    return `<span class="blank">${esc(label)}</span>`;
+  }).join('');
+}
+function renderCode(src, opt) {
+  opt = opt || {};
+  const lines = src.split('\n').map(s => { const m = s.match(/^( *)(.*)$/); return { ind: Math.floor(m[1].length / 2), text: m[2] }; });
+  return '<div class="code' + (opt.cls ? ' ' + opt.cls : '') + '">' + lines.map((L, i) => {
+    const n = i + 1;
+    const next = lines[i + 1];
+    let g = '';
+    for (let k = 1; k <= L.ind; k++) {
+      const end = !next || next.ind < k;
+      g += `<span class="g${end ? ' end' : ''}"></span>`;
+    }
+    let cls = 'cl';
+    if (opt.select) cls += ' sel';
+    if (opt.pick === n) cls += ' pick';
+    if (opt.right === n) cls += ' right';
+    if (opt.wrong === n) cls += ' wrong';
+    if (opt.hl === n) cls += opt.err ? ' errl' : ' hl';
+    const act = opt.select ? ` data-act="pickline" data-n="${n}" role="button" tabindex="0"` : '';
+    return `<div class="${cls}" data-line="${n}"${act}><span class="no">(${String(n).padStart(2, '0')})</span>${g}<span class="tx">${lineHTML(L.text, opt)}</span></div>`;
+  }).join('') + '</div>';
+}
+function filledSrc(q) {
+  if (q.type === 'line') return q.fixed;
+  let s = q.src;
+  (q.blanks || []).forEach(b => { s = s.split('[[' + b.label + ']]').join(b.options[b.answer]); });
+  return s;
+}
+
+// ---------------- 状態 ----------------
+let view = 'home';
+let Q = null;   // セッション
+let SEL = { units: new Set(UNITS.map(u => u.id)), types: new Set(Object.keys(TYPES)), lv: new Set([1, 2, 3]), shuffle: true };
+let pendingRestore = null;
+
+function toast(msg) {
+  const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
+  document.body.appendChild(t); setTimeout(() => t.remove(), 1900);
+}
+function go(v) { view = v; render(); window.scrollTo(0, 0); }
+
+// ---------------- セッション ----------------
+function newCur(q) {
+  const c = { picks: (q.blanks || []).map(() => null), choice: null, input: '', line: null, checked: false, ok: null, hint: false };
+  if (q.options) c.order = shuffle(q.options.map((_, i) => i));
+  if (q.blanks) c.bord = q.blanks.map(b => shuffle(b.options.map((_, i) => i)));
+  return c;
+}
+function startSession(ids, title, mode) {
+  if (!ids.length) { toast('出題できる問題がありません'); return; }
+  Q = { ids, i: 0, title, mode: mode || 'normal', results: [] };
+  Q.cur = newCur(QMAP[ids[0]]);
+  go('quiz');
+}
+function omakase() {
+  const rv = shuffle(reviewIds()).slice(0, 4);
+  const unseen = shuffle(QUESTIONS.filter(q => !S.rec[q.id] && !rv.includes(q.id)).map(q => q.id));
+  const rest = shuffle(QUESTIONS.filter(q => S.rec[q.id] && !rv.includes(q.id)).map(q => q.id));
+  const ids = rv.concat(unseen, rest).slice(0, 10);
+  startSession(shuffle(ids), 'おまかせ10問');
+}
+function record(id, ok) {
+  const r = S.rec[id] || { n: 0, c: 0, st: 0, w: 0 };
+  const wasReview = needReview(id);
+  r.n++; r.t = Date.now();
+  if (ok) { r.c++; r.st++; } else { r.w++; r.st = 0; }
+  r.last = ok ? 1 : 0;
+  S.rec[id] = r;
+  const d = today(); S.days[d] = (S.days[d] || 0) + 1;
+  save();
+  if (wasReview && ok && r.st >= 2) setTimeout(() => toast('🎉 2回連続正解！復習リストから卒業'), 300);
+}
+
+// ---------------- 画面：ホーム ----------------
+function greet() {
+  const h = new Date().getHours();
+  const tips = [
+    'わからないときは、変数の値を表に書き出してみよう。',
+    '繰り返しは「最初の1回」と「最後の1回」をていねいに追うのがコツ！',
+    '添字は 0 から始まるよ。要素数が5なら最後は 4 だね。',
+    '「÷」は商、「％」は余り。ここを取りちがえやすいよ。',
+    'まちがえた問題は「復習」に入るよ。2回連続で正解すると卒業！',
+    '答えたあとは「トレース」で1行ずつ動きを確かめてみよう。',
+    '二重ループは「内側が速く回る針」と考えるとわかりやすいよ。',
+  ];
+  const hi = h < 11 ? 'おはよう！' : h < 18 ? 'こんにちは！' : 'こんばんは！';
+  return { hi, tip: tips[Math.floor(Math.random() * tips.length)] };
+}
+function vHome() {
+  const done = QUESTIONS.filter(q => S.rec[q.id]).length;
+  let n = 0, c = 0; Object.values(S.rec).forEach(r => { n += r.n; c += r.c; });
+  const rv = reviewIds().length, st = starIds().length, td = S.days[today()] || 0;
+  const g = greet();
+  return `<div class="fade">
+  <section class="card hero">
+    <div class="owl">${owl('normal', 92)}</div>
+    <div style="flex:1;min-width:0">
+      <h1>プログラムを「読む力」をきたえよう</h1>
+      <div class="bubble">${g.hi} ${esc(g.tip)}</div>
+      <div class="stats">
+        <span class="stat">解いた問題<b>${done}</b> / ${QUESTIONS.length}</span>
+        <span class="stat">正答率<b>${n ? Math.round(c / n * 100) : '-'}</b>${n ? '%' : ''}</span>
+        <span class="stat">今日<b>${td}</b>問</span>
+      </div>
+    </div>
+  </section>
+  <div class="acts">
+    <button class="act o" data-act="omakase"><span class="ic">🎯</span><span class="nm">おまかせ10問</span><span class="ds">復習・未挑戦をまぜて出題</span></button>
+    <button class="act n" data-act="select"><span class="ic">🧭</span><span class="nm">えらんで練習</span><span class="ds">単元・問題の種類・レベル</span></button>
+    <button class="act m" data-act="review" ${rv ? '' : 'disabled'}><span class="ic">🔁</span><span class="nm">復習する</span><span class="ds">${rv ? 'まちがえた問題にもう一度' : 'まちがえた問題はまだなし'}</span>${rv ? `<span class="badge">${rv}</span>` : ''}</button>
+    <button class="act y" data-act="stars" ${st ? '' : 'disabled'}><span class="ic">⭐</span><span class="nm">チェックした問題</span><span class="ds">${st ? '★をつけた問題を解く' : '問題画面の☆で登録'}</span>${st ? `<span class="badge" style="color:#B58500">${st}</span>` : ''}</button>
+  </div>
+  <h2 class="sec">単元から選ぶ <span class="pill">全${QUESTIONS.length}問</span></h2>
+  <div class="units">${UNITS.map(u => {
+    const qs = QUESTIONS.filter(q => q.unit === u.id);
+    const ok = qs.filter(q => S.rec[q.id] && S.rec[q.id].c > 0).length;
+    return `<button class="unit" data-act="unit" data-u="${u.id}">
+      <span class="ui" style="background:${u.color}22">${u.icon}</span>
+      <span style="flex:1;min-width:0"><span class="un" style="color:${u.color === '#1F3864' ? u.color : 'var(--ink)'}">${esc(u.name)}</span><span class="us" style="display:block">${esc(u.sub)}</span>
+      <span class="bar" style="display:block"><i style="width:${ok / qs.length * 100}%;background:${u.color}"></i></span>
+      <span class="cnt" style="display:block">正解した問題 ${ok} / ${qs.length}</span></span>
+    </button>`;
+  }).join('')}</div>
+  <h2 class="sec">もっと</h2>
+  <div class="links">
+    <button class="lnk" data-act="guide"><span class="ic">📘</span><span><b>表記ガイド・読むコツ</b><small>Pythonとの対応表つき</small></span></button>
+    <button class="lnk" data-act="records"><span class="ic">📊</span><span><b>記録</b><small>単元ごとの正答率・問題一覧</small></span></button>
+    <button class="lnk" data-act="savepage"><span class="ic">💾</span><span><b>記録のセーブ</b><small>ほかの端末・次回に引きつぐ</small></span></button>
+  </div>
+  <p class="note">※ 記録はこの端末のブラウザに保存されます。共用のパソコンなどで記録が消えてしまう場合は、「記録のセーブ」でセーブコードを書き出しておくと、次回つづきから始められます。</p>
+  </div>`;
+}
+
+// ---------------- 画面：えらんで練習 ----------------
+function selIds() {
+  return QUESTIONS.filter(q => SEL.units.has(q.unit) && SEL.types.has(q.type) && SEL.lv.has(q.lv)).map(q => q.id);
+}
+function vSelect() {
+  const ids = selIds();
+  const chip = (set, key, label) => `<button class="chip ${set.has(key) ? 'on' : ''}" data-act="selchip" data-set="${set === SEL.units ? 'units' : set === SEL.types ? 'types' : 'lv'}" data-k="${key}">${label}</button>`;
+  return `<div class="fade">
+  <div class="qtop"><button class="xbtn" data-act="home" aria-label="もどる">←</button><b style="color:var(--navy);font-size:1.1rem">えらんで練習</b></div>
+  <section class="card sel-sec"><p class="sel-h">単元 <button data-act="selall" data-set="units">すべて／解除</button></p>
+    <div class="chips">${UNITS.map(u => chip(SEL.units, u.id, u.icon + ' ' + esc(u.name))).join('')}</div></section>
+  <section class="card sel-sec"><p class="sel-h">問題の種類 <button data-act="selall" data-set="types">すべて／解除</button></p>
+    <div class="chips">${Object.entries(TYPES).map(([k, t]) => chip(SEL.types, k, t.icon + ' ' + t.name)).join('')}</div>
+    <p class="note" style="margin:10px 2px 0">✏️ 空欄補充：条件や式をうめる／🔍 何をする？：プログラムの目的を答える／🖥️ 実行結果：表示されるものを選ぶ／🔢 値を答える：数値を入力／🐞 まちがい探し：誤りのある行をタップ</p></section>
+  <section class="card sel-sec"><p class="sel-h">レベル</p>
+    <div class="chips">${[1, 2, 3].map(l => chip(SEL.lv, l, '★'.repeat(l) + (l === 1 ? ' きほん' : l === 2 ? ' ふつう' : ' 共テレベル'))).join('')}</div></section>
+  <section class="card sel-sec"><p class="sel-h">出題順</p>
+    <div class="chips"><button class="chip ${SEL.shuffle ? 'on' : ''}" data-act="selshuf" data-v="1">🔀 シャッフル</button><button class="chip ${!SEL.shuffle ? 'on' : ''}" data-act="selshuf" data-v="0">➡️ 単元の順</button></div></section>
+  <div class="btnrow"><button class="btn pri" data-act="selstart" ${ids.length ? '' : 'disabled'}>この条件で ${ids.length} 問 はじめる</button></div>
+  </div>`;
+}
+
+// ---------------- 画面：問題 ----------------
+function vQuiz() {
+  const id = Q.ids[Q.i], q = QMAP[id], c = Q.cur, u = UMAP[q.unit];
+  const codeOpt = { blanks: q.blanks, picks: c.picks, checked: c.checked };
+  if (q.type === 'line') {
+    codeOpt.select = !c.checked;
+    if (!c.checked) codeOpt.pick = c.line;
+    else { codeOpt.right = q.lineAnswer; if (c.line !== q.lineAnswer) codeOpt.wrong = c.line; }
+  }
+  const pct = (Q.i + (c.checked ? 1 : 0)) / Q.ids.length * 100;
+  return `<div class="fade">
+  <div class="qtop">
+    <button class="xbtn" data-act="quit" aria-label="やめる">✕</button>
+    <div class="prog"><i style="width:${pct}%"></i></div>
+    <span class="qnum">${Q.i + 1} / ${Q.ids.length}</span>
+    <button class="star ${S.star[id] ? 'on' : ''}" data-act="star" title="あとで見直す（★チェック）">${S.star[id] ? '★' : '☆'}</button>
+  </div>
+  <div class="qgrid">
+    <section class="card qcard">
+      <div class="tags"><span class="tag" style="background:${u.color}22;color:${u.color === '#1F3864' ? u.color : '#444'}">${u.icon} ${esc(u.name)}</span><span class="tag">${TYPES[q.type].icon} ${TYPES[q.type].name}</span><span class="tag">${'★'.repeat(q.lv)}</span>${needReview(id) ? '<span class="tag" style="background:var(--orange-l);color:var(--orange-d)">復習</span>' : ''}</div>
+      <div class="qtitle">${esc(q.title)}</div>
+      <p class="qtext">${esc(q.text)}</p>
+      ${q.figure ? `<div class="fig mono"><span class="cap">実行結果</span>${esc(q.figure)}</div>` : ''}
+      ${renderCode(q.src, codeOpt)}
+    </section>
+    <section class="card acard" id="acard">
+      ${answerUI(q, c)}
+      ${c.checked ? feedback(q, c) : `
+        ${c.hint ? `<div class="hintbox">💡 ${esc(q.hint)}</div>` : ''}
+        <div class="btnrow">
+          ${q.hint && !c.hint ? '<button class="btn ghost sm" data-act="hint">💡 ヒント</button>' : ''}
+          <button class="btn pri" data-act="check">答え合わせ</button>
+        </div>`}
+    </section>
+  </div></div>`;
+}
+function answerUI(q, c) {
+  const dis = c.checked ? 'disabled' : '';
+  if (q.type === 'blank') {
+    return `<p class="alabel">空欄に入るものをえらぼう${q.blanks.length > 1 ? '（' + q.blanks.map(b => b.label).join('・') + '）' : ''}</p>` +
+      q.blanks.map((b, bi) => `<div class="bgroup"><div class="bhead"><span class="bx">${esc(b.label)}</span></div><div class="opts">` +
+        c.bord[bi].map((oi, pos) => {
+          let cls = 'opt';
+          if (c.checked) { if (oi === b.answer) cls += ' ok'; else if (c.picks[bi] === oi) cls += ' ng'; }
+          else if (c.picks[bi] === oi) cls += ' on';
+          const res = c.checked ? (oi === b.answer ? '<span class="res">⭕</span>' : c.picks[bi] === oi ? '<span class="res">❌</span>' : '') : '';
+          return `<button class="${cls}" data-act="pickblank" data-b="${bi}" data-o="${oi}" ${dis}><span class="mk">${MARK[pos]}</span><span class="ot mono">${hl(b.options[oi])}</span>${res}</button>`;
+        }).join('') + '</div></div>').join('');
+  }
+  if (q.type === 'purpose' || q.type === 'output') {
+    const isMono = q.type === 'output';
+    return `<p class="alabel">${q.type === 'output' ? '表示されるものをえらぼう' : 'あてはまるものをえらぼう'}</p><div class="opts">` +
+      c.order.map((oi, pos) => {
+        let cls = 'opt';
+        if (c.checked) { if (oi === q.answer) cls += ' ok'; else if (c.choice === oi) cls += ' ng'; }
+        else if (c.choice === oi) cls += ' on';
+        const res = c.checked ? (oi === q.answer ? '<span class="res">⭕</span>' : c.choice === oi ? '<span class="res">❌</span>' : '') : '';
+        return `<button class="${cls}" data-act="pickopt" data-o="${oi}" ${dis}><span class="mk">${MARK[pos]}</span><span class="ot${isMono ? ' mono' : ''}">${esc(q.options[oi])}</span>${res}</button>`;
+      }).join('') + '</div>';
+  }
+  if (q.type === 'input') {
+    const st = c.checked ? (c.ok ? 'ok' : 'ng') : '';
+    return `<p class="alabel">表示される値を入力しよう</p>
+      <div class="inbox"><input id="ans" class="${st}" type="text" inputmode="numeric" autocomplete="off" placeholder="ここに入力" value="${esc(c.input)}" ${dis}></div>`;
+  }
+  if (q.type === 'line') {
+    return `<p class="alabel">左のプログラムで、誤っている行をタップしよう</p>
+      <div class="linepick">${c.line ? `えらんだ行：<b>(${String(c.line).padStart(2, '0')})</b>` : '👆 行番号のあたりをタップ'}</div>`;
+  }
+  return '';
+}
+const PRAISE = ['正解！', 'すばらしい！', 'よく読めたね！', 'バッチリ！', 'その調子！'];
+const ENC = ['おしい！', 'もう一歩！', 'ここで覚えよう！', 'トレースで確かめよう！'];
+function feedback(q, c) {
+  const ok = c.ok;
+  let ans = '';
+  if (!ok) {
+    if (q.type === 'blank') ans = '正解：' + q.blanks.map(b => `${b.label} <code class="mono">${esc(b.options[b.answer])}</code>`).join('　');
+    else if (q.type === 'input') ans = `正解：<code class="mono">${esc(q.accept[0])}</code>`;
+    else if (q.type === 'line') ans = `正解：(${String(q.lineAnswer).padStart(2, '0')}) 行目`;
+    else ans = `正解：${esc(q.options[q.answer])}`;
+  }
+  const last = Q.i === Q.ids.length - 1;
+  return `<div class="fb ${ok ? 'ok' : 'ng'} pop" id="fb">
+    <div class="fbhead">${owl(ok ? 'happy' : 'sad', 54)}<div>${ok ? PRAISE[Math.floor(Math.random() * PRAISE.length)] : ENC[Math.floor(Math.random() * ENC.length)]}<small>${ok ? (needReview(q.id) ? 'あと1回正解で復習リストから卒業' : '') : 'この問題は「復習」に追加されました'}</small></div></div>
+    ${ans ? `<div class="correct-ans">${ans}</div>` : ''}
+    <div class="exp"><span class="lb">📝 解説</span>${esc(q.explain)}</div>
+  </div>
+  <div class="btnrow">
+    ${q.noTrace === true ? '' : '<button class="btn mint" data-act="trace">▶ トレースで確かめる</button>'}
+    <button class="btn nav" data-act="next">${last ? '結果を見る' : '次の問題へ →'}</button>
+  </div>`;
+}
+function check() {
+  const q = QMAP[Q.ids[Q.i]], c = Q.cur;
+  let ok;
+  if (q.type === 'blank') {
+    if (c.picks.some(p => p == null)) { toast('すべての空欄をえらんでね'); return; }
+    ok = q.blanks.every((b, i) => c.picks[i] === b.answer);
+  } else if (q.type === 'purpose' || q.type === 'output') {
+    if (c.choice == null) { toast('選択肢をえらんでね'); return; }
+    ok = c.choice === q.answer;
+  } else if (q.type === 'input') {
+    const el = $('#ans'); if (el) c.input = el.value;
+    const v = c.input.replace(/[０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0)).replace(/[−ー－]/g, '-').replace(/\s/g, '');
+    if (!v) { toast('答えを入力してね'); return; }
+    ok = q.accept.includes(v);
+  } else if (q.type === 'line') {
+    if (c.line == null) { toast('行をタップしてえらんでね'); return; }
+    ok = c.line === q.lineAnswer;
+  }
+  c.checked = true; c.ok = ok;
+  record(q.id, ok);
+  Q.results.push({ id: q.id, ok });
+  render();
+  requestAnimationFrame(() => { const fb = $('#fb'); if (fb && window.innerWidth <= 900) fb.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+}
+function next() {
+  if (Q.i >= Q.ids.length - 1) { go('result'); return; }
+  Q.i++; Q.cur = newCur(QMAP[Q.ids[Q.i]]);
+  render(); window.scrollTo(0, 0);
+}
+
+// ---------------- 画面：結果 ----------------
+function vResult() {
+  const n = Q.results.length, ok = Q.results.filter(r => r.ok).length;
+  const rate = n ? ok / n : 0;
+  const msg = rate === 1 ? '全問正解！すごい読解力！' : rate >= .7 ? 'よくできました！まちがえた問題を見直そう' : rate >= .4 ? 'いい調子！トレースで動きを確かめよう' : 'まずは1問ずつ、変数の表を書いて読もう';
+  const wrong = Q.results.filter(r => !r.ok).map(r => r.id);
+  return `<div class="fade"><section class="card result">
+    ${owl(rate >= .7 ? 'happy' : rate >= .4 ? 'normal' : 'think', 100)}
+    <div style="color:var(--sub);font-weight:700;margin-top:4px">${esc(Q.title)}</div>
+    <div class="score">${ok}<small> / ${n} 問正解</small></div>
+    <p style="font-weight:900;color:var(--navy);margin:10px 0 0">${msg}</p>
+    <div class="rlist">${Q.results.map(r => { const q = QMAP[r.id]; return `<div class="ritem"><span class="${r.ok ? 'ok' : 'ng'}">${r.ok ? '⭕' : '❌'}</span><span class="rt">${esc(q.title)}<br><small>${UMAP[q.unit].name}・${TYPES[q.type].name}</small></span><button class="btn ghost sm" data-act="one" data-id="${q.id}">もう一度</button></div>`; }).join('')}</div>
+    <div class="btnrow">
+      ${wrong.length ? `<button class="btn pri" data-act="retrywrong">まちがえた ${wrong.length} 問をもう一度</button>` : ''}
+      <button class="btn nav" data-act="omakase">おまかせ10問</button>
+      <button class="btn ghost" data-act="home">ホームへ</button>
+    </div>
+  </section></div>`;
+}
+
+// ---------------- 画面：記録 ----------------
+function vRecords() {
+  let n = 0, c = 0; Object.values(S.rec).forEach(r => { n += r.n; c += r.c; });
+  const done = QUESTIONS.filter(q => S.rec[q.id]).length;
+  const days = Object.keys(S.days).length;
+  const statusOf = id => { const r = S.rec[id]; if (!r) return ''; if (needReview(id)) return 'rv'; return r.last ? 'ok' : 'ng'; };
+  return `<div class="fade">
+  <div class="qtop"><button class="xbtn" data-act="home" aria-label="もどる">←</button><b style="color:var(--navy);font-size:1.1rem">記録</b></div>
+  <div class="rec-top">
+    <div class="card rbox"><div class="n">${done}<small style="font-size:.9rem;color:var(--sub)">/${QUESTIONS.length}</small></div><div class="l">挑戦した問題</div></div>
+    <div class="card rbox"><div class="n">${n ? Math.round(c / n * 100) + '%' : '-'}</div><div class="l">正答率（のべ ${n} 回）</div></div>
+    <div class="card rbox"><div class="n">${reviewIds().length}</div><div class="l">復習待ち</div></div>
+    <div class="card rbox"><div class="n">${days}</div><div class="l">練習した日数</div></div>
+  </div>
+  <h2 class="sec">単元ごとの正答率</h2>
+  <section class="card" style="padding:12px 16px">${UNITS.map(u => {
+    let un = 0, uc = 0; QUESTIONS.filter(q => q.unit === u.id).forEach(q => { const r = S.rec[q.id]; if (r) { un += r.n; uc += r.c; } });
+    const p = un ? uc / un : 0;
+    return `<div class="urow"><span style="font-weight:700;font-size:.9rem">${u.icon} ${esc(u.name)}</span><span class="ubar"><i style="width:${p * 100}%;background:${u.color}"></i></span><span class="pct">${un ? Math.round(p * 100) + '%' : '<span style="color:var(--sub);font-weight:500">未挑戦</span>'}</span></div>`;
+  }).join('')}</section>
+  <h2 class="sec">問題一覧 <span class="pill">タップで1問練習</span></h2>
+  <div class="legend"><span><i class="dot" style="background:var(--mint)"></i>正解</span><span><i class="dot" style="background:var(--orange)"></i>復習待ち</span><span><i class="dot" style="background:#E5DCCD"></i>未挑戦</span><span>★ チェック</span></div>
+  ${UNITS.map(u => `<p style="font-weight:900;margin:14px 4px 6px;color:var(--navy)">${u.icon} ${esc(u.name)}</p><div class="qlist">${QUESTIONS.filter(q => q.unit === u.id).map(q => {
+    const r = S.rec[q.id];
+    return `<button class="qi" data-act="one" data-id="${q.id}"><span class="dot ${statusOf(q.id)}"></span><span class="qt">${esc(q.title)}<br><small style="color:var(--sub);font-weight:500">${TYPES[q.type].name}${r ? `・${r.c}/${r.n}回正解` : ''}</small></span>${S.star[q.id] ? '<span class="st">★</span>' : ''}</button>`;
+  }).join('')}</div>`).join('')}
+  <div class="btnrow" style="margin-top:22px"><button class="btn ghost" data-act="savepage">💾 記録のセーブ・読みこみ</button></div>
+  </div>`;
+}
+
+// ---------------- 画面：セーブ ----------------
+function encodeSave() {
+  const data = JSON.stringify({ v: 1, rec: S.rec, star: S.star, days: S.days });
+  return 'YMD1-' + btoa(unescape(encodeURIComponent(data)));
+}
+function decodeSave(s) {
+  s = s.trim().replace(/\s/g, '');
+  if (!s.startsWith('YMD1-')) throw new Error('セーブコードの形式がちがいます');
+  const d = JSON.parse(decodeURIComponent(escape(atob(s.slice(5)))));
+  if (!d.rec) throw new Error('読みこめませんでした');
+  return d;
+}
+function vSave() {
+  const code = encodeSave();
+  return `<div class="fade">
+  <div class="qtop"><button class="xbtn" data-act="home" aria-label="もどる">←</button><b style="color:var(--navy);font-size:1.1rem">記録のセーブ・読みこみ</b></div>
+  <section class="card sel-sec">
+    <p class="sel-h">① 今の記録を書き出す</p>
+    <p style="margin:0 0 8px;font-size:.92rem">下のセーブコードをコピーして、メモ帳などに貼りつけて保存しておこう（自分のフォルダ・スマホのメモなど）。</p>
+    <textarea class="code-area" readonly id="savecode">${esc(code)}</textarea>
+    <div class="btnrow"><button class="btn pri" data-act="copysave">📋 コピーする</button></div>
+  </section>
+  <section class="card sel-sec">
+    <p class="sel-h">② 保存しておいた記録を読みこむ</p>
+    <p style="margin:0 0 8px;font-size:.92rem">セーブコードを貼りつけるか、保存したテキストファイルを選んでください。</p>
+    <textarea class="code-area" id="loadcode" placeholder="YMD1- から始まるコードを貼りつけ"></textarea>
+    <div class="btnrow">
+      <label class="btn ghost" style="text-align:center;cursor:pointer">📂 ファイルから読みこむ<input type="file" id="loadfile" accept=".txt,text/plain" hidden></label>
+      <button class="btn nav" data-act="loadsave">読みこむ</button>
+    </div>
+    ${pendingRestore ? `<div class="hintbox" style="margin-top:12px">
+      <b>このセーブコードには ${Object.keys(pendingRestore.rec).length} 問ぶんの記録があります。</b><br>どうしますか？
+      <div class="btnrow"><button class="btn mint sm" data-act="restore" data-m="merge">今の記録と合わせる</button><button class="btn ghost sm" data-act="restore" data-m="replace">置きかえる</button><button class="btn ghost sm" data-act="restore" data-m="cancel">やめる</button></div></div>` : ''}
+  </section>
+  <section class="card sel-sec">
+    <p class="sel-h">③ 記録を消す</p>
+    <div class="btnrow" style="margin-top:0">${S._askReset ? '<button class="btn sm" style="background:var(--red);color:#fff" data-act="reset" data-m="yes">本当に消す</button><button class="btn ghost sm" data-act="reset" data-m="no">やめる</button>' : '<button class="btn ghost sm" data-act="reset" data-m="ask">すべての記録を消す</button>'}</div>
+  </section></div>`;
+}
+
+// ---------------- 画面：ガイド ----------------
+function vGuide() {
+  const rows = [
+    ['変数への代入', 'kosu = 0\nkosu = kosu + 1', 'kosu = 0\nkosu = kosu + 1', '右辺を計算してから左の変数に入れる'],
+    ['配列', 'Data = [3, 5, 8]\nData[0]', 'Data = [3, 5, 8]\nData[0]', '配列名は大文字で始まる。添字は 0 から'],
+    ['二次元配列', 'Hyo[1, 2]', 'Hyo[1][2]', '[行, 列] の順'],
+    ['算術演算', 'x ÷ y\nx ％ y\nx / y\nx ** 2', 'x // y\nx % y\nx / y\nx ** 2', '÷ は商の整数部分、％ は余り、/ はふつうの割り算'],
+    ['比較', '==  !=  >  >=  <  <=', '==  !=  >  >=  <  <=', '「以上」は >=、「より大きい」は >'],
+    ['論理演算', 'a and b\na or b\nnot a', 'a and b\na or b\nnot a', 'かつ・または・でない'],
+    ['表示', '表示する("合計は", x)', 'print("合計は", x, sep="")', '「,」で区切ったものをつなげて表示し、改行する'],
+    ['条件分岐', 'もし x < 3 ならば:\n  …\nそうでなくもし x < 10 ならば:\n  …\nそうでなければ:\n  …', 'if x < 3:\n    …\nelif x < 10:\n    …\nelse:\n    …', '上から順に調べ、最初に成り立ったところだけ実行'],
+    ['条件で繰り返す', 'x < 10 の間繰り返す:\n  …', 'while x < 10:\n    …', '最初に条件を調べ、成り立つ間だけ中を実行'],
+    ['回数で繰り返す', 'i を 0 から 9 まで 1 ずつ\n増やしながら繰り返す:', 'for i in range(0, 10):', '「〜まで」の値もふくむ！（Pythonは10未満）'],
+    ['減らしながら', 'i を 5 から 1 まで 1 ずつ\n減らしながら繰り返す:', 'for i in range(5, 0, -1):', '5, 4, 3, 2, 1'],
+    ['関数（例）', '要素数(Data)\n整数(7.8)\n乱数()', 'len(Data)\nint(7.8)\nrandom.random()', '要素の個数／小数点以下を切り捨て／0以上1未満の小数'],
+  ];
+  const tips = [
+    ['変数の表をつくる', '紙に変数の名前を横に並べ、1行実行するたびに値を書きこもう。トレース機能はこれを自動でやってくれます。'],
+    ['最初と最後をていねいに', '繰り返しは「1回目」と「最後の1回」でまちがえやすい。〜まで の値もふくむか、条件が偽になるのはいつかを確かめよう。'],
+    ['字下げ（縦線）を見る', 'その行は繰り返しの中？外？ 縦線の終わり（└）がブロックの終わり。初期化の位置でよく差がつきます。'],
+    ['添字と値を区別する', 'i は「何番目か」、Data[i] は「そこに入っている値」。最大値の「場所」を求めるのか「値」を求めるのかに注意。'],
+    ['小さい例でためす', '要素が多いときは、2〜3個の小さい例で動きを確かめると目的が見えてきます。'],
+    ['関数は説明を信じる', '問題文で「〜を返す」と説明された関数は、中身を考えずに返す値に置きかえて読もう。'],
+  ];
+  return `<div class="fade">
+  <div class="qtop"><button class="xbtn" data-act="home" aria-label="もどる">←</button><b style="color:var(--navy);font-size:1.1rem">表記ガイド・読むコツ</b></div>
+  <section class="card" style="padding:16px 18px">
+    <div style="display:flex;gap:12px;align-items:center">${owl('normal', 60)}<div class="bubble">このアプリのプログラムは、大学入学共通テスト「情報」で使われるプログラム表記にそろえて書いているよ。Pythonとくらべて読んでみよう。</div></div>
+    <p class="note" style="margin-top:10px">※ このアプリでは、配列の添字はすべて 0 から始まるものとします。関数（要素数・整数・乱数など）のはたらきは、各問題の問題文の説明にしたがってください。</p>
+  </section>
+  <h2 class="sec">表記の対応表</h2>
+  <section class="card gwrap"><table class="gtable"><thead><tr><th>項目</th><th>共通テスト用プログラム表記</th><th>Python</th><th>ポイント</th></tr></thead><tbody>
+  ${rows.map(r => `<tr><td style="font-weight:900;white-space:nowrap">${r[0]}</td><td><code class="mono">${hl(r[1])}</code></td><td class="py"><code class="mono">${esc(r[2])}</code></td><td style="font-size:.85rem">${esc(r[3])}</td></tr>`).join('')}
+  </tbody></table></section>
+  <h2 class="sec">字下げの見方</h2>
+  <section class="card" style="padding:16px 18px">
+    <p style="margin:0 0 8px;font-size:.92rem">ブロック（繰り返しや「もし」の中身）は、左の縦線で表されます。縦線が └ で終わったところでブロックも終わり。下の例で (04) は繰り返しの<b>外</b>なので、1回だけ実行されます。</p>
+    ${renderCode('goukei = 0\ni を 1 から 3 まで 1 ずつ増やしながら繰り返す:\n  goukei = goukei + i\n表示する(goukei)')}
+  </section>
+  <h2 class="sec">プログラムを読む6つのコツ</h2>
+  <div class="tips">${tips.map((t, i) => `<div class="card tip"><h3><span class="tn">${i + 1}</span>${esc(t[0])}</h3><p>${esc(t[1])}</p></div>`).join('')}</div>
+  </div>`;
+}
+
+// ---------------- トレース ----------------
+let T = null;
+function openTrace() {
+  const q = QMAP[Q.ids[Q.i]];
+  T = { q, which: 'fixed', i: 0, playing: false, timer: null, speed: 700 };
+  runTrace();
+  document.body.style.overflow = 'hidden';
+  renderTrace();
+}
+function runTrace() {
+  const q = T.q;
+  T.src = (q.type === 'line' && T.which === 'orig') ? q.src : filledSrc(q);
+  T.res = DNCL.trace(T.src, q.funcs);
+  T.i = 0;
+}
+function closeTrace() { stopPlay(); T = null; $('#ov').innerHTML = ''; document.body.style.overflow = ''; }
+function stopPlay() { if (T && T.timer) { clearInterval(T.timer); T.timer = null; } if (T) T.playing = false; }
+function togglePlay() {
+  if (T.playing) { stopPlay(); renderTrace(); return; }
+  if (T.i >= T.res.events.length - 1) T.i = 0;
+  T.playing = true;
+  T.timer = setInterval(() => { if (T.i < T.res.events.length - 1) { T.i++; renderTrace(); } else { stopPlay(); renderTrace(); } }, T.speed);
+  renderTrace();
+}
+function varHTML(name, v, pv) {
+  const fv = x => typeof x === 'string' ? '"' + esc(x) + '"' : esc(DNCL.fmt(x));
+  const changed = JSON.stringify(v) !== JSON.stringify(pv);
+  if (Array.isArray(v) && v.length && Array.isArray(v[0])) {
+    const cols = Math.max(...v.map(r => r.length));
+    let h = `<table class="grid2"><tr><th></th>${Array.from({ length: cols }, (_, j) => `<th>${j}</th>`).join('')}</tr>`;
+    v.forEach((row, i) => { h += `<tr><th>${i}</th>` + row.map((x, j) => `<td class="${pv && pv[i] && pv[i][j] !== x ? 'chg' : ''}">${fv(x)}</td>`).join('') + '</tr>'; });
+    return `<div class="var${changed ? ' chg' : ''}"><span class="vn">${esc(name)}</span>${h}</table></div>`;
+  }
+  if (Array.isArray(v)) {
+    return `<div class="var${changed ? ' chg' : ''}"><span class="vn">${esc(name)}</span><span class="arr">${v.map((x, i) => `<span class="cell"><span class="ix">${i}</span><span class="cv${pv && pv[i] !== x ? ' chg' : ''}">${fv(x)}</span></span>`).join('')}</span></div>`;
+  }
+  return `<div class="var${changed ? ' chg' : ''}"><span class="vn">${esc(name)}</span><span class="vv">${fv(v)}</span></div>`;
+}
+function renderTrace() {
+  if (!T) return;
+  const ev = T.res.events[T.i], prev = T.i > 0 ? T.res.events[T.i - 1] : null;
+  const N = T.res.events.length;
+  const q = T.q;
+  const out = T.res.out.slice(0, ev.outLen);
+  const noteCls = ev.error ? 'e' : ev.cond === true ? 't' : ev.cond === false ? 'f' : '';
+  const sw = q.type === 'line' ? `<div class="tswitch"><button class="chip ${T.which === 'fixed' ? 'on' : ''}" data-act="tsw" data-w="fixed">✅ 修正後のプログラム</button><button class="chip ${T.which === 'orig' ? 'on' : ''}" data-act="tsw" data-w="orig">🐞 修正前（問題のまま）</button></div>` : '';
+  $('#ov').innerHTML = `<div class="ov" data-act="ovbg"><div class="tr" role="dialog" aria-label="トレース">
+    <div class="tr-h"><div class="tt">▶ トレース：${esc(q.title)}<small>1行ずつ実行して、変数と表示の変化を確かめよう${q.random ? '（乱数を使うので実行するたびに結果が変わります）' : ''}</small></div><button class="xbtn" style="background:transparent;border-color:#46618f" data-act="tclose" aria-label="閉じる">✕</button></div>
+    <div class="tr-b">
+      <div>${sw}<div class="tr-code" id="trcode">${renderCode(T.src, { hl: ev.line, err: ev.error })}</div></div>
+      <div>
+        <div class="tnote ${noteCls}"><span class="stp">${ev.end ? '終了' : (T.i + 1) + '/' + (N - 1)}</span><span>${ev.line ? `(${String(ev.line).padStart(2, '0')}) ` : ''}${esc(ev.note)}</span></div>
+        <div class="vh">📦 変数</div>
+        <div class="vlist">${ev.snap.order.length ? ev.snap.order.map(k => varHTML(k, ev.snap.vars[k], prev ? prev.snap.vars[k] : undefined)).join('') : '<div class="empty-state" style="padding:8px">まだ変数はありません</div>'}</div>
+        <div class="vh">🖥️ 表示</div>
+        <div class="console">${out.length ? out.map((l, i) => `<div class="ln${ev.show && i === out.length - 1 ? ' new' : ''}">${esc(l)}</div>`).join('') : '<span class="empty">（まだ何も表示されていません）</span>'}</div>
+      </div>
+    </div>
+    <div class="tr-c">
+      <button class="cb" data-act="tfirst" title="最初へ">⏮</button>
+      <button class="cb" data-act="tprev" title="1つもどる">◀</button>
+      <button class="cb main" data-act="tnext">1行すすむ ▶</button>
+      <button class="cb play ${T.playing ? 'on' : ''}" data-act="tplay" title="自動再生">${T.playing ? '⏸' : '⏵'}</button>
+      <button class="cb" data-act="tlast" title="最後へ">⏭</button>
+      ${q.random ? '<button class="cb" data-act="trerun" title="もう一度実行（乱数が変わる）">🎲</button>' : ''}
+      <input type="range" min="0" max="${N - 1}" value="${T.i}" id="tslider" aria-label="ステップ">
+    </div>
+  </div></div>`;
+  const hlEl = document.querySelector('#trcode .cl.hl, #trcode .cl.errl');
+  if (hlEl) hlEl.scrollIntoView({ block: 'nearest' });
+}
+
+// ---------------- 描画 ----------------
+function render() {
+  const app = $('#app');
+  if (view === 'home') app.innerHTML = vHome();
+  else if (view === 'select') app.innerHTML = vSelect();
+  else if (view === 'quiz') app.innerHTML = vQuiz();
+  else if (view === 'result') app.innerHTML = vResult();
+  else if (view === 'records') app.innerHTML = vRecords();
+  else if (view === 'guide') app.innerHTML = vGuide();
+  else if (view === 'savepage') app.innerHTML = vSave();
+}
+
+// ---------------- 操作 ----------------
+const ACT = {
+  home: () => { Q = null; go('home'); },
+  guide: () => go('guide'),
+  records: () => go('records'),
+  savepage: () => { pendingRestore = null; S._askReset = false; go('savepage'); },
+  font: () => {
+    const steps = [0.9, 1, 1.12, 1.25];
+    const i = steps.indexOf(S.font || 1);
+    S.font = steps[(i + 1) % steps.length]; save();
+    document.documentElement.style.setProperty('--fs', S.font);
+    toast('文字の大きさ：' + ['小', '標準', '大', '特大'][steps.indexOf(S.font)]);
+  },
+  omakase: () => omakase(),
+  select: () => go('select'),
+  review: () => startSession(shuffle(reviewIds()), '復習', 'review'),
+  stars: () => startSession(shuffle(starIds()), 'チェックした問題'),
+  unit: el => { const u = UMAP[el.dataset.u]; startSession(QUESTIONS.filter(q => q.unit === u.id).map(q => q.id), u.name); },
+  one: el => startSession([el.dataset.id], QMAP[el.dataset.id].title),
+  selchip: el => {
+    const set = SEL[el.dataset.set]; const k = el.dataset.set === 'lv' ? Number(el.dataset.k) : el.dataset.k;
+    if (set.has(k)) set.delete(k); else set.add(k); render();
+  },
+  selall: el => {
+    const key = el.dataset.set; const all = key === 'units' ? UNITS.map(u => u.id) : Object.keys(TYPES);
+    if (SEL[key].size === all.length) SEL[key].clear(); else SEL[key] = new Set(all);
+    render();
+  },
+  selshuf: el => { SEL.shuffle = el.dataset.v === '1'; render(); },
+  selstart: () => { const ids = selIds(); startSession(SEL.shuffle ? shuffle(ids) : ids, 'えらんで練習'); },
+  quit: () => { if (Q.results.length) go('result'); else ACT.home(); },
+  star: () => { const id = Q.ids[Q.i]; if (S.star[id]) delete S.star[id]; else S.star[id] = 1; save(); render(); toast(S.star[id] ? '★ チェックしました' : 'チェックをはずしました'); },
+  hint: () => { Q.cur.hint = true; render(); },
+  pickblank: el => { if (Q.cur.checked) return; Q.cur.picks[+el.dataset.b] = +el.dataset.o; render(); },
+  pickopt: el => { if (Q.cur.checked) return; Q.cur.choice = +el.dataset.o; render(); },
+  pickline: el => { if (Q.cur.checked) return; Q.cur.line = +el.dataset.n; render(); },
+  check: () => check(),
+  next: () => next(),
+  retrywrong: () => { const ids = Q.results.filter(r => !r.ok).map(r => r.id); startSession([...new Set(ids)], 'まちがえた問題'); },
+  trace: () => openTrace(),
+  tclose: () => closeTrace(),
+  ovbg: (el, e) => { if (e.target === el) closeTrace(); },
+  tnext: () => { stopPlay(); if (T.i < T.res.events.length - 1) T.i++; renderTrace(); },
+  tprev: () => { stopPlay(); if (T.i > 0) T.i--; renderTrace(); },
+  tfirst: () => { stopPlay(); T.i = 0; renderTrace(); },
+  tlast: () => { stopPlay(); T.i = T.res.events.length - 1; renderTrace(); },
+  tplay: () => togglePlay(),
+  trerun: () => { stopPlay(); runTrace(); renderTrace(); toast('🎲 もう一度実行しました'); },
+  tsw: el => { stopPlay(); T.which = el.dataset.w; runTrace(); renderTrace(); },
+  copysave: async () => {
+    const ta = $('#savecode');
+    try { await navigator.clipboard.writeText(ta.value); toast('📋 コピーしました'); }
+    catch (e) { ta.focus(); ta.select(); toast('選択しました。Ctrl+C（長押し→コピー）でコピーしてね'); }
+  },
+  loadsave: () => {
+    try { pendingRestore = decodeSave($('#loadcode').value); render(); }
+    catch (e) { toast('⚠ ' + e.message); }
+  },
+  restore: el => {
+    const m = el.dataset.m, d = pendingRestore;
+    if (m === 'cancel' || !d) { pendingRestore = null; render(); return; }
+    if (m === 'replace') { S.rec = d.rec || {}; S.star = d.star || {}; S.days = d.days || {}; }
+    else {
+      Object.entries(d.rec || {}).forEach(([id, r]) => { const a = S.rec[id]; if (!a || (r.t || 0) > (a.t || 0)) S.rec[id] = r; });
+      Object.assign(S.star, d.star || {});
+      Object.entries(d.days || {}).forEach(([k, v]) => { S.days[k] = Math.max(S.days[k] || 0, v); });
+    }
+    save(); pendingRestore = null; toast('✅ 記録を読みこみました'); go('home');
+  },
+  reset: el => {
+    const m = el.dataset.m;
+    if (m === 'ask') S._askReset = true;
+    else if (m === 'no') S._askReset = false;
+    else { S.rec = {}; S.star = {}; S.days = {}; S._askReset = false; save(); toast('記録を消しました'); }
+    render();
+  },
+};
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]');
+  if (!el || el.disabled) return;
+  const f = ACT[el.dataset.act];
+  if (f) f(el, e);
+});
+document.addEventListener('input', e => {
+  if (e.target.id === 'ans' && Q) Q.cur.input = e.target.value;
+  if (e.target.id === 'tslider' && T) { stopPlay(); T.i = +e.target.value; renderTrace(); const s = $('#tslider'); if (s) s.focus(); }
+});
+document.addEventListener('change', e => {
+  if (e.target.id === 'loadfile') {
+    const f = e.target.files[0]; if (!f) return;
+    const rd = new FileReader();
+    rd.onload = () => { try { pendingRestore = decodeSave(String(rd.result)); render(); } catch (err) { toast('⚠ ' + err.message); } };
+    rd.readAsText(f);
+  }
+});
+document.addEventListener('keydown', e => {
+  if (T) {
+    if (e.key === 'ArrowRight') { e.preventDefault(); ACT.tnext(); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); ACT.tprev(); }
+    else if (e.key === 'Escape') closeTrace();
+    return;
+  }
+  if (e.key === 'Enter' && e.target.id === 'ans') { e.preventDefault(); check(); }
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('sel')) { e.preventDefault(); ACT.pickline(e.target); }
+});
+
+render();
+})();
+
+</script>
+</body>
+</html>
