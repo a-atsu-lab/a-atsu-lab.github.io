@@ -387,7 +387,7 @@ kbd{background:#f2f4f7;border:1px solid var(--line);border-bottom-width:2px;bord
       <div class="menu-pop">
         <button id="mNew"><i data-ic="new"></i>新規作成</button>
         <button id="mSave"><i data-ic="save"></i>保存（.json）　Ctrl+S</button>
-        <button id="mOpen"><i data-ic="open"></i>開く（.json）</button>
+        <button id="mOpen"><i data-ic="open"></i>開く（.json / 設計書.md）</button>
         <button id="mPrint"><i data-ic="print"></i>印刷・PDF（画面一覧）</button>
         <button id="mHelp"><i data-ic="help"></i>使い方</button>
       </div>
@@ -409,7 +409,7 @@ kbd{background:#f2f4f7;border:1px solid var(--line);border-bottom-width:2px;bord
 </div>
 <div id="modal" hidden></div>
 <div id="print"></div>
-<input type="file" id="fOpen" accept=".json,application/json" hidden>
+<input type="file" id="fOpen" accept=".json,.md,.markdown,.txt,application/json,text/markdown,text/plain" hidden>
 <input type="file" id="fImg" accept="image/*" hidden>
 <input type="file" id="fApp" accept=".html,.htm,text/html" hidden>
 <div id="appview" hidden></div>
@@ -1132,6 +1132,194 @@ function buildAIMarkdown(){
   if((sp.extra||'').trim())L.push('## その他の要望','',sp.extra.trim(),'');
   return L.join('\n');
 }
+/* ---------- 設計書（.md）から読み込む ---------- */
+function parseAIMarkdown(md){
+  md=String(md).replace(/^\uFEFF/,'').replace(/\r\n?/g,'\n');
+  const lines=md.split('\n');
+  const h1=lines.find(l=>/^#\s+アプリ設計書[：:]/.test(l));
+  if(!h1)throw new Error('notmd');
+  const p=newProject();p.screens=[];p.map={};
+  p.name=h1.replace(/^#\s+アプリ設計書[：:]\s*/,'').trim()||'無題';
+  const blank=v=>{v=String(v||'').trim();return /^（未記入）$/.test(v)?'':v;};
+  // 大見出しごとに分ける
+  const sec={};let curH=null;
+  lines.forEach(l=>{const m=l.match(/^##\s+(.+?)\s*$/);if(m&&!l.startsWith('###')){curH=m[1];sec[curH]=[];return;}if(curH)sec[curH].push(l);});
+  const body=k=>{const key=Object.keys(sec).find(x=>x.startsWith(k));return key?sec[key]:null;};
+  const text=k=>{const b=body(k);return b?blank(b.join('\n').trim()):'';};
+  // 作成者
+  const au=lines.find(l=>/^作成者[：:]/.test(l));
+  if(au){let s=au.replace(/^作成者[：:]\s*/,'').trim();const c=s.match(/^(\d年\d+組)\s*/);if(c){p.author.cls=c[1];s=s.slice(c[0].length);}
+    const n=s.match(/^(\d+)番\s*/);if(n){p.author.no=n[1];s=s.slice(n[0].length);}p.author.name=s.trim();}
+  // 端末
+  const req=(body('AIへのお願い')||[]).join('\n'),look=(body('見た目')||[]).join('\n');
+  const dk=Object.keys(DEVICES).find(k=>req.includes(DEVICES[k].label+'（')||look.includes('対象の端末：'+DEVICES[k].label));
+  p.device=dk||'phone';
+  const W=DEVICES[p.device].w,DH=DEVICES[p.device].h;
+  // 企画
+  const kb=body('企画')||[];let inF=false;const feats=[];
+  kb.forEach(l=>{let m;
+    if((m=l.match(/^-\s*だれのためのアプリか[：:]\s*(.*)$/))){p.concept.target=blank(m[1]);inF=false;}
+    else if((m=l.match(/^-\s*解決する困りごと[：:]\s*(.*)$/))){p.concept.problem=blank(m[1]);inF=false;}
+    else if(/^-\s*主な機能[：:]/.test(l)){inF=true;const r=l.replace(/^-\s*主な機能[：:]\s*/,'');if(blank(r))feats.push(r.trim());}
+    else if(inF&&(m=l.match(/^\s+-\s+(.*)$/))){if(blank(m[1]))feats.push(m[1].trim());}
+  });
+  p.concept.features=feats.map(x=>'・'+x).join('\n');
+  // 設計
+  p.spec.states=text('状態');p.spec.data=text('扱うデータ');p.spec.env=text('動かす環境');p.spec.extra=text('その他の要望');
+  // 画面一覧（目的のもと）
+  const rows=(body('画面一覧')||[]).filter(l=>/^\|/.test(l)).map(l=>l.replace(/^\||\|$/g,'').split('|').map(x=>x.trim())).filter(r=>r.length>=3&&/^\d+$/.test(r[0]));
+  const stripStart=n=>n.replace(/（スタート画面）\s*$/,'').trim();
+  // 各画面
+  const detail=body('各画面のくわしい内容')||[];
+  const blocks=[];let b=null;
+  detail.forEach(l=>{const m=l.match(/^###\s+(\d+)\.\s+(.+?)\s*$/);if(m){b={no:+m[1],title:m[2],lines:[]};blocks.push(b);}else if(b)b.lines.push(l);});
+  const list=blocks.length?blocks:rows.map(r=>({no:+r[0],title:r[1],lines:[]}));
+  const TR=Object.fromEntries(Object.entries(TRANS).map(([k,v])=>[v,k]));
+  const pend=[];const notes=[];
+  list.forEach(bl=>{
+    const isStart=/（スタート画面）\s*$/.test(bl.title);const name=stripStart(bl.title)||('画面'+bl.no);
+    const s=newScreen(name);
+    const row=rows.find(r=>+r[0]===bl.no);if(row)s.purpose=blank(row[2]);
+    let inP=false;const tree=[];
+    bl.lines.forEach(l=>{let m;
+      if((m=l.match(/^-\s*目的[：:]\s*(.*)$/))){s.purpose=blank(m[1]);inP=false;}
+      else if((m=l.match(/^-\s*メモ[：:]\s*(.*)$/))){s.notes=m[1].trim();inP=false;}
+      else if((m=l.match(/^-\s*縦に長い画面（高さ\s*(\d+)/))){s.h=+m[1];inP=false;}
+      else if((m=l.match(/^-\s*背景色[：:]\s*(#[0-9a-fA-F]{6})/))){s.bg=m[1];inP=false;}
+      else if(/^-\s*部品（/.test(l))inP=true;
+      else if(inP&&(m=l.match(/^(\s*)-\s+(.*)$/))){const d=Math.max(0,Math.round((m[1].length-2)/2));if(!/^（部品なし）$/.test(m[2].trim()))tree.push({d,t:m[2]});}
+    });
+    // 木構造に
+    const root={kids:[]},stack=[{d:-1,n:root}];
+    tree.forEach(it=>{const n=Object.assign(parseItem(it.t),{kids:[]});while(stack.length>1&&stack[stack.length-1].d>=it.d)stack.pop();stack[stack.length-1].n.kids.push(n);stack.push({d:it.d,n});});
+    const H=Math.max(s.h||0,DH);
+    layoutScreen(s,root.kids,W,H,pend);
+    p.screens.push(s);if(isStart)p.start=s.id;
+  });
+  if(!p.screens.length)throw new Error('noscreens');
+  if(!p.screens.some(s=>s.id===p.start))p.start=p.screens[0].id;
+  // つながり
+  let miss=0;
+  pend.forEach(({el,to,trans})=>{el.trans=TR[trans]||'slide';if(to==='__back'){el.link='__back';return;}const t=p.screens.find(s=>s.name===to);if(t)el.link=t.id;else miss++;});
+  if(miss)notes.push(`移動先の画面が見つからないつながりが ${miss} 件ありました`);
+  const nLinks=p.screens.reduce((a,s)=>a+s.els.filter(e=>e.link).length,0),nEls=p.screens.reduce((a,s)=>a+s.els.length,0);
+  return {p,info:{screens:p.screens.length,els:nEls,links:nLinks,notes}};
+}
+function parseItem(t){
+  // 「説明 — 位置／つながり／設計メモ」
+  const i=t.indexOf(' — ');let desc=i<0?t:t.slice(0,i),rest=i<0?'':t.slice(i+3);
+  const parts=rest?rest.split('／'):[];const n={pos:parts[0]||'',link:null,trans:'',note:''};
+  parts.slice(1).forEach(x=>{let m;
+    if((m=x.match(/^押すと前の画面に戻る(?:（(.+)）)?$/))){n.link='__back';n.trans=m[1]||'';}
+    else if((m=x.match(/^押すと「(.+)」へ移動(?:（(.+?)）)?$/))){n.link=m[1];n.trans=m[2]||'';}
+    else if((m=x.match(/^設計メモ[：:](.*)$/)))n.note=m[1].trim();
+  });
+  const q=s=>{const m=s.match(/「(.*)」/);return m?m[1]:'';};
+  desc=desc.trim();
+  if(/^ヘッダー（画面上部の帯）/.test(desc))n.kind='header';
+  else if(/^タブバー（画面下部の帯）/.test(desc))n.kind='tabbar';
+  else if(/のまとまり（カード）$/.test(desc)||/^枠（まとまり）/.test(desc))n.kind='box';
+  else if(/^押せる文字/.test(desc)){n.kind='link';n.text=q(desc);}
+  else if(/^ボタン/.test(desc)){n.kind='button';n.text=q(desc);}
+  else if(/^入力欄/.test(desc)){n.kind='input';n.text=q(desc);}
+  else if(/^テキスト/.test(desc)){n.kind='text';n.text=q(desc);n.head=/（見出し）$/.test(desc);}
+  else if(/^画像/.test(desc)){n.kind='image';const m=desc.match(/（(.*)）$/);n.text=m?m[1]:'画像';}
+  else if(/^円/.test(desc)){n.kind='ellipse';n.text=q(desc);}
+  else {n.kind='rect';n.text=q(desc)||desc.replace(/^四角形/,'');}
+  return n;
+}
+function layoutScreen(s,nodes,W,H,pend){
+  const add=(type,o,n)=>{const e=mkEl(type,o);if(n){if(n.note)e.note=n.note;if(n.link)pend.push({el:e,to:n.link,trans:n.trans});}s.els.push(e);return e;};
+  const tw=(t,fs)=>Math.min(W-32,Math.max(24,[...String(t||'')].length*fs+12));
+  const hx=(pos,w,X,BW)=>/左/.test(pos)?X:/右/.test(pos)?X+BW-w:Math.round(X+(BW-w)/2);
+  const alignOf=pos=>/左寄せ/.test(pos)?'left':/右寄せ/.test(pos)?'right':/中央/.test(pos)?'center':null;
+  // 1つの部品（子のないもの）の大きさ
+  function leaf(n,X,BW,fix,inBox){
+    const pos=n.pos,full=/横幅いっぱい/.test(pos),al=alignOf(pos);
+    let type=n.kind,o={fix:fix||''},w,h;
+    if(type==='link'){type='rect';Object.assign(o,{text:n.text,fill:'',radius:0,fontSize:16,color:'#2f6fed'});w=tw(n.text,16);h=40;}
+    else if(type==='button'){o.text=n.text;w=full?BW-(inBox?0:32):Math.min(200,BW);h=48;}
+    else if(type==='input'){o.text=n.text;w=Math.min(300,BW-(inBox?0:32));if(full)w=BW-(inBox?0:32);h=44;}
+    else if(type==='text'){const fs=n.head?20:inBox?15:16;Object.assign(o,{text:n.text,fontSize:fs,bold:!!n.head});if(inBox&&!n.head&&n.kind==='text'&&fix==='')o.fontSize=fs;
+      if(al&&(/寄せ/.test(pos)||!inBox||/中央/.test(pos)&&true)){w=BW-(inBox?0:32);o.align=al;}else{w=tw(n.text,fs);o.align='center';}h=Math.round(fs*(inBox?1.45:1.6));}
+    else if(type==='image'){o.text=n.text||'画像';w=full?BW-(inBox?0:32):Math.min(200,BW);h=inBox?110:140;}
+    else if(type==='ellipse'){o.text=n.text;w=h=48;}
+    else{o.text=n.text;w=full?BW-(inBox?0:32):Math.min(160,BW);h=48;}
+    const pad=inBox?0:16;
+    const x=full?X+pad:hx(pos,w,X+pad,BW-pad*2);
+    return {type,o,w,h,x,n};
+  }
+  // 箱の中を並べる（行ごと）
+  function flow(kids,X,Y,BW,fix,gap){
+    let y=Y,row=null;
+    kids.forEach(k=>{
+      if(k.kind==='box'){row=null;const h=boxAt(k,X,y,BW,fix,true);y+=h+gap;return;}
+      const L=leaf(k,X,BW,fix,true);
+      const small=L.w<BW*.5;
+      if(row&&small&&/右|中央/.test(k.pos)&&(row.free>=L.w+8||(row.free>0||row.wide)&&row.last.w-L.w-8>=40)){L.x=X+BW-L.w;if(/中央/.test(k.pos)&&!/右/.test(k.pos))L.x=Math.round(X+(BW-L.w)/2);
+        if(row.last&&row.last.x+row.last.w>L.x-8){row.last.w=Math.max(24,L.x-8-row.last.x);}
+        const e=add(L.type,Object.assign(L.o,{x:Math.round(L.x),y:row.y,w:Math.round(L.w),h:L.h}),k);row.h=Math.max(row.h,L.h);y=row.y+row.h+gap;row.free=0;row.wide=false;return;}
+      const e=add(L.type,Object.assign(L.o,{x:Math.round(L.x),y,w:Math.round(L.w),h:L.h}),k);
+      row={y,h:L.h,last:e,free:BW-L.w,wide:L.type==='text'&&L.w>=BW*.5};y+=L.h+gap;
+    });
+    return y-gap-Y;
+  }
+  function boxAt(n,X,Y,BW,fix,inBox){
+    const full=/横幅いっぱい/.test(n.pos);
+    let w=full?BW:Math.min(BW-32,360);if(!full&&/左寄り|右寄り/.test(n.pos))w=Math.round(BW*.46);
+    const x=full?X:hx(n.pos,w,X+16,BW-32);
+    const r=add('rect',{x,y:Y,w,h:60,fill:'#ffffff',stroke:'#e4e7ec',radius:full?0:12,fix:fix||'',text:''},n);
+    const ch=n.kids.length?flow(n.kids,x+12,Y+10,w-24,fix,4):36;
+    r.h=ch+20;return r.h;
+  }
+  let top=0,bottom=H;
+  // 固定の帯を先に
+  nodes.forEach(n=>{
+    if(n.kind==='header'){const r=add('rect',{x:0,y:0,w:W,h:56,fill:'#ffffff',stroke:'#e4e7ec',radius:0,fix:'top'},n);
+      const back=n.kids.filter(k=>/左/.test(k.pos)),rest=n.kids.filter(k=>!back.includes(k));
+      back.forEach((k,i)=>{const L=leaf(k,8,80,'top',true);add(L.type,Object.assign(L.o,{x:8+i*84,y:8,w:80,h:40,align:'left',fontSize:16}),k);});
+      rest.forEach(k=>{const L=leaf(k,16,W-32,'top',true);const isR=/右/.test(k.pos)&&L.w<W*.5;const w=isR?Math.min(L.w,96):W-192;
+        add(L.type,Object.assign(L.o,{x:isR?W-8-w:96,y:k.kind==='text'?16:8,w,h:k.kind==='text'?24:40,fontSize:k.kind==='text'?17:(L.o.fontSize||16),bold:k.kind==='text'?true:L.o.bold,align:isR?'right':'center'}),k);});
+      top=Math.max(top,56);n.done=true;}
+    if(n.kind==='tabbar'){bottom=Math.min(bottom,H-64);add('rect',{x:0,y:H-64,w:W,h:64,fill:'#ffffff',stroke:'#e4e7ec',radius:0,fix:'bottom'},n);
+      const k=n.kids.length||1,w=W/k;
+      n.kids.forEach((c,i)=>{const L=leaf(c,0,w,'bottom',true);const o=Object.assign(L.o,{x:Math.round(i*w),y:H-60,w:Math.round(w),h:56,fontSize:12,align:'center'});
+        if(L.type==='rect'&&c.kind!=='link')Object.assign(o,{fill:'',radius:0,color:'#475467'});add(L.type,o,c);});
+      n.done=true;}
+  });
+  // 残りを上から
+  const rest=nodes.filter(n=>!n.done);
+  const tgt=pos=>/上部/.test(pos)?.1:/上の方/.test(pos)?.3:/中ほど/.test(pos)?.5:/下の方/.test(pos)?.7:/下部/.test(pos)?.9:null;
+  let y=top+16;
+  const estH=n=>n.kind==='box'?24+n.kids.reduce((a,k)=>a+(k.kind==='box'?estH(k):/右/.test(k.pos)?0:26),0):({button:48,input:44,image:140,link:40,text:n.head?32:26}[n.kind]||48);
+  const remain=i=>rest.slice(i).reduce((a,n)=>a+estH(n)+(n.kind==='box'&&/横幅いっぱい/.test(n.pos)?0:12),0);
+  // 同じ種類のカードが続くところは、最初と最後の位置のあいだに等間隔で並べる
+  const tOv=rest.map(n=>tgt(n.pos));
+  const fw=x=>x&&x.kind==='box'&&/横幅いっぱい/.test(x.pos);
+  for(let i=0;i<rest.length;){let j=i;while(j+1<rest.length&&fw(rest[i])&&fw(rest[j+1]))j++;
+    if(j>i&&tOv[i]!=null&&tOv[j]!=null){const lo=tOv[i],hi=tOv[j];for(let k=i;k<=j;k++)tOv[k]=lo+(hi-lo)*(k-i)/(j-i);}i=j+1;}
+  rest.forEach((n,i)=>{
+    let t=tOv[i];if(t!=null){const lim=bottom-16-remain(i);t=Math.max(y,Math.min(Math.round(t*H-estH(n)/2),lim));}
+    if(n.kind==='box'){if(t!=null)y=Math.max(y,t);const h=boxAt(n,0,y,W,'',false);y+=h+(/横幅いっぱい/.test(n.pos)?0:12);return;}
+    const L=leaf(n,0,W,'',false);
+    if(t!=null)y=Math.max(y,t);
+    add(L.type,Object.assign(L.o,{x:Math.round(L.x),y,w:Math.round(L.w),h:L.h}),n);y+=L.h+12;
+  });
+  if(y>bottom+8&&!(s.h>H))s.h=Math.ceil((y+(H-bottom)+16)/10)*10;
+}
+function showMdImportResult(info){
+  const d=pmDialog(`<h3>設計書（.md）から読み込みました</h3>
+  <p>画面 <b>${info.screens}</b> 枚・部品 <b>${info.els}</b> 個・つながり <b>${info.links}</b> 本を作り直しました。企画・作成者・状態・データ・動かす環境も読み込んでいます。</p>
+  <p><b>確認してほしいこと</b></p>
+  <ul style="margin:4px 0 0;padding-left:20px;line-height:1.7">
+   <li>設計書には部品の<b>正確な位置・大きさ・色</b>が書かれていないため、だいたいの位置に並べ直しています。見た目を整えてください。</li>
+   <li>ユーザーテスト、確認チェックリスト、改良の記録、アプリの版は設計書に入っていないため、空の状態です。</li>
+   ${info.notes.map(x=>`<li>${esc(x)}</li>`).join('')}
+  </ul>
+  <p>続きの作業は、これまでどおり「ファイル → 保存」で <b>.json</b> に保存してください（json なら次からはそのまま元どおりに開けます）。</p>
+  <div class="r"><button class="pri" data-a="close">OK</button></div>`);
+  d.querySelector('[data-a=close]').onclick=()=>d.remove();
+}
 function aiMissing(){
   const m=[];
   if(!P.concept.target.trim()||!P.concept.problem.trim())m.push('企画（だれのため・困りごと）');
@@ -1520,7 +1708,10 @@ function wire(){
   mi('#mNew',()=>{if(!confirm('新しく作り始めますか？\n今の作品は、保存していないと消えてしまいます。'))return;P=newProject();undoS=[];redoS=[];cur=P.start;sel=[];saveLocal();renderAll();fit();openConcept(true);});
   document.addEventListener('pointerdown',e=>{if(menu.open&&!e.target.closest('#menu'))menu.removeAttribute('open');});
   $('#fOpen').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();
-    r.onload=()=>{try{P=norm(JSON.parse(r.result));undoS=[];redoS=[];cur=P.start;sel=[];saveLocal();renderAll();fit();toast('読み込みました');}catch(err){alert('ファイルを読み込めませんでした。このツールで保存した .json ファイルを選んでください。');}};
+    r.onload=()=>{const txt=String(r.result).replace(/^\uFEFF/,'');let info=null;
+      try{if(/^\s*[\{\[]/.test(txt))P=norm(JSON.parse(txt));else{const res=parseAIMarkdown(txt);P=norm(res.p);info=res.info;}
+        undoS=[];redoS=[];cur=P.start;sel=[];LAY=null;saveLocal();renderAll();fit();if(info)showMdImportResult(info);else toast('読み込みました');}
+      catch(err){console.error(err);alert('ファイルを読み込めませんでした。\nこのツールで保存した .json ファイルか、「AIで作る」で書き出した設計書（.md）を選んでください。');}};
     r.readAsText(f);e.target.value='';};
   $('#bAddScr').onclick=addScreen;
   $('#zOut').onclick=()=>setZoom(zoom/1.2);$('#zIn').onclick=()=>setZoom(zoom*1.2);$('#zFit').onclick=fitAll;
