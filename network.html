@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ネットワーク図鑑</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+/* 方針：1枚の図に「インターネット」と自宅・外出先・学校の3つのLAN。画面は「テーマ → 図（カメラが通り道に寄る）→ 下に固定の説明パネル」で、説明とアニメーションを同時に見られる */
+:root{
+  --bg:#fdf8ef; --card:#fff; --ink:#2f2a26; --sub:#7a716a; --line:#eee3d3; --soft:#f6efe3;
+  --ac:#d48a12; --acs:#fbefda; --net:#3a78d4; --lan:#1f9468; --lans:#e3f4ec; --ng:#d64b3f;
+  --font:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",sans-serif;
+  --hd:54px;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-weight:500;font-size:16px;line-height:1.7}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--ac);outline-offset:2px}
+header{position:sticky;top:0;z-index:30;height:var(--hd);background:rgba(253,248,239,.96);border-bottom:2px solid var(--line)}
+header .in{max-width:1100px;margin:0 auto;height:100%;display:flex;align-items:center;gap:10px;padding:0 14px}
+.brand{font-weight:900;font-size:16px;flex:1;line-height:1.2}
+.brand small{display:block;font-size:11px;color:var(--sub);font-weight:700}
+.pages{display:flex;gap:4px;background:var(--soft);border-radius:999px;padding:3px}
+.pages a{padding:4px 14px;border-radius:999px;text-decoration:none;color:var(--sub);font-weight:700;font-size:14px}
+.pages a.on{background:var(--ac);color:#fff}
+.view{display:none}.view.on{display:block}
+
+/* ===== 図のページ（1画面アプリ） ===== */
+#v-map.on{display:grid;grid-template-rows:auto 1fr auto;height:calc(100dvh - var(--hd));height:calc(100vh - var(--hd));max-width:1100px;margin:0 auto}
+@supports (height:100dvh){#v-map.on{height:calc(100dvh - var(--hd))}}
+@media(min-width:900px){#v-map.on{grid-template-columns:1fr 360px;grid-template-rows:auto 1fr;column-gap:12px;padding:0 12px 12px}#v-map .themes{grid-column:1/3}#v-map .panel{grid-row:2;grid-column:2;max-height:none;border-radius:20px;border:2.5px solid var(--acs)}}
+.themes{display:flex;gap:6px;overflow-x:auto;padding:8px 12px;scrollbar-width:none}
+.themes::-webkit-scrollbar{display:none}
+.themes button{flex:none;border:2.5px solid var(--line);background:#fff;border-radius:14px;padding:3px 12px;font-weight:700;font-size:14px;cursor:pointer;line-height:1.35;text-align:left}
+.themes button small{display:block;font-size:10.5px;color:var(--sub);font-weight:500}
+.themes button.on{border-color:var(--ac);background:var(--ac);color:#fff}
+.themes button.on small{color:#fff}
+.stage{position:relative;min-height:0;margin:0 10px;background:#fff;border-radius:20px;box-shadow:0 4px 18px rgba(120,90,50,.12);overflow:hidden;touch-action:none}
+.stage svg{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab}
+.stage svg.drag{cursor:grabbing}
+.zoom{position:absolute;right:8px;top:8px;display:grid;gap:5px}
+.zoom button{width:36px;height:36px;border-radius:12px;border:2px solid var(--line);background:rgba(255,255,255,.95);font-size:18px;font-weight:900;cursor:pointer;line-height:1}
+.zoom button.w{width:auto;font-size:11.5px;padding:0 6px;height:30px}
+.spd{position:absolute;left:8px;bottom:8px;display:flex;align-items:center;gap:2px;background:rgba(255,255,255,.95);border:2px solid var(--line);border-radius:999px;padding:2px;font-size:12px;font-weight:700}
+.spd span{padding:0 6px 0 8px;color:var(--sub)}
+.spd button{border:0;background:transparent;border-radius:999px;padding:3px 10px;cursor:pointer;font-size:12.5px;font-weight:700;color:var(--sub)}
+.spd button.on{background:var(--ac);color:#fff}
+.dtl{position:absolute;left:8px;top:8px;display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.95);border:2px solid var(--line);border-radius:999px;padding:3px 10px 3px 6px;font-size:12.5px;font-weight:700;cursor:pointer}
+.dtl input{width:18px;height:18px;accent-color:var(--net);margin:0}
+.panel{background:#fff;border-top:2.5px solid var(--acs);padding:10px 14px 12px;max-height:44vh;overflow-y:auto;overscroll-behavior:contain}
+@media(max-width:899px){.panel{margin-top:8px;border-radius:20px 20px 0 0;box-shadow:0 -4px 16px rgba(120,90,50,.08)}}
+.ctrl{display:flex;align-items:center;gap:6px;position:sticky;top:-10px;background:#fff;padding:2px 0 6px;z-index:2}
+.btn{white-space:nowrap;appearance:none;border:2.5px solid var(--ac);background:var(--ac);color:#fff;border-radius:999px;padding:4px 14px;font-size:14px;font-weight:700;cursor:pointer;line-height:1.5}
+.btn.ghost{background:#fff;color:var(--ac)}
+.btn.sq{padding:4px 10px}
+.btn:disabled{opacity:.35;cursor:default}
+.dots{display:flex;gap:5px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end}
+.dots button{width:23px;height:23px;border-radius:50%;border:2px solid var(--line);background:#fff;font-size:11px;font-weight:900;color:var(--sub);cursor:pointer;padding:0}
+.dots button.on{background:var(--ac);border-color:var(--ac);color:#fff}
+.dots button.done{border-color:var(--ac);color:var(--ac)}
+.ph{display:flex;gap:8px;align-items:flex-start;margin-top:2px}
+.ph .n{flex:none;width:28px;height:28px;border-radius:50%;background:var(--ac);color:#fff;display:grid;place-items:center;font-weight:900;font-size:14px;margin-top:1px}
+.ph b{font-size:16.5px;line-height:1.45;font-weight:900}
+.pd{font-size:14.5px;margin:4px 0 0}
+.hdr{margin-top:8px;background:#eef4fd;border-radius:12px;padding:6px 10px;font-size:12.5px;line-height:1.6}
+.hdr::before{content:"📦 パケットのラベル（例）";display:block;font-weight:900;color:var(--net);font-size:11.5px}
+.hdr .m{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
+.tw{display:inline-block;background:#fff;border:1.5px solid var(--ac);color:var(--ac);border-radius:999px;padding:0 8px;font-size:12.5px;font-weight:700;cursor:pointer;margin:6px 3px 0 0;line-height:1.7}
+.intro{font-size:14.5px}
+.intro .k{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--sub);margin-top:6px}
+.intro .k span{display:flex;align-items:center;gap:4px}
+
+svg text{font-family:var(--font)}
+.rg-t{font-size:15px;font-weight:900}
+.node{cursor:pointer}
+.node .hit{fill:transparent}
+.node .nm{font-size:12px;font-weight:900;fill:#3a332d;paint-order:stroke;stroke:#fff;stroke-width:4px;stroke-linejoin:round}
+.node .sb{font-size:10px;font-weight:700;fill:#8a8178;paint-order:stroke;stroke:#fff;stroke-width:3.5px}
+.node .ipt{font-size:10px;font-weight:700;fill:#3a78d4;font-family:ui-monospace,Menlo,Consolas,monospace;paint-order:stroke;stroke:#fff;stroke-width:3.5px;display:none}
+.show-ip .node .ipt{display:block}
+.node .glow{fill:none;stroke:var(--ac);stroke-width:4;opacity:0}
+.node.hl .glow{opacity:1}
+@media (prefers-reduced-motion:no-preference){.node.hl .glow{animation:gl 1.2s ease-in-out infinite}}
+@keyframes gl{50%{opacity:.3}}
+.node.dim{opacity:.3}
+.lk{fill:none;stroke-linecap:round}
+.lk.w{stroke:#b9ab96;stroke-width:3}
+.lk.r{stroke:#b9ab96;stroke-width:2.5;stroke-dasharray:3 5}
+.lk.n{stroke:#9fb7dc;stroke-width:3.5}
+.lk.o{stroke:#e2a64a;stroke-width:4}
+.lk.hl{stroke:var(--ac);stroke-width:5.5}
+.lk.r.hl{stroke-width:3.5}
+.lk.dim{opacity:.25}
+.pk-t{font-size:10px;font-weight:900;fill:#fff;text-anchor:middle;dominant-baseline:central}
+.block{font-size:40px;font-weight:900;fill:var(--ng);text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:#fff;stroke-width:5px}
+
+/* ===== 用語集 ===== */
+#v-words main,.wrap{max-width:760px;margin:0 auto;padding:10px 16px 60px}
+h1{font-size:clamp(22px,6vw,30px);font-weight:900;margin:10px 0 2px;line-height:1.35}
+.lead{color:var(--sub);font-size:14.5px;margin:0 0 10px}
+.search input{width:100%;font:inherit;font-size:16px;padding:8px 14px;border:2.5px solid var(--line);border-radius:999px;background:#fff;margin:6px 0 8px}
+.cats{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.cats::-webkit-scrollbar{display:none}
+.cats button{flex:none;border:2px solid var(--line);background:#fff;border-radius:999px;padding:3px 12px;font-size:13.5px;font-weight:700;cursor:pointer;color:var(--sub)}
+.cats button.on{border-color:var(--ac);background:var(--ac);color:#fff}
+.cat-h{font-size:14px;font-weight:900;color:var(--ac);margin:18px 0 6px;display:flex;align-items:center;gap:8px}
+.cat-h::after{content:"";flex:1;height:2px;background:var(--line)}
+.terms{display:grid;gap:8px}
+@media(min-width:620px){.terms{grid-template-columns:1fr 1fr}}
+.term{background:#fff;border:2px solid var(--line);border-radius:16px;padding:10px 12px}
+.term h3{margin:0;font-size:17px;font-weight:900;line-height:1.4}
+.term h3 small{font-size:11.5px;color:var(--sub);font-weight:700;margin-left:6px}
+.term p{margin:4px 0 6px;font-size:14.5px}
+.ex,.exs{font-size:13px;background:var(--soft);border-radius:10px;padding:5px 10px;margin:4px 0 6px}
+.see{border:0;background:var(--lan);color:#fff;border-radius:999px;padding:2px 12px;font-size:13px;font-weight:700;cursor:pointer;margin:6px 6px 0 0}
+.empty{color:var(--sub);text-align:center;padding:30px 0}
+
+
+/* しくみ */
+.subtabs{display:flex;gap:6px;position:sticky;top:var(--hd);z-index:5;background:var(--bg);padding:8px 0}
+.subtabs a{flex:1;text-align:center;border:2.5px solid var(--line);background:#fff;border-radius:14px;padding:5px 4px;text-decoration:none;color:var(--sub);font-weight:700;font-size:14px}
+.subtabs a.on{border-color:var(--ac);background:var(--ac);color:#fff}
+.ls{display:none}.ls.on{display:block}
+.card{background:#fff;border:2px solid var(--line);border-radius:18px;padding:12px 14px;margin:12px 0}
+.card h2{font-size:17px;font-weight:900;margin:0 0 4px;display:flex;gap:8px;align-items:center;line-height:1.4}
+.card h2 .no{flex:none;width:26px;height:26px;border-radius:50%;background:var(--ac);color:#fff;display:grid;place-items:center;font-size:13px}
+.card h3{font-size:15px;margin:14px 0 2px}
+.card p{margin:4px 0;font-size:14.5px}
+.small{font-size:13px}
+.octs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:6px}
+.octs input{width:100%;text-align:center;font:inherit;font-size:17px;padding:5px;border:2px solid var(--line);border-radius:10px;font-variant-numeric:tabular-nums}
+.bitrow{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:6px}
+.bitrow div{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;text-align:center;background:#eef4fd;border-radius:8px;padding:5px 0;color:#2a5aa8}
+.note{font-size:13px;color:var(--sub);margin-top:6px}
+.big2{font-size:22px;color:var(--ac);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--ac)}
+.cN{color:#d48a12}.cH{color:#1f9468}
+.bitgrid{display:grid;grid-template-columns:62px 1fr;gap:3px 8px;align-items:center;margin-top:6px;font-size:12px}
+.bitgrid .lb{color:var(--sub);font-weight:700;line-height:1.25}
+.bits32{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.bits32 span{display:flex;justify-content:center;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;border-radius:6px;padding:3px 0;letter-spacing:.02em}
+.bits32 i{font-style:normal}
+.bits32 i.n{color:#b5730a;font-weight:700}.bits32 i.h{color:#1f9468}
+.bits32 span{background:var(--soft)}
+.res{background:var(--soft);border-radius:12px;padding:8px 10px;margin-top:8px;font-size:14px}
+.res .ok{color:#1f9468;font-weight:900}.res .ng{color:#d64b3f;font-weight:900}
+.v6{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin:8px 0}
+.v6 button{border:2px solid var(--line);background:#fff;border-radius:10px;padding:4px 0;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:14px;cursor:pointer}
+.v6 button.on{border-color:var(--ac);background:var(--acs)}
+.v6 button.z{color:var(--sub)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.dom,.url{display:flex;flex-wrap:wrap;justify-content:center;gap:2px;margin:10px 0 4px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:clamp(17px,5vw,24px);font-weight:700}
+.dom button,.url button{border:2.5px solid var(--line);background:#fff;border-radius:10px;padding:2px 8px;font:inherit;cursor:pointer}
+.dom button.on,.url button.on{border-color:var(--ac);background:var(--acs);color:var(--ac)}
+.dom span{align-self:center;color:var(--sub)}
+.url{font-size:clamp(13px,3.8vw,18px)}
+.mini{border:2px solid var(--line);border-radius:14px;overflow:hidden;background:#fdfbf7}
+.mini svg{display:block;width:100%;height:auto}
+.seg2{display:flex;background:var(--soft);border-radius:999px;padding:3px}
+.seg2 button{border:0;background:transparent;padding:5px 14px;border-radius:999px;font-size:14px;color:var(--sub);cursor:pointer;font-weight:700}
+.seg2 button.on{background:#fff;color:var(--ac);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+table.t{border-collapse:collapse;width:100%;font-size:13px;margin-top:8px}
+table.t th,table.t td{border:1.5px solid var(--line);padding:4px 7px;text-align:left;vertical-align:top}
+table.t th{background:var(--soft)}
+.okc{color:#1f9468}.ngc{color:#d64b3f}
+.pt2{display:none}
+@media(max-width:430px){.brand{font-size:13.5px}.brand small{display:none}.pages a{padding:4px 9px;font-size:13px}}
+
+/* ===== 下から出るカード ===== */
+.backdrop{position:fixed;inset:0;background:rgba(40,30,20,.3);opacity:0;pointer-events:none;transition:opacity .25s;z-index:40}
+.backdrop.on{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:50;background:#fff;border-radius:24px 24px 0 0;max-height:62vh;max-height:62dvh;overflow-y:auto;transform:translateY(105%);transition:transform .3s cubic-bezier(.2,.8,.2,1);box-shadow:0 -6px 30px rgba(0,0,0,.15);overscroll-behavior:contain}
+.sheet.on{transform:none}
+@media(min-width:900px){.sheet{left:auto;right:24px;bottom:24px;width:420px;border-radius:24px;max-height:78vh;transform:translateY(calc(100% + 60px))}.sheet.on{transform:none}}
+.sh-top{position:sticky;top:0;background:#fff;padding:12px 16px 8px;display:flex;align-items:center;gap:12px;border-bottom:2px solid var(--soft)}
+.sh-top svg{flex:none}
+.sh-top .tt{flex:1;line-height:1.35}
+.sh-top .tt small{display:block;color:var(--lan);font-weight:700;font-size:12px}
+.sh-top .tt b{font-size:19px;font-weight:900}
+.sh-x{flex:none;border:0;background:var(--soft);width:36px;height:36px;border-radius:50%;font-size:20px;cursor:pointer}
+.sh-b{padding:12px 16px 20px;font-size:15px}
+.sh-b p{margin:0 0 8px}
+.role{background:var(--lans);border-radius:14px;padding:8px 12px;margin:8px 0}
+.role::before{content:"この機器の役割";display:block;font-size:12px;font-weight:900;color:var(--lan)}
+.role ul{margin:4px 0 0;padding-left:1.2em}
+.pt{background:var(--acs);border-radius:14px;padding:8px 12px;margin:8px 0;font-size:14px}
+.pt::before{content:"ここがポイント";display:block;font-size:12px;font-weight:900;color:var(--ac)}
+.ipbox{background:#eef4fd;border-radius:12px;padding:6px 10px;font-size:13px;margin:8px 0}
+.ipbox b{color:var(--net)}
+.mono{font-family:ui-monospace,Menlo,Consolas,monospace}
+</style>
+</head>
+<body>
+<header><div class="in">
+  <div class="brand"><small>情報Ⅰ 総復習</small>ネットワーク図鑑</div>
+  <nav class="pages"><a href="#map" id="pgMap">ネットワーク図</a><a href="#learn-ip" id="pgLearn">しくみ</a><a href="#words" id="pgWords">用語集</a></nav>
+</div></header>
+
+<section class="view" id="v-map">
+  <div class="themes" id="themes"></div>
+  <div class="stage" id="stage">
+    <svg id="map" class="show-ip" viewBox="0 0 900 760" aria-label="ネットワーク図"></svg>
+    <label class="dtl"><input type="checkbox" id="ipT" checked> IPアドレス</label>
+    <div class="spd" id="spd" role="group" aria-label="アニメーションの速さ"><span>速さ</span><button data-v="1.8">ゆっくり</button><button data-v="1" class="on">ふつう</button><button data-v="0.55">はやい</button></div>
+    <div class="zoom"><button id="zIn" aria-label="拡大">＋</button><button id="zOut" aria-label="縮小">－</button><button id="zAll" class="w">全体</button></div>
+  </div>
+  <div class="panel" id="panel"></div>
+</section>
+
+<section class="view" id="v-learn"><div class="wrap">
+  <div class="subtabs" id="subtabs"><a href="#learn-ip" data-s="ip">IPアドレス</a><a href="#learn-dns" data-s="dns">ドメイン名</a><a href="#learn-sw" data-s="sw">交換方式</a></div>
+
+  <div class="ls" id="ls-ip">
+    <h1>IPアドレスとサブネットマスク</h1>
+    <p class="lead">IPアドレスは、ネットワーク上の機器の住所です。今使われているのは<b>IPv4</b>と、その後継の<b>IPv6</b>の2種類です。</p>
+    <div class="card">
+      <h2><span class="no">1</span>IPv4：32ビットの番号</h2>
+      <p>8ビットずつ4つに区切り、それぞれを10進数（0〜255）で書きます。数字を変えてみましょう。</p>
+      <div class="octs"><input type="number" id="i0" min="0" max="255" value="192" aria-label="1つ目"><input type="number" id="i1" min="0" max="255" value="168" aria-label="2つ目"><input type="number" id="i2" min="0" max="255" value="1" aria-label="3つ目"><input type="number" id="i3" min="0" max="255" value="3" aria-label="4つ目"></div>
+      <div class="bitrow" id="ipBits"></div>
+      <div class="note">作れる番号は 2<sup>32</sup> ＝ 約43億個。世界中の機器の数に足りなくなってきたため、IPv6への移行が進んでいます。</div>
+    </div>
+    <div class="card">
+      <h2><span class="no">2</span>サブネットマスク：どこまでがネットワークの番号？</h2>
+      <p>IPアドレスは、前半の<b class="cN">ネットワーク部</b>（どのネットワークか）と、後半の<b class="cH">ホスト部</b>（その中のどの機器か）に分かれます。その境目を示すのが<b>サブネットマスク</b>です。1が並んだところがネットワーク部です。</p>
+      <label for="pf">ネットワーク部の長さ：<b id="pfV" class="big2"></b> ビット</label>
+      <input type="range" id="pf" min="8" max="30" value="24">
+      <div class="bitgrid" id="maskGrid"></div>
+      <div class="res" id="maskRes"></div>
+      <h3>同じネットワークの機器かどうか確かめる</h3>
+      <p class="small">もう1台のIPアドレスを入れてみましょう（上のIPアドレスと比べます）。</p>
+      <div class="octs"><input type="number" id="j0" min="0" max="255" value="192" aria-label="1つ目"><input type="number" id="j1" min="0" max="255" value="168" aria-label="2つ目"><input type="number" id="j2" min="0" max="255" value="1" aria-label="3つ目"><input type="number" id="j3" min="0" max="255" value="5" aria-label="4つ目"></div>
+      <div class="res" id="sameRes"></div>
+      <div class="pt">ネットワーク部が同じなら<b>同じLAN</b>の中なので、スイッチなどを通って直接届きます。違えば<b>別のネットワーク</b>なので、ルータに渡して転送してもらいます。<br>接続できる台数は 2<sup>（ホスト部のビット数）</sup>−2 台。ホスト部がすべて0の番号（ネットワークアドレス）と、すべて1の番号（ブロードキャストアドレス）は機器に使えないためです。</div>
+    </div>
+    <div class="card">
+      <h2><span class="no">3</span>IPv6：128ビットの番号</h2>
+      <p>16ビットずつ8つに区切り、それぞれを<b>16進数</b>で書いて「:」でつなぎます。区切りをタップすると2進数が見られます。</p>
+      <div class="v6" id="v6"></div>
+      <div class="row"><button class="btn ghost" id="v6t">省略して書く</button></div>
+      <div class="res" id="v6Res"></div>
+      <div class="note" id="v6Rule">省略のルール：①各区切りの先頭の0は省略できる（0db8 → db8）　②0だけの区切りが続くところは、1か所だけ「::」にまとめられる</div>
+      <table class="t"><tr><th></th><th>IPv4</th><th>IPv6</th></tr><tr><td>長さ</td><td>32ビット</td><td>128ビット</td></tr><tr><td>書き方</td><td>8ビットずつ10進数で4つ、「.」区切り</td><td>16ビットずつ16進数で8つ、「:」区切り</td></tr><tr><td>個数</td><td>2<sup>32</sup>＝約43億</td><td>2<sup>128</sup>＝約340澗（3.4×10<sup>38</sup>）</td></tr><tr><td>例</td><td class="mono">192.168.1.3</td><td class="mono">2001:db8::ff00:42:8329</td></tr></table>
+    </div>
+  </div>
+
+  <div class="ls" id="ls-dns">
+    <h1>ドメイン名とDNS</h1>
+    <p class="lead">IPアドレスは数字の並びで覚えにくいので、人は<b>ドメイン名</b>という名前を使います。DNSがドメイン名をIPアドレスに変換します。</p>
+    <div class="card">
+      <h2><span class="no">1</span>ドメイン名は右から読む</h2>
+      <p>「.」で区切られた部分は、<b>右にいくほど大きなまとまり</b>を表します。部分をタップしてください。</p>
+      <div class="dom" id="dom"></div>
+      <div class="res" id="domRes"></div>
+      <h3>おもな種類（jpドメインの例）</h3>
+      <table class="t"><tr><th>ドメイン</th><th>使う組織</th></tr><tr><td class="mono">ac.jp</td><td>大学など</td></tr><tr><td class="mono">ed.jp</td><td>小・中・高校など</td></tr><tr><td class="mono">co.jp</td><td>企業</td></tr><tr><td class="mono">go.jp</td><td>政府機関</td></tr><tr><td class="mono">or.jp</td><td>財団法人などの団体</td></tr><tr><td class="mono">ne.jp</td><td>ネットワークサービス</td></tr></table>
+      <p class="small" style="margin-top:6px">国を表さない「.com」「.org」なども、いちばん右のトップレベルドメインです。</p>
+    </div>
+    <div class="card">
+      <h2><span class="no">2</span>URLの中のドメイン名</h2>
+      <div class="url" id="url"></div>
+      <div class="res" id="urlRes"></div>
+    </div>
+    <div class="card">
+      <h2><span class="no">3</span>DNSは階層をたどって答えを見つける</h2>
+      <p>DNSサーバは世界に1台ではありません。ドメイン名の階層に合わせて分担しています。「▶ 再生」で問い合わせの流れを見てみましょう。</p>
+      <div class="mini"><svg id="dnsSvg" viewBox="0 0 400 270"></svg></div>
+      <div class="row" style="margin-top:8px"><button class="btn" id="dnsGo">▶ 再生</button><span class="small" id="dnsCnt" style="color:var(--sub)"></span></div>
+      <div class="res" id="dnsRes">「www.example.ac.jp のIPアドレスは？」と調べるときの流れです。</div>
+      <div class="pt">問い合わせを受けたDNSサーバ（キャッシュDNSサーバ）が、ルートサーバ → jpのDNSサーバ → example.ac.jpのDNSサーバ と順にたどります。一度調べた答えはしばらく覚えておく（<b>キャッシュ</b>）ので、次からはすぐ答えられます。実際にたどる段の数はドメインによって違います。</div>
+    </div>
+  </div>
+
+  <div class="ls" id="ls-sw">
+    <h1>パケット交換方式と回線交換方式</h1>
+    <p class="lead">通信の方式は大きく2つ。昔の電話は<b>回線交換方式</b>、インターネットは<b>パケット交換方式</b>です。切り替えて「通信を始める」を押してください。</p>
+    <div class="card">
+      <div class="row"><div class="seg2" id="swSeg"><button data-v="c" class="on">回線交換方式</button><button data-v="p">パケット交換方式</button></div></div>
+      <div class="mini" style="margin-top:8px"><svg id="swSvg" viewBox="0 0 400 260"></svg></div>
+      <div class="row" style="margin-top:8px"><button class="btn" id="swGo">通信を始める</button><button class="btn ghost" id="swBreak">真ん中の回線を故障させる</button></div>
+      <div class="res" id="swRes"></div>
+    </div>
+    <div class="card">
+      <h2><span class="no">★</span>くらべてみよう</h2>
+      <table class="t"><tr><th></th><th>回線交換方式</th><th>パケット交換方式</th></tr>
+      <tr><td>しくみ</td><td>通信の前に相手までの回線をつなぎ、通信が終わるまで<b>占有</b>する</td><td>データを<b>パケット</b>に分け、回線を<b>みんなで共有</b>して送る</td></tr>
+      <tr><td>回線の使い方</td><td class="ngc">話していない時間も占有するのでむだが多い</td><td class="okc">すき間に他の人のパケットも流せるので効率がよい</td></tr>
+      <tr><td>途中の故障</td><td class="ngc">通信が切れる</td><td class="okc">別の経路で届く</td></tr>
+      <tr><td>通信の品質</td><td class="okc">一定の速さが保証されやすい</td><td class="ngc">混雑すると遅れることがある</td></tr>
+      <tr><td>例</td><td>昔の固定電話</td><td>インターネット</td></tr></table>
+    </div>
+  </div>
+</div></section>
+
+<section class="view" id="v-words"><div class="wrap">
+  <h1>ネットワーク用語集</h1>
+  <p class="lead">用語をタップすると、その場で説明が出ます。「図で見る」で、ネットワーク図のどこにあるかを確かめられます。</p>
+  <div class="search"><input type="search" id="q" placeholder="用語をさがす（例：DNS、ルータ）" aria-label="用語をさがす"></div>
+  <div class="cats" id="cats"></div>
+  <div id="tlist"></div>
+</div></section>
+
+<div class="backdrop" id="bd"></div>
+<div class="sheet" id="sheet" role="dialog" aria-labelledby="shT">
+  <div class="sh-top"><svg id="shI" width="48" height="48" viewBox="-26 -26 52 52" aria-hidden="true"></svg><div class="tt"><small id="shTag"></small><b id="shT"></b></div><button class="sh-x" id="shX" aria-label="閉じる">×</button></div>
+  <div class="sh-b" id="shB"></div>
+</div>
+
+<script>
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const sleep=ms=>new Promise(r=>setTimeout(r,RM?Math.min(ms,80):ms));
+const NS='http://www.w3.org/2000/svg';
+
+/* ===== アイコン ===== */
+function icon(t){switch(t){
+ case 'server':return `<rect x="-15" y="-20" width="30" height="40" rx="4" fill="#dfe7f2" stroke="#9fb3c8" stroke-width="2"/><rect x="-10" y="-14" width="20" height="6" rx="2" fill="#fff"/><rect x="-10" y="-4" width="20" height="6" rx="2" fill="#fff"/><rect x="-10" y="6" width="20" height="6" rx="2" fill="#fff"/><circle cx="7" cy="-11" r="1.8" fill="#4cc495"/><circle cx="7" cy="-1" r="1.8" fill="#4cc495"/>`;
+ case 'web':return icon('server')+`<circle cx="11" cy="13" r="8" fill="#3a78d4"/><circle cx="10" cy="12" r="3.5" fill="none" stroke="#fff" stroke-width="2"/><path d="M12.5 14.5l3 3" stroke="#fff" stroke-width="2"/>`;
+ case 'mail':return icon('server')+`<rect x="2" y="6" width="18" height="13" rx="2" fill="#e2604f"/><path d="M2 7l9 7l9 -7" stroke="#fff" stroke-width="1.8" fill="none"/>`;
+ case 'dns':return icon('server')+`<rect x="1" y="5" width="20" height="15" rx="2" fill="#7a55d0"/><text x="11" y="12.5" text-anchor="middle" dominant-baseline="central" font-size="6.5" font-weight="900" fill="#fff">DNS</text>`;
+ case 'cloud':return `<path d="M-14 10 a9 9 0 0 1 1 -18 a12 12 0 0 1 23 2 a8 8 0 0 1 4 16 z" fill="#e7effc" stroke="#3a78d4" stroke-width="2"/><rect x="-8" y="-2" width="16" height="11" rx="2" fill="#f6c34a"/><rect x="-8" y="-5" width="7" height="4" rx="1.5" fill="#f6c34a"/>`;
+ case 'file':return icon('server')+`<rect x="2" y="7" width="18" height="12" rx="2" fill="#f6c34a"/><rect x="2" y="4" width="8" height="4" rx="1.5" fill="#f6c34a"/>`;
+ case 'dhcpS':return icon('server')+`<rect x="0" y="5" width="22" height="15" rx="2" fill="#7a8fa8"/><text x="11" y="12.5" text-anchor="middle" dominant-baseline="central" font-size="5.6" font-weight="900" fill="#fff">DHCP</text>`;
+ case 'auth':return icon('server')+`<circle cx="11" cy="12" r="8.5" fill="#1f9468"/><circle cx="9" cy="12" r="3" fill="none" stroke="#fff" stroke-width="2"/><path d="M12 12h5m-2 0v3" stroke="#fff" stroke-width="2"/>`;
+ case 'proxy':return icon('server')+`<circle cx="11" cy="12" r="8.5" fill="#d48a12"/><path d="M5.5 12h11M12.5 8l4 4l-4 4" stroke="#fff" stroke-width="2" fill="none"/>`;
+ case 'pc':return `<rect x="-19" y="-17" width="38" height="26" rx="3" fill="#334155"/><rect x="-16" y="-14" width="32" height="20" rx="1.5" fill="#a7ecd0"/><rect x="-4" y="9" width="8" height="5" fill="#334155"/><rect x="-11" y="14" width="22" height="3.5" rx="1.5" fill="#334155"/>`;
+ case 'laptop':return `<rect x="-16" y="-15" width="32" height="21" rx="3" fill="#334155"/><rect x="-13.5" y="-12.5" width="27" height="16" rx="1.5" fill="#a7ecd0"/><path d="M-21 7h42l-4 6h-34z" fill="#5b6b7d"/>`;
+ case 'phone':return `<rect x="-9" y="-16" width="18" height="32" rx="4" fill="#333"/><rect x="-7" y="-12" width="14" height="23" rx="1.5" fill="#a7ecd0"/><circle cy="13.5" r="1.3" fill="#888"/>`;
+ case 'tablet':return `<rect x="-14" y="-18" width="28" height="36" rx="4" fill="#333"/><rect x="-11.5" y="-14.5" width="23" height="28" rx="1.5" fill="#a7ecd0"/>`;
+ case 'printer':return `<rect x="-11" y="-17" width="22" height="10" fill="#fff" stroke="#9aa5b4" stroke-width="2"/><rect x="-18" y="-8" width="36" height="18" rx="4" fill="#9aa5b4"/><rect x="-11" y="5" width="22" height="11" fill="#fff" stroke="#9aa5b4" stroke-width="2"/><circle cx="12" cy="-2" r="2" fill="#4cc495"/>`;
+ case 'router':return `<path d="M-12 -6v-12M12 -6v-12" stroke="#5b6b7d" stroke-width="3" stroke-linecap="round"/><rect x="-20" y="-7" width="40" height="18" rx="5" fill="#5b6b7d"/><circle cx="-11" cy="2" r="2" fill="#4cc495"/><circle cx="-4" cy="2" r="2" fill="#4cc495"/><circle cx="3" cy="2" r="2" fill="#f6c34a"/>`;
+ case 'wrouter':return icon('router')+`<path d="M-6 -22a9 9 0 0 1 12 0M-10 -27a15 15 0 0 1 20 0" stroke="#d48a12" stroke-width="2.2" fill="none" stroke-linecap="round"/>`;
+ case 'irouter':return `<circle r="14" fill="#fff" stroke="#3a78d4" stroke-width="2.5"/><path d="M-7 -3h11l-3 -3M7 3h-11l3 3" stroke="#3a78d4" stroke-width="2.2" fill="none" stroke-linecap="round"/>`;
+ case 'switch':return `<rect x="-26" y="-8" width="52" height="16" rx="4" fill="#7a8fa8"/>${[-18,-10,-2,6,14].map(x=>`<rect x="${x}" y="-3" width="5" height="5" rx="1" fill="#e7effc"/>`).join('')}<circle cx="22" cy="0" r="1.8" fill="#4cc495"/>`;
+ case 'ap':return `<ellipse cx="0" cy="6" rx="16" ry="6" fill="#fff" stroke="#9aa5b4" stroke-width="2"/><circle cx="0" cy="6" r="2" fill="#4cc495"/><path d="M-7 -4a10 10 0 0 1 14 0M-12 -10a17 17 0 0 1 24 0" stroke="#d48a12" stroke-width="2.2" fill="none" stroke-linecap="round"/>`;
+ case 'onu':return `<rect x="-13" y="-13" width="26" height="26" rx="4" fill="#fff" stroke="#9aa5b4" stroke-width="2"/><circle cx="-5" cy="-5" r="2" fill="#4cc495"/><circle cx="1" cy="-5" r="2" fill="#4cc495"/><text y="6" text-anchor="middle" dominant-baseline="central" font-size="7" font-weight="900" fill="#7a8fa8">ONU</text>`;
+ case 'fw':return `<rect x="-18" y="-13" width="36" height="26" rx="3" fill="#e2604f"/><path d="M-18 -4.5h36M-18 4.5h36M-6 -13v8.5M8 -13v8.5M0 -4.5v9M-12 -4.5v9M12 -4.5v9M-6 4.5v8.5M8 4.5v8.5" stroke="#fff" stroke-width="1.6"/>`;
+ case 'isp':return `<rect x="-20" y="-18" width="40" height="36" rx="4" fill="#d6e4f7" stroke="#9fb7dc" stroke-width="2"/>${[0,1].map(r=>[-13,-4,5].map(x=>`<rect x="${x}" y="${-12+r*11}" width="7" height="7" rx="1" fill="#fff"/>`).join('')).join('')}<rect x="-4" y="10" width="8" height="8" fill="#9fb7dc"/>`;
+ case 'tower':return `<path d="M-11 18L0 -12L11 18M-6 5h12M-3 -3h6" stroke="#5b6b7d" stroke-width="3" fill="none" stroke-linejoin="round"/><circle cy="-15" r="3.5" fill="#d48a12"/><path d="M-9 -22a12 12 0 0 1 18 0M-14 -27a19 19 0 0 1 28 0" stroke="#d48a12" stroke-width="2.2" fill="none" stroke-linecap="round"/>`;
+ case 'book':return `<rect x="-16" y="-17" width="32" height="34" rx="5" fill="#d48a12"/><rect x="-11" y="-12" width="22" height="24" rx="2" fill="#fff"/><path d="M-7 -6h14M-7 0h14M-7 6h9" stroke="#e0c08a" stroke-width="2.2" stroke-linecap="round"/>`;
+}}
+
+/* ===== 機器の配置（900×640）。lp：名前の位置 b=下 l=左 r=右 ===== */
+const N={
+ dns:{x:90,y:82,t:'dns',n:'DNSサーバ',ip:'192.0.2.53'},
+ web:{x:260,y:82,t:'web',n:'検索サイト',s:'Webサーバ',ip:'192.0.2.80'},
+ cloud:{x:450,y:82,t:'cloud',n:'クラウドドライブ',s:'ストレージサーバ',ip:'192.0.2.150'},
+ mymail:{x:640,y:82,t:'mail',n:'メールサーバ',s:'（送る人の側）',ip:'192.0.2.25'},
+ othermail:{x:810,y:82,t:'mail',n:'メールサーバ',s:'（受け取る人の側）',ip:'198.51.100.25'},
+ r1:{x:200,y:186,t:'irouter',n:'ルータ'},r2:{x:450,y:186,t:'irouter',n:'ルータ'},r3:{x:700,y:186,t:'irouter',n:'ルータ'},
+ hisp:{x:120,y:276,t:'isp',n:'プロバイダ',s:'（自宅の契約）',lp:'r'},
+ carrier:{x:380,y:276,t:'isp',n:'携帯電話会社',lp:'r'},
+ sisp:{x:650,y:276,t:'isp',n:'プロバイダ',s:'（学校の契約）',lp:'r'},
+ onu:{x:120,y:374,t:'onu',n:'ONU',s:'光回線の終端装置',lp:'r'},
+ hfw:{x:120,y:458,t:'fw',n:'ファイアウォール',lp:'r'},
+ hrouter:{x:120,y:518,t:'wrouter',n:'ルータ・無線AP',s:'DHCP・NAT',lp:'r',ip:[{t:'インターネット側 203.0.113.10',x:10,y:-103,a:'start'},{t:'LAN側 192.168.1.1',x:0,y:50,a:'middle'}]},
+ phone:{x:52,y:690,t:'phone',n:'スマホ',ip:'192.168.1.3'},
+ pc:{x:150,y:692,t:'laptop',n:'ノートPC',ip:'192.168.1.4'},
+ hprinter:{x:248,y:690,t:'printer',n:'プリンタ',ip:'192.168.1.5'},
+ tower:{x:380,y:480,t:'tower',n:'基地局'},
+ ophone:{x:380,y:670,t:'phone',n:'外出先のスマホ',s:'4G・5G',ip:'100.64.12.34'},
+ srouter:{x:650,y:366,t:'router',n:'ルータ',lp:'l',ip:[{t:'インターネット側 198.51.100.50',x:10,y:-30,a:'start'},{t:'LAN側 172.16.0.1',x:10,y:32,a:'start'}]},
+ sfw:{x:650,y:428,t:'fw',n:'ファイアウォール',lp:'l'},
+ proxy:{x:790,y:412,t:'proxy',n:'プロキシサーバ',s:'フィルタリング',ip:'172.16.0.10'},
+ sw:{x:650,y:500,t:'switch',n:'スイッチ',s:'スイッチングハブ',lp:'l'},
+ ap:{x:500,y:505,t:'ap',n:'無線AP'},
+ tablet:{x:500,y:695,t:'tablet',n:'タブレット',ip:'172.16.1.15'},
+ s1:{x:582,y:695,t:'pc'},s2:{x:642,y:695,t:'pc',n:'生徒PC',ip:'172.16.0.22'},s3:{x:702,y:695,t:'pc'},
+ sprinter:{x:758,y:697,t:'printer',n:'プリンタ',ip:'172.16.0.30'},
+ dhcp:{x:841,y:526,t:'dhcpS',n:'DHCPサーバ',ip:'172.16.0.13'},
+ file:{x:841,y:616,t:'file',n:'ファイルサーバ',s:'個人フォルダ',ip:'172.16.0.11'},
+ auth:{x:841,y:706,t:'auth',n:'認証サーバ',ip:'172.16.0.12'}};
+const LINKS=[['dns','r1','n'],['web','r1','n'],['cloud','r2','n'],['mymail','r3','n'],['othermail','r3','n'],['r1','r2','n'],['r2','r3','n'],
+ ['hisp','r1','n'],['carrier','r2','n'],['sisp','r3','n'],
+ ['hisp','onu','o'],['onu','hfw','w'],['hfw','hrouter','w'],['hrouter','phone','r'],['hrouter','pc','r'],['hrouter','hprinter','w'],
+ ['carrier','tower','w'],['tower','ophone','r'],
+ ['sisp','srouter','o'],['srouter','sfw','w'],['sfw','proxy','w'],['sfw','sw','w'],['proxy','sw','w'],['sw','ap','w'],['ap','tablet','r'],['sw','s1','w'],['sw','s2','w'],['sw','s3','w'],['sw','sprinter','w'],['sw','dhcp','w'],['sw','file','w'],['sw','auth','w']];
+
+/* ===== 機器の説明 ===== */
+const DEV={
+ dns:['インターネット','DNSサーバ','<p>「www.example.jp」のような<b>ドメイン名</b>を、機器どうしが使う<b>IPアドレス</b>に変換して答えます。ネットの電話帳です。</p>',['ドメイン名に対応するIPアドレスを答える','メールの宛先（@の後ろ）から、相手のメールサーバを答える'],'Webを見るときも、メールを送るときも、クラウドを使うときも、相手の名前しか知らなければ最初にDNSに問い合わせる。実際には、まずプロバイダなどが用意したDNSサーバに聞き、そのサーバが必要に応じて世界中のDNSサーバに順に問い合わせて答えを見つける（図では1台にまとめている）。一度調べた答えはしばらく覚えておく（キャッシュ）。',['dns','domain','ip']],
+ web:['インターネット','Webサーバ（検索サイト）','<p>ブラウザからの「このページをください」という要求に応えて、HTMLや画像を返します。検索サイトでは、キーワードに合うページの一覧を作って返します。</p>',['HTTP／HTTPSで要求を受け、Webページを返す','インターネットにつながっていれば、自宅・学校・外出先のどこからでも同じように使える'],'',['www','http','https','server']],
+ cloud:['インターネット','クラウドドライブ（ストレージサーバ）','<p>インターネット上のサーバにファイルを保存するサービスです。ネットにつながれば、どの端末からでも同じファイルを開けます。</p>',['ファイルを保存・同期する','IDとパスワードなどで本人を確認する（認証）','リンクで他の人と共有できる'],'共有範囲の設定ミスで誰でも見られる状態になる事故がある。パスワードの使い回しにも注意。',['cloud','auth','mfa','https']],
+ mymail:['インターネット','メールサーバ（送る人の側）','<p>送る人のメールアドレスを管理しているサーバです。端末から<b>SMTP</b>で受け取ったメールを、相手のメールサーバへ<b>SMTP</b>で転送します。</p>',['送信：SMTPで受け取り、相手のメールサーバへ転送する','受信：自分あてに届いたメールをメールボックスにためておく'],'',['smtp','pop','imap','mailaddr']],
+ othermail:['インターネット','メールサーバ（受け取る人の側）','<p>受け取る人のメールアドレスを管理しているサーバです。届いたメールを相手の<b>メールボックス</b>に入れ、相手が取りに来るのを待ちます。</p>',['届いたメールをメールボックスに保存する','受け取る人の端末にPOP／IMAPで渡す'],'',['smtp','pop','imap']],
+ r:['インターネット','ルータ','<p>インターネットは、世界中のルータがつながった網の目です。ルータはパケットの<b>宛先IPアドレス</b>を見て、次に渡す相手を選びます（<b>ルーティング</b>）。</p>',['宛先IPアドレスを見て、次のルータへ転送する','経路が複数あるので、一部が壊れても別の経路で届く'],'図では3台だけだが、実際には何台ものルータをバケツリレーのように通る。',['router','routing','packet']],
+ hisp:['インターネットへの入口','プロバイダ（ISP）','<p><b>インターネットサービスプロバイダ</b>。自宅のネットワークをインターネットにつなぐ会社です。</p>',['自宅のルータにグローバルIPアドレスを割り当てる','インターネットへの出入口になる'],'',['isp','globalip','wan']],
+ sisp:['インターネットへの入口','プロバイダ（ISP）','<p>学校のネットワークをインターネットにつなぐ会社です。自治体の学校ネットワークをいったん経由してからインターネットに出る場合もあります。</p>',['学校のルータにグローバルIPアドレスを割り当てる'],'',['isp','globalip','wan']],
+ carrier:['インターネットへの入口','携帯電話会社','<p>4G・5Gの<b>モバイル回線</b>を提供する会社です。基地局からの電波で、外出先のスマホをインターネットにつなぎます。</p>',['スマホにIPアドレスを割り当てる','携帯電話会社のネットワークを通してインターネットにつなぐ'],'Wi-Fiがない外出先でも、同じ検索サイトやクラウドドライブが使える。',['mobile','isp']],
+ tower:['外出先','基地局','<p>スマホと電波でやりとりするアンテナです。町のあちこちにあり、そこから携帯電話会社のネットワークに有線でつながります。</p>',['スマホと4G・5Gの電波で通信する'],'',['mobile']],
+ ophone:['外出先','外出先のスマホ','<p>家や学校のWi-Fiがなくても、<b>モバイル回線</b>で基地局につながります。IPアドレスは携帯電話会社から割り当てられます。</p>',['インターネット上のサービスに、どこからでもアクセスできる'],'',['mobile','client','ip']],
+ onu:['自宅のLAN','ONU（光回線終端装置）','<p>光ファイバーで届く<b>光の信号</b>と、家の機器が使う<b>電気の信号</b>を変換する装置です。光回線の入口にあります。</p>',['光信号と電気信号を相互に変換する'],'',['onu','wan']],
+ hfw:['自宅のLAN','ファイアウォール（ルータの機能）','<p>家のLANとインターネットの<b>境目</b>に立つ防火壁です。家庭では、ルータの中に機能として入っています。</p>',['外から勝手に入ってこようとする通信を止める','家の中から頼んだ通信の返事は通す'],'家の機器とインターネットの間の通信は、必ずここを通る。図では1台のルータの中を分けてかいている。',['fw','port']],
+ hrouter:['自宅のLAN','ルータ・無線AP（無線LANルータ）','<p>家庭のルータは、いくつもの機能を1台にまとめています。</p>',['<b>ルータ</b>：家のLANとインターネットをつなぎ、パケットを転送する','<b>無線LANアクセスポイント</b>：スマホやPCと電波でつながる','<b>DHCP</b>：家の機器にプライベートIPアドレスを自動で配る','<b>NAT</b>：外に出るとき、プライベートIPアドレスをグローバルIPアドレスに置きかえる','<b>ファイアウォール</b>：上の段にかいた機能'],'Wi-Fiのパスワード（暗号化キー）を設定しないと、電波を他人に使われたり通信をのぞかれたりする。暗号化方式はWPA2やWPA3を使う。',['router','ap','dhcp','nat','privateip']],
+ phone:['自宅のLAN','スマホ','<p>無線LANで家のルータにつながる<b>クライアント</b>（サービスを使う側）です。つないだとき、DHCPでプライベートIPアドレスを自動でもらいます。</p>',[],'',['client','wifi','dhcp']],
+ pc:['自宅のLAN','ノートPC','<p>無線LANでつながるクライアントです。</p>',['ブラウザやメールソフトでサービスを使う','OSの更新やセキュリティソフトで自分の身を守る'],'',['client','wifi']],
+ hprinter:['自宅のLAN','プリンタ','<p>LANケーブルでルータにつながっています。家の中だけの通信はルータの中で折り返すので、インターネットには出ません。</p>',[],'',['lan','wiredlan']],
+ srouter:['学校のLAN','ルータ','<p>学校のLANと外のネットワークをつなぎ、パケットを転送します。</p>',['宛先IPアドレスを見て、外へ送るか中へ入れるかを決める','NATでプライベートIPアドレスとグローバルIPアドレスを変換する'],'',['router','routing','nat']],
+ sfw:['学校のLAN','ファイアウォール','<p>学校のLANとインターネットの境目で、通信を<b>通す・止める</b>を決める専用の装置です。</p>',['外からの不正なアクセスを止める（校内サーバは外から使えない）','許可していない種類の通信（ポート番号）を止める','通信の記録（ログ）を残す'],'学校や会社では、家庭よりきびしいルールで守っている。',['fw','port','log']],
+ proxy:['学校のLAN','プロキシサーバ（フィルタリング）','<p><b>プロキシ</b>は「代理」という意味。生徒PCの代わりに外のWebサーバへアクセスします。</p>',['<b>フィルタリング</b>：有害なサイトや授業に関係のないサイトをブロックする','見たページをためておき（キャッシュ）、表示を速くする','誰がどこにアクセスしたかの記録を残す'],'',['proxy','filtering','cache']],
+ sw:['学校のLAN','スイッチ（スイッチングハブ）','<p>LANケーブルをたくさんつなぐための集線装置です。届いたデータの<b>宛先MACアドレス</b>を見て、必要な口（ポート）にだけ送ります。</p>',['LAN内の機器どうしをつなぐ','宛先の機器にだけデータを送るので、むだな通信が減る'],'ルータは「ネットワークどうし」をつなぎ、スイッチは「同じネットワークの中の機器」をつなぐ。',['switch','mac','lan']],
+ file:['学校のLAN（校内サーバ）','ファイルサーバ（個人フォルダ）','<p>校内LANの中でファイルを保存するサーバです。一人ひとりの<b>個人フォルダ</b>があります。</p>',['生徒・先生のファイルを保存する','校内LANの中から使う。ファイアウォールの外（自宅など）からは使えない'],'この情報処理室のPCは起動のたびに初期化されるので、残したいファイルは個人フォルダに保存する。',['server','lan']],
+ dhcp:['学校のLAN（校内サーバ）','DHCPサーバ','<p>校内のPCやタブレットに、<b>IPアドレス</b>などの設定を自動で配るサーバです。家庭ではルータがこの役をしていますが、台数の多い学校では専用のサーバ（またはスイッチなどの機能）が受け持ちます。</p>',['起動した機器にプライベートIPアドレスを貸し出す','外への出口（ルータ）やDNSサーバの場所も教える','同じ番号が2台にならないよう管理する'],'',['dhcp','privateip']],
+ auth:['学校のLAN（校内サーバ）','認証サーバ','<p>PCにログインするとき、入力した<b>IDとパスワード</b>が正しいかを確かめるサーバです。</p>',['利用者が本人かどうかを確認する（認証）','利用者ごとに使ってよいフォルダや機能を決める（アクセス権）'],'',['auth']],
+ ap:['学校のLAN','無線LANアクセスポイント','<p>タブレットなどと電波でつながり、有線のLANに橋渡しします。</p>',['電波でつながった端末のデータを有線LANへ渡す','暗号化（WPA2／WPA3）で電波ののぞき見を防ぐ'],'',['ap','wifi']],
+ tablet:['学校のLAN','タブレット','<p>無線LANでつながるクライアントです。</p>',[],'',['client','wifi']],
+ s:['学校のLAN','生徒PC','<p>LANケーブルでスイッチにつながるクライアントです。ログインは認証サーバ、保存はファイルサーバ、外へはプロキシとファイアウォールを通ります。</p>',[],'',['client','wiredlan','lan']],
+ sprinter:['学校のLAN','プリンタ','<p>スイッチにつながっているので、どの生徒PCからも印刷できます。</p>',[],'',['lan']]};
+const devKey=id=>/^r\d$/.test(id)?'r':/^s\d$/.test(id)?'s':id;
+
+/* ===== 道すじ ===== */
+const rev=a=>[...a].reverse();
+const HOME_UP=d=>[d,'hrouter','hfw','onu','hisp','r1'];
+const SCH_UP=['s2','sw','proxy','sfw','srouter','sisp','r3'];
+const OUT_UP=['ophone','tower','carrier','r2'];
+const C={'接続':'#7a8fa8',DNS:'#7a55d0',HTTPS:'#1f9468',SMTP:'#e2604f',IMAP:'#e2604f',DHCP:'#7a8fa8','認証':'#1f9468','ファイル共有':'#3a78d4','印刷':'#7a8fa8'};
+const pk=(p,l,d=0)=>({p,l,d});C['割り当て']='#7a8fa8';
+
+/* ===== テーマと手順 ===== */
+const TH={
+ connect:{n:'つなぐ',s:'IPアドレスをもらう',intro:'通信を始める前に、機器はまず<b>IPアドレス</b>（ネット上の住所）を手に入れます。どこから、どんな番号をもらうのかを見てみましょう。',
+  steps:[
+  {t:'スマホが家のWi-Fiにつながる',d:'スマホは無線LANの電波で、家のルータ（無線AP）につながります。でも、この時点ではまだ住所（IPアドレス）を持っていません。',hl:['phone','hrouter'],tw:['wifi','ap']},
+  {t:'DHCPでIPアドレスをもらう',d:'ルータの<b>DHCP</b>機能が、「192.168.1.3を使ってね」と<b>プライベートIPアドレス</b>を自動で配ります。DHCPは<b>LANの中だけ</b>で行われるやりとりです。いっしょに、外への出口（ルータ）やDNSサーバの場所も教えてくれます。',pk:[[pk(['phone','hrouter'],'DHCP')],[pk(['hrouter','phone'],'DHCP')]],hl:['hrouter'],tw:['dhcp','privateip'],hd:['0.0.0.0（まだ番号がない）','255.255.255.255（LANの中の全員あて）→ ルータ 192.168.1.1 が返事','DHCP（67・68番）']},
+  {t:'ルータはプロバイダからグローバルIPアドレスをもらう',d:'家のルータの外側（インターネット側）には、ルータがプロバイダに接続したとき<b>グローバルIPアドレス</b>（世界で1つだけの番号）が割り当てられます。これはLANの中のDHCPとは別の、プロバイダとの接続の手続きです。家の機器はみんな、外に出るときこの番号を共有します（<b>NAT</b>）。',pk:[[pk(['hrouter','hfw','onu','hisp'],'接続')],[pk(['hisp','onu','hfw','hrouter'],'割り当て')]],hl:['hisp'],tw:['globalip','nat','isp']},
+  {t:'外出先のスマホは携帯電話会社から',d:'外ではWi-Fiの代わりに<b>モバイル回線</b>を使います。IPアドレスは携帯電話会社から割り当てられます。',pk:[[pk(['ophone','tower','carrier'],'接続')],[pk(['carrier','tower','ophone'],'割り当て')]],hl:['ophone','carrier'],tw:['mobile']},
+  {t:'学校の生徒PCは、校内のDHCPサーバからもらう',d:'情報処理室の生徒PCは、起動したときに校内の<b>DHCPサーバ</b>から<b>プライベートIPアドレス</b>（例：172.16.0.22）をもらいます。台数が多いので、家庭のようにルータではなく専用のサーバが配っています。やりとりはLANの中だけです。',pk:[[pk(['s2','sw','dhcp'],'DHCP')],[pk(['dhcp','sw','s2'],'DHCP')]],hl:['s2','dhcp'],tw:['dhcp','privateip','switch'],hd:['0.0.0.0（まだ番号がない）','255.255.255.255（LANの中の全員あて）→ DHCPサーバ 172.16.0.13 が返事','DHCP（67・68番）']},
+  {t:'学校のルータにもグローバルIPアドレス',d:'学校のルータのインターネット側には、プロバイダとの契約で<b>グローバルIPアドレス</b>（例：198.51.100.50）が割り当てられています。学校や会社では、いつも同じ番号（固定IPアドレス）を使う契約が多いです。生徒PCが外に出るときは、ルータの<b>NAT</b>でこの番号に置きかわります。',pk:[[pk(['srouter','sisp'],'接続')],[pk(['sisp','srouter'],'割り当て')]],hl:['srouter','sisp'],tw:['globalip','nat']}]},
+ web:{n:'Web検索',s:'どこからでも同じサイトへ',intro:'自宅のスマホで検索します。最後に、学校や外出先からも同じ検索サイトにアクセスできることを確かめます。',
+  steps:[
+  {t:'スマホで検索ワードを入力',d:'検索サイトのアドレスは「www.example.jp」のような<b>ドメイン名</b>です。でも機器どうしは<b>IPアドレス</b>で相手を探すので、まず番号を調べます。',hl:['phone'],tw:['domain','url']},
+  {t:'DNSサーバに問い合わせる',d:'「www.example.jp のIPアドレスは？」と<b>DNSサーバ</b>に聞きます。家の中からインターネットへ出るときは、必ず<b>ファイアウォール</b>を通ります。',pk:[[pk([...HOME_UP('phone'),'dns'],'DNS')]],hl:['dns','hfw'],tw:['dns','fw'],hd:['192.168.1.3 → ルータのNATで 203.0.113.10','192.0.2.53（DNSサーバ）','DNS（53番）']},
+  {t:'DNSサーバが番号を答える',d:'「192.0.2.80です」と返事が来ます。ファイアウォールは、<b>家の中から頼んだ通信の返事</b>なので通します。',pk:[[pk(rev([...HOME_UP('phone'),'dns']),'DNS')]],hl:['phone','hfw'],tw:['fw'],hd:['192.0.2.53','203.0.113.10 → NATで 192.168.1.3 に戻す','DNS（53番）']},
+  {t:'HTTPSで検索サイトへ',d:'わかったIPアドレスあてに、「このキーワードで検索して」という要求を<b>パケット</b>に分けて送ります。<b>HTTPS</b>なので中身は暗号化されています。',pk:[[pk([...HOME_UP('phone'),'web'],'HTTPS')]],hl:['web'],tw:['https','packet','routing'],hd:['203.0.113.10（NAT後）','192.0.2.80（検索サイト）','HTTPS（443番）']},
+  {t:'検索結果が返ってくる',d:'検索サイトはページ一覧のHTMLを返します。パケットは来た道を戻り、ファイアウォール・ルータを通ってスマホに表示されます。',pk:[[pk(rev([...HOME_UP('phone'),'web']),'HTTPS')]],hl:['phone'],tw:['http']},
+  {t:'学校からも、外出先からも',d:'同じ検索サイトには、学校の生徒PCからも外出先のスマホからもアクセスできます。どこにいても、インターネットのルータの網を通って同じサーバに届きます。学校では途中で<b>プロキシサーバ</b>がフィルタリングをしています。',pk:[[pk([...SCH_UP,'r2','r1','web'],'HTTPS'),pk([...OUT_UP,'r1','web'],'HTTPS',300)]],hl:['web','proxy','s2','ophone'],tw:['proxy','filtering','mobile']}]},
+ mail:{n:'メール',s:'送信と受信',intro:'自宅のノートPCから、外出先にいる友達のスマホへメールを送ります。メールは相手の端末に直接は届かず、<b>メールサーバ</b>どうしでリレーされます。',
+  steps:[
+  {t:'ノートPCでメールを書く',d:'宛先は「名前@ドメイン名」。@の後ろが、相手のメールサーバの場所を表します。',hl:['pc'],tw:['mailaddr']},
+  {t:'送信用のメールサーバの場所をDNSで調べる',d:'メールソフトに設定された送信サーバ（例：smtp.example.jp）のIPアドレスを、DNSで調べます。',pk:[[pk([...HOME_UP('pc'),'dns'],'DNS')],[pk(rev([...HOME_UP('pc'),'dns']),'DNS')]],hl:['dns'],tw:['dns']},
+  {t:'SMTPで自分側のメールサーバへ送る',d:'書いたメールを<b>SMTP</b>で、自分のメールアドレスを管理するメールサーバに渡します。',pk:[[pk([...HOME_UP('pc'),'r2','r3','mymail'],'SMTP')]],hl:['mymail'],tw:['smtp'],hd:['203.0.113.10（NAT後）','192.0.2.25（送る人側のメールサーバ）','SMTP（587番）']},
+  {t:'メールサーバが、相手のメールサーバをDNSで調べる',d:'メールサーバは宛先の@の後ろ（相手のドメイン名）を<b>DNS</b>に問い合わせ、「そのドメインのメールはこのサーバへ」という答えをもらいます。',pk:[[pk(['mymail','r3','r2','r1','dns'],'DNS')],[pk(['dns','r1','r2','r3','mymail'],'DNS')]],hl:['dns','mymail'],tw:['dns','domain']},
+  {t:'メールサーバどうしでSMTPで転送',d:'相手のメールサーバへ<b>SMTP</b>で転送します。メールは相手の<b>メールボックス</b>にたまります。',pk:[[pk(['mymail','r3','othermail'],'SMTP')]],hl:['othermail'],tw:['smtp'],hd:['192.0.2.25','198.51.100.25（受け取る人側のメールサーバ）','SMTP（25番）']},
+  {t:'友達がIMAPでメールを受け取る',d:'友達のスマホは、自分のメールボックスを見に行って受け取ります。<b>IMAP</b>ならメールはサーバに残るので、スマホでもPCでも同じ状態で読めます。<b>POP</b>は端末にダウンロードする方式です。',pk:[[pk([...OUT_UP,'r3','othermail'],'IMAP')],[pk(rev([...OUT_UP,'r3','othermail']),'IMAP')]],hl:['ophone','othermail'],tw:['imap','pop'],hd:['100.64.12.34（外出先のスマホ）','198.51.100.25','IMAP（993番・暗号化あり）']}]},
+ cloud:{n:'クラウドドライブ',s:'学校で保存→家と外で開く',intro:'学校の生徒PCでレポートをクラウドドライブに保存し、家のPCや外出先のスマホで開きます。',
+  steps:[
+  {t:'生徒PCでレポートを作る',d:'このレポートを、家でも続きができるようにクラウドドライブに保存します。',hl:['s2']},
+  {t:'DNSでクラウドドライブの場所を調べる',d:'クラウドドライブも、ドメイン名でアクセスするので最初にDNSで調べます。学校では<b>プロキシサーバ</b>が生徒PCの代わりに問い合わせます。',pk:[[pk(['s2','sw','proxy'],'HTTPS')],[pk(['proxy','sfw','srouter','sisp','r3','r2','r1','dns'],'DNS')],[pk(['dns','r1','r2','r3','sisp','srouter','sfw','proxy'],'DNS')]],hl:['dns','proxy'],tw:['dns','proxy']},
+  {t:'ログインしてHTTPSで保存',d:'IDとパスワード（＋確認コードの<b>多要素認証</b>）でログインし、レポートを<b>HTTPS</b>で暗号化してアップロードします。インターネットに出るので、プロキシ・ファイアウォール・ルータを通ります。',pk:[[pk([...SCH_UP,'r2','cloud'],'HTTPS')]],hl:['cloud','sfw'],tw:['mfa','https','cloud'],hd:['172.16.0.22 → 学校のルータのNATで 198.51.100.50','192.0.2.150（クラウドドライブ）','HTTPS（443番）']},
+  {t:'家のノートPCで開く',d:'家のPCから同じアカウントでログインすると、同じレポートが開けます。ここでも最初にDNSで調べてから（図では省略）アクセスします。',pk:[[pk([...HOME_UP('pc'),'r2','cloud'],'HTTPS')],[pk(rev([...HOME_UP('pc'),'r2','cloud']),'HTTPS')]],hl:['pc','cloud','hfw'],tw:['https']},
+  {t:'外出先のスマホでも開ける',d:'モバイル回線でも同じです。インターネットにつながれば、<b>どこからでも同じファイル</b>にアクセスできるのがクラウドの強みです。',pk:[[pk([...OUT_UP,'cloud'],'HTTPS')],[pk(rev([...OUT_UP,'cloud']),'HTTPS')]],hl:['ophone','cloud'],tw:['cloud','mobile']},
+  {t:'共有するときは範囲に注意',d:'リンクで友達と共有できます。「リンクを知っている全員」にすると、リンクが広まったとき誰でも見られてしまいます。',hl:['cloud'],tw:['auth']}]},
+ local:{n:'校内サーバ',s:'ログイン・個人フォルダ',intro:'情報処理室のPCは、校内のサーバとLANの中だけでやりとりしています。インターネットの<b>外には出ない</b>通信です。',
+  steps:[
+  {t:'生徒PCにログイン',d:'入力したIDとパスワードを、校内の<b>認証サーバ</b>が確かめます。通信はスイッチを通るだけで、ファイアウォールの外には出ません。',pk:[[pk(['s2','sw','auth'],'認証')],[pk(['auth','sw','s2'],'認証')]],hl:['auth','sw'],tw:['auth','switch'],hd:['172.16.0.22（生徒PC）','172.16.0.12（認証サーバ）','LANの中だけ']},
+  {t:'個人フォルダに保存',d:'この情報処理室のPCは起動のたびに初期化されるので、残したいファイルは<b>ファイルサーバの個人フォルダ</b>へ保存します。',pk:[[pk(['s2','sw','file'],'ファイル共有')]],hl:['file'],tw:['server','lan'],hd:['172.16.0.22','172.16.0.11（ファイルサーバ）','LANの中だけ']},
+  {t:'プリンタで印刷',d:'印刷データもスイッチを通ってプリンタへ。スイッチは宛先の<b>MACアドレス</b>を見て、プリンタにつながる口にだけ送ります。',pk:[[pk(['s2','sw','sprinter'],'印刷')]],hl:['sprinter','sw'],tw:['mac','switch']},
+  {t:'家からは個人フォルダを使えない',d:'家のPCから学校の個人フォルダにアクセスしようとしても、学校の<b>ファイアウォール</b>が外からの通信を止めます。家でも使いたいファイルはクラウドドライブへ、というように使い分けます。',pk:[[pk([...HOME_UP('pc'),'r2','r3','sisp','srouter','sfw'],'ファイル共有')]],block:'sfw',hl:['sfw','file','pc'],tw:['fw','cloud']}]}};
+
+/* ===== 用語 ===== */
+const CATS=['ネットワークの種類','機器','住所と名前','送り方・プロトコル','サービス','安全を守る'];
+const T=[
+ ['lan','LAN','ラン',0,'家や学校など、限られた範囲の中のネットワーク。','',['wan','switch','wiredlan'],'sw'],
+ ['wan','WAN','ワン',0,'離れた場所のLANどうしを結ぶ、広い範囲のネットワーク。通信会社の回線を使う。','',['lan','internet','isp'],'hisp'],
+ ['internet','インターネット','',0,'世界中のネットワークを、TCP/IPという共通のルールでつないだ「ネットワークのネットワーク」。','',['tcpip','router','isp'],'r2'],
+ ['isp','ISP（インターネットサービスプロバイダ）','',0,'家や学校のネットワークをインターネットにつなぐ会社。「プロバイダ」とも。','',['globalip','wan'],'hisp'],
+ ['mobile','モバイル回線（4G・5G）','',0,'携帯電話会社の基地局と電波でつながる回線。外出先でもインターネットが使える。','',['isp','wifi'],'tower'],
+ ['wiredlan','有線LAN','',0,'LANケーブルでつなぐLAN。通信が安定していて速い。規格はイーサネット。','',['lan','wifi','switch'],'s2'],
+ ['wifi','無線LAN（Wi-Fi）','',0,'電波でつなぐLAN。ケーブルがいらず便利だが、電波は周りに広がるので暗号化（WPA2／WPA3）が必須。','',['ap','wiredlan'],'phone'],
+ ['router','ルータ','',1,'ネットワークとネットワークをつなぎ、パケットの宛先IPアドレスを見て次の転送先を決める機器。','',['routing','switch','ip'],'srouter'],
+ ['switch','スイッチ（スイッチングハブ）','',1,'同じLANの中で機器どうしをつなぐ集線装置。宛先MACアドレスを見て、必要な口にだけデータを送る。','',['router','mac','lan'],'sw'],
+ ['ap','無線LANアクセスポイント','',1,'電波でつながった端末を、有線のLANに橋渡しする機器。家庭ではルータと一体のことが多い。','',['wifi','router'],'ap'],
+ ['onu','ONU（光回線終端装置）','',1,'光ファイバーの光信号と、機器が使う電気信号を変換する装置。','',['wan','isp'],'onu'],
+ ['server','サーバ','',1,'サービスを提供する側のコンピュータ。Webサーバ、メールサーバ、ファイルサーバ、DNSサーバなど。','',['client'],'file'],
+ ['client','クライアント','',1,'サービスを利用する側のコンピュータ。スマホ・PCのブラウザなど。サーバとクライアントで役割を分ける方式をクライアントサーバシステムという。','',['server'],'phone'],
+ ['ip','IPアドレス','',2,'ネットワーク上の機器の住所にあたる番号。IPv4（32ビット）とIPv6（128ビット）がある。','',['ipv4','ipv6','subnet','globalip','privateip'],'phone','ip'],
+ ['ipv4','IPv4','アイピーブイフォー',2,'32ビットのIPアドレス。8ビットずつ4つに区切り、10進数で「192.168.1.3」のように書く。','2の32乗＝約43億個。足りなくなり、IPv6への移行が進んでいる。',['ipv6','subnet'],'phone','ip'],
+ ['ipv6','IPv6','アイピーブイシックス',2,'128ビットのIPアドレス。16ビットずつ8つに区切り、16進数で「2001:db8::ff00:42:8329」のように書く。','2の128乗＝約3.4×10の38乗個。先頭の0や、0が続く部分（::）を省略して書ける。',['ipv4'],null,'ip'],
+ ['subnet','サブネットマスク','',2,'IPアドレスのどこまでがネットワーク部（どのネットワークか）で、どこからがホスト部（その中のどの機器か）かを示す値。1が並ぶ部分がネットワーク部。','255.255.255.0（/24）なら前から24ビットがネットワーク部。つなげる機器は2の8乗−2＝254台。',['netpart','ip'],null,'ip'],
+ ['netpart','ネットワーク部・ホスト部','',2,'IPアドレスの前半（ネットワーク部）はネットワークの番号、後半（ホスト部）はその中の機器の番号。ネットワーク部が同じ機器どうしは、同じLANの中で直接通信できる。','',['subnet','router'],null,'ip'],
+ ['globalip','グローバルIPアドレス','',2,'インターネット上で世界に1つだけのIPアドレス。プロバイダから割り当てられる。','',['privateip','nat'],'hrouter'],
+ ['privateip','プライベートIPアドレス','',2,'LANの中だけで使うIPアドレス。ほかの家と同じ番号でもかまわない。','192.168.○.○、172.16.○.○、10.○.○.○ など',['globalip','nat','dhcp'],'hrouter'],
+ ['mac','MACアドレス','マック',2,'ネットワーク機器1台ごとに製造時につけられる番号。LANの中で隣の機器にデータを届けるときに使う。','',['switch','ip'],'sw'],
+ ['dhcp','DHCP','',2,'LANにつないだ機器に、IPアドレスなどの設定を自動で配る仕組み。','',['privateip','router'],'hrouter'],
+ ['nat','NAT','ナット',2,'プライベートIPアドレスとグローバルIPアドレスを変換する仕組み。ルータが行う。1つのグローバルIPアドレスを家族みんなで使える。','',['globalip','privateip'],'hrouter'],
+ ['domain','ドメイン名','',2,'IPアドレスの代わりに人が覚えやすいようにつけた名前。右にいくほど大きなまとまりを表す。「www.example.ac.jp」なら jp＝日本、ac＝大学など、example＝組織名、www＝サーバの名前。','',['tld','dns','url'],'dns','dns'],
+ ['tld','トップレベルドメイン','',2,'ドメイン名のいちばん右の部分。jp（日本）のような国を表すものや、com・org などがある。','',['domain'],null,'dns'],
+ ['dns','DNS','',2,'ドメイン名とIPアドレスを対応づける仕組み。DNSサーバに問い合わせて変換する。ネットの電話帳。DNSサーバはドメイン名の階層ごとに分担している。','',['domain','ip','cache'],'dns','dns'],
+ ['url','URL','',2,'Web上の情報の場所を表す書き方。「https://www.example.jp/index.html」＝プロトコル名＋ドメイン名＋ファイルの場所。','',['domain','https'],'web'],
+ ['packet','パケット','',3,'データを小さく分けたかたまり。宛先や送信元のIPアドレス、順番の番号などがヘッダとしてつく。','',['packetsw','tcp'],'r2'],
+ ['packetsw','パケット交換方式','',3,'データをパケットに分けて送る方式。回線を独占しないので多くの人で共有でき、一部が壊れても別の経路で届く。これに対し、通話中に回線を独占するのが回線交換方式。','',['circuit','packet','routing'],'r2','sw'],
+ ['circuit','回線交換方式','',3,'通信を始める前に相手までの回線をつなぎ、通信が終わるまでその回線を占有する方式。昔の固定電話で使われた。一定の品質を保ちやすいが、話していない時間も回線を使えずむだが多く、途中が故障すると通信が切れる。','',['packetsw'],null,'sw'],
+ ['routing','ルーティング','',3,'ルータが宛先IPアドレスと経路表（ルーティングテーブル）を見て、パケットの次の転送先を選ぶこと。','',['router','packet'],'r1'],
+ ['protocol','プロトコル','',3,'通信するための約束事。機器のメーカーが違っても、同じプロトコルを使えば通信できる。','',['tcpip','http','smtp'],null],
+ ['tcpip','TCP/IP（4つの階層）','',3,'インターネットで使われるプロトコルのまとまり。アプリケーション層・トランスポート層・インターネット層・ネットワークインタフェース層の4階層。','アプリケーション層：HTTP・SMTP・POP・IMAP・DNS／トランスポート層：TCP・UDP／インターネット層：IP／ネットワークインタフェース層：イーサネット・Wi-Fi',['tcp','ip','protocol'],null],
+ ['tcp','TCP','',3,'データが確実に届くようにするプロトコル。パケットの順番を管理し、届かなかったものは再送してもらう。','',['tcpip','packet'],null],
+ ['port','ポート番号','',3,'1台のコンピュータの中で、どのアプリ（サービス）あての通信かを区別する番号。HTTPは80、HTTPSは443、DNSは53など。ファイアウォールはこれで通信を通すか決める。','',['fw','tcp'],'sfw'],
+ ['www','WWW（World Wide Web）','',4,'Webページどうしをリンク（ハイパーリンク）でつなぎ、世界中の情報をたどれる仕組み。ページはHTMLで書かれる。','',['http','url'],'web'],
+ ['http','HTTP','',4,'ブラウザとWebサーバがWebページをやりとりするプロトコル。','',['https','www'],'web'],
+ ['https','HTTPS','',4,'HTTPの通信をSSL/TLSで暗号化したもの。アドレス欄に鍵マークが出る。盗聴や改ざん、なりすましを防ぐ。','',['http','ssl'],'web'],
+ ['mailaddr','メールアドレス','',4,'「ユーザ名@ドメイン名」の形。@の後ろで、どのメールサーバあてかが決まる。','',['smtp','domain'],'othermail'],
+ ['smtp','SMTP','',4,'メールを送るプロトコル。端末から自分側のメールサーバへ、メールサーバから相手のメールサーバへの転送に使う。','',['pop','imap'],'mymail'],
+ ['pop','POP','ポップ',4,'メールを受け取るプロトコル。メールボックスから端末にダウンロードして読む。','',['imap','smtp'],'othermail'],
+ ['imap','IMAP','アイマップ',4,'メールを受け取るプロトコル。メールをサーバに置いたまま読むので、複数の端末で同じ状態を見られる。','',['pop','smtp'],'othermail'],
+ ['webmail','Webメール','',4,'ブラウザでメールを読み書きする方式。端末とサーバの間はHTTPSで通信する。','',['https','imap'],'mymail'],
+ ['cloud','クラウド（クラウドサービス）','',4,'インターネット上のサーバの機能を、必要なときに必要なだけ使う形態。ファイル保存（クラウドドライブ）、メール、文書作成など。','',['server','auth'],'cloud'],
+ ['cache','キャッシュ','',4,'一度使ったデータを近くにためておき、次から速く使えるようにする仕組み。ブラウザやプロキシサーバ、DNSでも使われる。','',['proxy','dns'],'proxy'],
+ ['fw','ファイアウォール','',5,'LANとインターネットの境目で、決められたルールに従って通信を通したり止めたりする仕組み。外からの不正なアクセスを防ぐ。','',['port','proxy'],'sfw'],
+ ['proxy','プロキシサーバ','',5,'端末の代わりに外のサーバへアクセスする代理のサーバ。フィルタリングやキャッシュ、アクセスの記録に使う。','',['filtering','cache','fw'],'proxy'],
+ ['filtering','フィルタリング','',5,'有害なWebサイトなどへのアクセスを制限する仕組み。','',['proxy'],'proxy'],
+ ['auth','認証','',5,'利用者が本人かどうかを確かめること。知識（パスワード）、所持（スマホ・ICカード）、生体（指紋・顔）の3つの要素がある。','',['mfa'],'auth'],
+ ['mfa','多要素認証','',5,'認証の3つの要素のうち、2つ以上を組み合わせる方法。パスワードが漏れても、スマホがなければログインできない。','',['auth'],'cloud'],
+ ['ssl','SSL/TLS','',5,'Webなどの通信を暗号化するプロトコル。公開鍵暗号と共通鍵暗号を組み合わせ、電子証明書で相手が本物か確かめる。','',['https'],'web'],
+ ['log','ログ','',5,'通信や操作の記録。不正なアクセスがあったときに原因を調べる手がかりになる。','',['fw','proxy'],'sfw']];
+const TM={};T.forEach(t=>TM[t[0]]=t);
+const short=w=>TM[w][1].replace(/（.*/,'');
+
+/* ===== 図を描く ===== */
+const sv=$('#map');
+function drawMap(){let s=`<rect x="-2000" y="-2000" width="5000" height="5000" fill="#fdf8ef"/>
+ <rect x="10" y="10" width="880" height="232" rx="24" fill="#eef4fd" stroke="#c8d8f0" stroke-width="2"/><text class="rg-t" x="28" y="36" fill="#3a78d4">🌐 インターネット</text>
+ <rect x="10" y="318" width="290" height="434" rx="24" fill="#fff4e4" stroke="#f0d3a6" stroke-width="2"/><text class="rg-t" x="28" y="344" fill="#b5730a">🏠 自宅のLAN</text>
+ <rect x="54" y="420" width="238" height="134" rx="14" fill="#fff" stroke="#e7c48e" stroke-width="1.5" stroke-dasharray="5 4"/><text x="173" y="436" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b5730a">無線LANルータ（1台に入っている機能）</text>
+ <rect x="310" y="318" width="140" height="434" rx="24" fill="#f4effc" stroke="#d6c8ef" stroke-width="2"/><text class="rg-t" x="326" y="344" fill="#6b45c0">📱 外出先</text>
+ <rect x="460" y="318" width="430" height="434" rx="24" fill="#e9f6ef" stroke="#b9e0cd" stroke-width="2"/><text class="rg-t" x="476" y="344" fill="#1f9468">🏫 学校の情報処理室</text>
+ <rect x="800" y="470" width="82" height="276" rx="12" fill="#fff" stroke="#9fd3b9" stroke-width="1.5" stroke-dasharray="5 4"/><text x="841" y="486" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1f9468">校内サーバ</text>`;
+ s+='<g id="links">'+LINKS.map(([a,b,k])=>`<line class="lk ${k}" data-a="${a}" data-b="${b}" x1="${N[a].x}" y1="${N[a].y}" x2="${N[b].x}" y2="${N[b].y}"/>`).join('')+'</g><g id="nodes">';
+ for(const id in N){const n=N[id],lp=n.lp||'b';let lab='';
+  const all=n.ip?[].concat(n.ip):[];const ips=all.filter(x=>typeof x==='string');all.filter(x=>typeof x==='object').forEach(o=>lab+=`<text class="ipt" text-anchor="${o.a}" x="${o.x}" y="${o.y}">${o.t}</text>`);
+  if(lp==='b'){const y0=n.t==='irouter'?30:36;if(n.n)lab+=`<text class="nm" text-anchor="middle" y="${y0}">${n.n}</text>`;if(n.s)lab+=`<text class="sb" text-anchor="middle" y="${y0+13}">${n.s}</text>`;ips.forEach((p,i)=>lab+=`<text class="ipt" text-anchor="middle" y="${-26-i*12}">${p}</text>`)}
+  else{const a=lp==='r'?'start':'end',x=lp==='r'?28:-28;let y=n.s?-1:4;lab+=`<text class="nm" text-anchor="${a}" x="${x}" y="${y}">${n.n}</text>`;if(n.s)lab+=`<text class="sb" text-anchor="${a}" x="${x}" y="${y+13}">${n.s}</text>`;ips.forEach((p,i)=>lab+=`<text class="ipt" text-anchor="${a}" x="${x}" y="${y+(n.s?26:14)+i*12}">${p}</text>`)}
+  s+=`<g class="node" data-id="${id}" transform="translate(${n.x},${n.y})" role="button" tabindex="0" aria-label="${n.n||'生徒PC'}"><circle class="hit" r="26"/><circle class="glow" r="${n.t==='irouter'?19:27}"/>${icon(n.t)}${lab}</g>`}
+ s+='</g><g id="pk"></g><g id="fx"></g>';sv.innerHTML=s;}
+drawMap();
+
+/* ===== カメラ（拡大・移動） ===== */
+let cam={x:0,y:0,w:900,h:760};let SPD=1;
+function aspect(){const r=$('#stage').getBoundingClientRect();return r.width/Math.max(1,r.height)}
+function fit(b){const a=aspect();let {x,y,w,h}=b;if(w/h<a){const nw=h*a;x-=(nw-w)/2;w=nw}else{const nh=w/a;y-=(nh-h)/2;h=nh}return {x,y,w,h}}
+function maxW(){const r=$('#stage').getBoundingClientRect();return r.width/0.9}
+function readable(b){let c=fit(b);const m=maxW();if(c.w>m){const cx=c.x+c.w/2,cy=c.y+c.h/2,h=m*c.h/c.w;c={x:cx-m/2,y:cy-h/2,w:m,h}}return c}
+function clampCam(c){const x=Math.max(-40,Math.min(900-c.w+40,c.x)),y=Math.max(-40,Math.min(760-c.h+40,c.y));return c.w>980?c:{...c,x,y}}
+let follow=false,userCam=false;
+function setCam(c){cam=c;sv.setAttribute('viewBox',`${c.x} ${c.y} ${c.w} ${c.h}`)}
+let camAnim=0;
+function camTo(b,ms=600,keep){const to=keep?fit(b):clampCam(readable(b)),from={...cam},id=++camAnim;return new Promise(res=>{if(RM){setCam(to);return res()}const t0=performance.now();const f=now=>{if(id!==camAnim)return res();let q=Math.min(1,(now-t0)/ms);q=q<.5?2*q*q:1-Math.pow(-2*q+2,2)/2;setCam({x:from.x+(to.x-from.x)*q,y:from.y+(to.y-from.y)*q,w:from.w+(to.w-from.w)*q,h:from.h+(to.h-from.h)*q});if(q<1)requestAnimationFrame(f);else res()};requestAnimationFrame(f)})}
+const ALL={x:4,y:4,w:892,h:752};
+function bboxOf(ids){if(!ids.length)return ALL;let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;ids.forEach(k=>{const n=N[k];x0=Math.min(x0,n.x);y0=Math.min(y0,n.y);x1=Math.max(x1,n.x);y1=Math.max(y1,n.y)});
+ const pad=62;let b={x:x0-pad,y:y0-pad-10,w:x1-x0+pad*2,h:y1-y0+pad*2+24};if(b.w<300){b.x-=(300-b.w)/2;b.w=300}if(b.h<230){b.y-=(230-b.h)/2;b.h=230}return b}
+$('#zIn').onclick=()=>zoom(.75);$('#zOut').onclick=()=>zoom(1/.75);$('#zAll').onclick=()=>{userCam=true;camTo(ALL,600,true)};
+function zoom(k,cx,cy){userCam=true;cx=cx??cam.x+cam.w/2;cy=cy??cam.y+cam.h/2;const w=Math.min(1800,Math.max(160,cam.w*k)),h=w*cam.h/cam.w;camAnim++;setCam({x:cx-(cx-cam.x)*w/cam.w,y:cy-(cy-cam.y)*h/cam.h,w,h})}
+let drag=null;
+sv.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,c:{...cam},m:false,id:e.pointerId}});
+sv.addEventListener('pointermove',e=>{if(!drag||drag.id!==e.pointerId)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(!drag.m&&Math.hypot(dx,dy)<6)return;if(!drag.m){drag.m=true;userCam=true;sv.setPointerCapture(e.pointerId);sv.classList.add('drag')}
+ const r=sv.getBoundingClientRect(),sc=cam.w/r.width;camAnim++;setCam({...drag.c,w:cam.w,h:cam.h,x:drag.c.x-dx*sc,y:drag.c.y-dy*sc})});
+const endDrag=e=>{if(drag&&drag.m){sv.classList.remove('drag');setTimeout(()=>drag=null,0)}else drag=null};
+sv.addEventListener('pointerup',endDrag);sv.addEventListener('pointercancel',endDrag);
+sv.addEventListener('wheel',e=>{e.preventDefault();const r=sv.getBoundingClientRect();zoom(e.deltaY>0?1.12:1/1.12,cam.x+(e.clientX-r.left)/r.width*cam.w,cam.y+(e.clientY-r.top)/r.height*cam.h)},{passive:false});
+sv.addEventListener('click',e=>{if(drag&&drag.m)return;const g=e.target.closest('.node');if(g)openDev(g.dataset.id)});
+sv.addEventListener('keydown',e=>{const g=e.target.closest('.node');if(g&&(e.key==='Enter'||e.key===' ')){e.preventDefault();openDev(g.dataset.id)}});
+addEventListener('resize',()=>setCam(fit(cam)));
+$$('#spd button').forEach(b=>b.onclick=()=>{SPD=+b.dataset.v;$$('#spd button').forEach(x=>x.classList.toggle('on',x===b))});
+$('#ipT').onchange=e=>{sv.classList.toggle('show-ip',e.target.checked);renderPanel()};
+
+function overview(ms=600){const ids=new Set();TH[th].steps.forEach(x=>(x.hl||[]).forEach(k=>ids.add(k)));const first=[...stepIds(TH[th].steps[0])];const b=bboxOf(first.length?first:[...ids]);userCam=false;if(fit(ALL).w<=maxW())return camTo(ALL,ms,true);return ms?camTo(b,ms):setCam(clampCam(readable(b)))}
+/* ===== 手順の再生 ===== */
+let th='connect',step=-1,playing=false,runId=0;
+$('#themes').innerHTML=Object.entries(TH).map(([k,v])=>`<button data-k="${k}" class="${k===th?'on':''}">${v.n}<small>${v.s}</small></button>`).join('');
+$$('#themes button').forEach(b=>b.onclick=()=>{$$('#themes button').forEach(x=>x.classList.toggle('on',x===b));th=b.dataset.k;stop();runId++;step=-1;clearFx();renderPanel();hl();overview()});
+function stepIds(s){const ids=new Set(s.hl||[]);(s.pk||[]).flat().forEach(g=>g.p.forEach(k=>ids.add(k)));return [...ids]}
+function hl(){const S=TH[th].steps,cur=step>=0?S[step]:null;const on=new Set(cur?stepIds(cur):[]),lk=new Set(),glow=new Set(cur?cur.hl||[]:[]);
+ if(cur)(cur.pk||[]).flat().forEach(g=>{for(let i=1;i<g.p.length;i++){lk.add(g.p[i-1]+'|'+g.p[i]);lk.add(g.p[i]+'|'+g.p[i-1])}});
+ $$('.node',sv).forEach(g=>{g.classList.toggle('hl',glow.has(g.dataset.id));g.classList.toggle('dim',!!cur&&!on.has(g.dataset.id))});
+ $$('.lk',sv).forEach(l=>{const k=l.dataset.a+'|'+l.dataset.b;l.classList.toggle('hl',lk.has(k));l.classList.toggle('dim',!!cur&&!lk.has(k))});}
+function el(t,a,p){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e}
+function animate(g,id){return new Promise(res=>{const p=g.p;if(p.length<2)return res();const pts=p.map(k=>[N[k].x,N[k].y]);
+ const grp=el('g',{},$('#pk'));const col=C[g.l]||'#d48a12';const w=g.l?Math.max(26,[...g.l].length*8+14):0;
+ el('circle',{r:9,fill:col,stroke:'#fff','stroke-width':3},grp);if(g.l){el('rect',{x:-w/2,y:-30,width:w,height:17,rx:8.5,fill:col,stroke:'#fff','stroke-width':2},grp);const t=el('text',{class:'pk-t',y:-21.5},grp);t.textContent=g.l}
+ const sl=[];let tot=0;for(let i=1;i<pts.length;i++){const d=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]);sl.push(d);tot+=d}
+ const D=RM?10:Math.min(7500,Math.max(2400,tot*7.5))*SPD,t0=performance.now()+(g.d||0);
+ const f=now=>{if(id!==runId){grp.remove();return res()}const q=Math.max(0,Math.min(1,(now-t0)/D));let d=q*tot,i=0;while(i<sl.length-1&&d>sl[i]){d-=sl[i];i++}const a=pts[i],b=pts[i+1],r=sl[i]?d/sl[i]:1;const px=a[0]+(b[0]-a[0])*r,py=a[1]+(b[1]-a[1])*r;grp.setAttribute('transform',`translate(${px},${py})`);
+  if(g.lead&&follow&&!userCam&&q>0){const tx=px-cam.w/2,ty=py-cam.h/2;setCam(clampCam({...cam,x:cam.x+(tx-cam.x)*.12,y:cam.y+(ty-cam.y)*.12}))}
+  if(q<1)requestAnimationFrame(f);else{setTimeout(()=>grp.remove(),300);res()}};requestAnimationFrame(f)})}
+function clearFx(){$('#pk').innerHTML='';$('#fx').innerHTML=''}
+async function run(i){step=i;const id=++runId;clearFx();renderPanel();hl();const s=TH[th].steps[i];userCam=false;
+ const b=bboxOf(stepIds(s));follow=fit(b).w>maxW()&&(s.pk||[]).length>0;
+ if(follow){const f0=s.pk[0][0].p[0],n=N[f0];await camTo({x:n.x-150,y:n.y-115,w:300,h:230})}else await camTo(b);
+ (s.pk||[]).forEach(grp=>grp.forEach((g,j)=>g.lead=j===0));if(id!==runId)return;
+ for(const grp of (s.pk||[])){await Promise.all(grp.map(g=>animate(g,id)));if(id!==runId)return;await sleep(450*SPD);if(id!==runId)return}
+ if(follow&&!userCam&&s.block){const n=N[s.block];camTo({x:n.x-150,y:n.y-115,w:300,h:230})}
+ if(s.block){const n=N[s.block];const t=el('text',{class:'block',x:n.x,y:n.y-4},$('#fx'));t.textContent='✕';const t2=el('text',{x:n.x,y:n.y+40,'text-anchor':'middle','font-size':12,'font-weight':900,fill:'#d64b3f',style:'paint-order:stroke;stroke:#fff;stroke-width:4px'},$('#fx'));t2.textContent='外からの通信は通さない'}}
+function stop(){playing=false;renderCtrl()}
+async function play(){if(playing){stop();runId++;return}playing=true;renderCtrl();const S=TH[th].steps;let i=step<0||step>=S.length-1?0:step+1;
+ for(;i<S.length;i++){if(!playing)return;await run(i);if(!playing)return;await sleep(2200*SPD)}stop()}
+function renderCtrl(){const c=$('#ctrl');if(!c)return;const S=TH[th].steps;$('#bPlay').textContent=playing?'■ 止める':(step<0?'▶ 再生':'▶ つづけて再生');$('#bPrev').disabled=step<=0;$('#bNext').disabled=step>=S.length-1}
+function renderPanel(){const T0=TH[th],S=T0.steps,cur=step>=0?S[step]:null,ipOn=$('#ipT').checked;
+ let h=`<div class="ctrl" id="ctrl"><button class="btn sq ghost" id="bPrev" aria-label="前へ">◀</button><button class="btn" id="bPlay"></button><button class="btn sq ghost" id="bNext" aria-label="次へ">▶</button><button class="btn sq ghost" id="bRe" aria-label="もう一度" ${cur?'':'disabled'}>↺</button><div class="dots">${S.map((x,i)=>`<button data-i="${i}" class="${i===step?'on':i<step?'done':''}">${i+1}</button>`).join('')}</div></div>`;
+ if(!cur)h+=`<div class="ph"><b>${T0.n}：${T0.s}</b></div><div class="pd intro">${T0.intro}<br><span class="muted" style="color:var(--sub);font-size:13px">▶で順に再生、番号で好きな手順へ。機器をタップすると役割が見られます。</span><div class="k"><span><svg width="24" height="8"><line x1="2" y1="4" x2="22" y2="4" stroke="#b9ab96" stroke-width="3" stroke-linecap="round"/></svg>LANケーブル</span><span><svg width="24" height="8"><line x1="2" y1="4" x2="22" y2="4" stroke="#b9ab96" stroke-width="2.5" stroke-dasharray="3 5" stroke-linecap="round"/></svg>電波</span><span><svg width="24" height="8"><line x1="2" y1="4" x2="22" y2="4" stroke="#e2a64a" stroke-width="4" stroke-linecap="round"/></svg>光回線</span><span><svg width="24" height="8"><line x1="2" y1="4" x2="22" y2="4" stroke="#9fb7dc" stroke-width="3.5" stroke-linecap="round"/></svg>インターネット</span></div></div>`;
+ else{h+=`<div class="ph"><span class="n">${step+1}</span><b>${cur.t}</b></div><div class="pd">${cur.d}</div>`;
+  if(ipOn&&cur.hd)h+=`<div class="hdr">送信元：<span class="m">${cur.hd[0]}</span><br>宛先：<span class="m">${cur.hd[1]}</span><br>プロトコル：<b>${cur.hd[2]}</b></div>`;
+  if(cur.tw)h+='<div>'+cur.tw.map(w=>`<button class="tw" data-w="${w}">${short(w)}</button>`).join('')+'</div>';}
+ $('#panel').innerHTML=h;$('#panel').scrollTop=0;
+ $('#bPlay').onclick=play;$('#bPrev').onclick=()=>{stop();if(step>0)run(step-1)};$('#bNext').onclick=()=>{stop();run(Math.min(step+1,S.length-1))};$('#bRe').onclick=()=>{stop();if(step>=0)run(step)};
+ $$('#panel .dots button').forEach(b=>b.onclick=()=>{stop();run(+b.dataset.i)});$$('#panel .tw').forEach(b=>b.onclick=()=>openTerm(b.dataset.w,true));renderCtrl()}
+
+/* ===== カード ===== */
+let hist=[];
+function openSheet(ico,tag,title,html){$('#shI').innerHTML=ico;$('#shTag').textContent=tag;$('#shT').textContent=title;$('#shB').innerHTML=html;$('#sheet').classList.add('on');$('#bd').classList.add('on');$('#sheet').scrollTop=0;$$('#shB .tw[data-w]').forEach(b=>b.onclick=()=>openTerm(b.dataset.w))}
+function close(){hist=[];$('#sheet').classList.remove('on');$('#bd').classList.remove('on')}
+$('#shX').onclick=close;$('#bd').onclick=close;addEventListener('keydown',e=>{if(e.key==='Escape')close()});
+function openDev(id){const d=DEV[devKey(id)],n=N[id];hist=[{dev:id}];const ips=n.ip?[].concat(n.ip).map(x=>typeof x==='object'?x.t:x):[];
+ openSheet(icon(n.t),d[0],d[1],d[2]+(d[3].length?`<div class="role"><ul>${d[3].map(x=>`<li>${x}</li>`).join('')}</ul></div>`:'')+(d[4]?`<div class="pt">${d[4]}</div>`:'')+(ips.length?`<div class="ipbox">IPアドレス（例）：<b class="mono">${ips.join('／')}</b></div>`:'')+`<div style="font-size:13px;color:var(--sub);margin-top:8px">関連する用語</div>`+d[5].map(w=>`<button class="tw" data-w="${w}">${short(w)}</button>`).join(''))}
+function openTerm(w,fresh){const t=TM[w];if(!t)return;if(fresh)hist=[];if(!hist.length||hist[hist.length-1].term!==w)hist.push({term:w});
+ const prev=hist.length>1?hist[hist.length-2]:null,prevName=prev?(prev.term?short(prev.term):DEV[devKey(prev.dev)][1]):'';
+ const html=(prev?`<button class="tw" id="tBack" style="border-color:var(--sub);color:var(--sub);margin:0 0 8px">← ${prevName}にもどる</button>`:'')+`<p>${t[4]}</p>${t[5]?`<div class="exs">${t[5]}</div>`:''}`+(t[7]?`<button class="see" id="tSee">図で見る</button>`:'')+(t[8]?`<button class="see" id="tLearn" style="background:var(--ac)">しくみで見る</button>`:'')+`<div style="font-size:13px;color:var(--sub);margin-top:8px">関連する用語</div>`+t[6].map(r=>`<button class="tw" data-w="${r}">${short(r)}</button>`).join('');
+ openSheet(t[7]&&N[t[7]]?icon(N[t[7]].t):icon('book'),'用語｜'+CATS[t[3]],t[1]+(t[2]?`（${t[2]}）`:''),html);
+ const bk=$('#tBack');if(bk)bk.onclick=()=>{hist.pop();const p=hist.pop();if(p.term)openTerm(p.term);else openDev(p.dev)};
+ const se=$('#tSee');if(se)se.onclick=()=>{close();seeIn(t[7])};const le=$('#tLearn');if(le)le.onclick=()=>{close();location.hash='learn-'+t[8]}}
+function seeIn(id){if(location.hash!=='#map')location.hash='map';setTimeout(async()=>{stop();runId++;step=-1;clearFx();renderPanel();hl();const n=N[id];await camTo({x:n.x-150,y:n.y-120,w:300,h:240});const g=$(`.node[data-id="${id}"]`,sv);g.classList.add('hl');setTimeout(()=>{g.classList.remove('hl');openDev(id)},900)},80)}
+
+/* ===== 用語集 ===== */
+let cat=-1;
+$('#cats').innerHTML=`<button data-c="-1" class="on">すべて</button>`+CATS.map((c,i)=>`<button data-c="${i}">${c}</button>`).join('');
+$$('#cats button').forEach(b=>b.onclick=()=>{cat=+b.dataset.c;$$('#cats button').forEach(x=>x.classList.toggle('on',x===b));renderTerms()});
+$('#q').addEventListener('input',renderTerms);
+function renderTerms(){const q=$('#q').value.trim().toLowerCase();let h='';
+ CATS.forEach((c,ci)=>{if(cat>=0&&cat!==ci)return;const ts=T.filter(t=>t[3]===ci&&(!q||(t[1]+t[2]+t[4]+t[5]).toLowerCase().includes(q)));if(!ts.length)return;
+  h+=`<div class="cat-h">${c}</div><div class="terms">`+ts.map(t=>`<div class="term"><h3>${t[1]}${t[2]?`<small>${t[2]}</small>`:''}</h3><p>${t[4]}</p>${t[5]?`<div class="ex">${t[5]}</div>`:''}<div>${t[7]?`<button class="see" data-id="${t[7]}">図で見る</button>`:''}${t[8]?`<a class="see" style="background:var(--ac);text-decoration:none;display:inline-block" href="#learn-${t[8]}">しくみで見る</a>`:''}${t[6].map(r=>`<button class="tw" data-w="${r}">${short(r)}</button>`).join('')}</div></div>`).join('')+'</div>'});
+ $('#tlist').innerHTML=h||'<div class="empty">見つかりませんでした。別のことばで試してください。</div>';
+ $$('#tlist .tw').forEach(b=>b.onclick=()=>openTerm(b.dataset.w,true));$$('#tlist .see').forEach(b=>b.onclick=()=>seeIn(b.dataset.id))}
+
+/* ===== しくみ：IPアドレス ===== */
+const oct=p=>[0,1,2,3].map(i=>{let v=Math.round(+$('#'+p+i).value);return isNaN(v)||v<0?0:v>255?255:v});
+const toBits=o=>o.map(v=>v.toString(2).padStart(8,'0')).join('');
+function bits32(b,n,cls=true){let h='';for(let g=0;g<4;g++){h+='<span>';for(let i=g*8;i<g*8+8;i++)h+=`<i class="${cls?(i<n?'n':'h'):''}">${b[i]}</i>`;h+='</span>'}return `<div class="bits32">${h}</div>`}
+function ipUpd(){const a=oct('i'),n=+$('#pf').value;$('#pfV').textContent=n;
+ $('#ipBits').innerHTML=a.map(v=>`<div>${v.toString(2).padStart(8,'0')}</div>`).join('');
+ const ab=toBits(a),mb='1'.repeat(n)+'0'.repeat(32-n);const mask=[0,1,2,3].map(g=>parseInt(mb.slice(g*8,g*8+8),2));
+ const net=[0,1,2,3].map(g=>a[g]&mask[g]);const bc=[0,1,2,3].map(g=>a[g]|(255-mask[g]));
+ $('#maskGrid').innerHTML=`<div class="lb">IPアドレス<br><span class="mono">${a.join('.')}</span></div>${bits32(ab,n)}<div class="lb">サブネット<br>マスク</div>${bits32(mb,n)}`;
+ const hosts=Math.pow(2,32-n)-2;
+ $('#maskRes').innerHTML=`サブネットマスク：<b class="mono">${mask.join('.')}</b>（「/${n}」とも書く）<br>ネットワーク部：<b class="cN">前から${n}ビット</b>／ホスト部：<b class="cH">残り${32-n}ビット</b><br>このネットワークの番号（ネットワークアドレス）：<b class="mono">${net.join('.')}</b><br>つなげられる機器の数：2<sup>${32-n}</sup>−2 ＝ <b>${hosts.toLocaleString()}台</b>`;
+ const b2=oct('j'),bb=toBits(b2),same=ab.slice(0,n)===bb.slice(0,n);
+ $('#sameRes').innerHTML=`<div class="bitgrid" style="margin:0 0 6px"><div class="lb">1台目</div>${bits32(ab,n)}<div class="lb">2台目</div>${bits32(bb,n)}</div>`+(same?`<span class="ok">同じネットワーク</span>：ネットワーク部（前から${n}ビット）が一致。LANの中で直接届きます。`:`<span class="ng">別のネットワーク</span>：ネットワーク部が違います。ルータを通して転送します。`);}
+['i0','i1','i2','i3','j0','j1','j2','j3','pf'].forEach(id=>$('#'+id).addEventListener('input',ipUpd));ipUpd();
+const V6=['2001','0db8','0000','0000','0000','ff00','0042','8329'];let v6short=false,v6sel=-1;
+function v6Upd(){$('#v6').innerHTML=V6.map((g,i)=>`<button data-i="${i}" class="${i===v6sel?'on':''} ${g==='0000'?'z':''}">${v6short?(g.replace(/^0+/,'')||'0'):g}</button>`).join('');
+ $$('#v6 button').forEach(b=>b.onclick=()=>{v6sel=+b.dataset.i;v6Upd()});
+ const full=V6.join(':'),sh='2001:db8::ff00:42:8329';
+ $('#v6Res').innerHTML=`<b class="mono" style="word-break:break-all">${v6short?sh:full}</b>`+(v6sel>=0?`<br>${v6sel+1}番目の区切り <b class="mono">${V6[v6sel]}</b>（16進数） ＝ <span class="mono">${parseInt(V6[v6sel],16).toString(2).padStart(16,'0')}</span>（16ビット）`:'<br><span class="small" style="color:var(--sub)">16進数1けた＝4ビット。4けたで16ビット、それが8つで128ビット。</span>');
+ $('#v6t').textContent=v6short?'省略せずに書く':'省略して書く'}
+$('#v6t').onclick=()=>{v6short=!v6short;v6Upd()};v6Upd();
+
+/* ===== しくみ：ドメイン名 ===== */
+const DOM=[['www','ホスト名','組織の中のコンピュータ（ここではWebサーバ）の名前。'],['example','組織名','組織ごとに登録する名前。この部分は世界で重ならないように管理されている。'],['ac','組織の種類（第2レベルドメイン）','ac＝大学など。ほかに ed（小中高校など）、co（企業）、go（政府）など。'],['jp','トップレベルドメイン','いちばん大きなまとまり。jp＝日本。国を表すもののほか、.com や .org などもある。']];
+let domSel=3;function domUpd(){$('#dom').innerHTML=DOM.map((d,i)=>`<button data-i="${i}" class="${i===domSel?'on':''}">${d[0]}</button>`).join('<span>.</span>');$$('#dom button').forEach(b=>b.onclick=()=>{domSel=+b.dataset.i;domUpd()});const d=DOM[domSel];$('#domRes').innerHTML=`<b>${d[0]}</b>：${d[1]}<br>${d[2]}`}domUpd();
+const URLP=[['https://','プロトコル名','どんな約束事で通信するか。https は暗号化されたWebの通信。'],['www.example.ac.jp','ドメイン名','どのサーバか。DNSでIPアドレスに変換される。'],['/info/index.html','パス（ファイルの場所）','サーバの中の、どのフォルダのどのファイルか。']];
+let urlSel=1;function urlUpd(){$('#url').innerHTML=URLP.map((d,i)=>`<button data-i="${i}" class="${i===urlSel?'on':''}">${d[0]}</button>`).join('');$$('#url button').forEach(b=>b.onclick=()=>{urlSel=+b.dataset.i;urlUpd()});const d=URLP[urlSel];$('#urlRes').innerHTML=`<b>${d[1]}</b>：${d[2]}`}urlUpd();
+const DN={pc:{x:48,y:210,t:'laptop',n:'PC'},res:{x:150,y:210,t:'dns',n:'キャッシュDNSサーバ',s:'（プロバイダなど）'},root:{x:290,y:36,t:'dns',n:'ルートサーバ'},jp:{x:290,y:124,t:'dns',n:'jpのDNSサーバ'},auth:{x:290,y:212,t:'dns',n:'example.ac.jpのDNSサーバ'}};
+(function(){const g=$('#dnsSvg');let s='';[['pc','res'],['res','root'],['res','jp'],['res','auth']].forEach(([a,b])=>s+=`<line x1="${DN[a].x}" y1="${DN[a].y}" x2="${DN[b].x}" y2="${DN[b].y}" stroke="#d6c8ef" stroke-width="3" stroke-dasharray="5 5"/>`);
+ for(const k in DN){const n=DN[k];const lab=false;s+=`<g transform="translate(${n.x},${n.y})">${icon(n.t)}<text x="${lab?24:0}" y="${lab?4:36}" text-anchor="${lab?'start':'middle'}" font-size="11.5" font-weight="900" style="paint-order:stroke;stroke:#fff;stroke-width:4px">${n.n}</text>${n.s?`<text y="49" text-anchor="middle" font-size="9.5" fill="#8a8178">${n.s}</text>`:''}</g>`}
+ s+='<g id="dnsPk"></g>';g.innerHTML=s})();
+let dnsRun=0;
+function dnsMove(a,b,lab,col,id){return new Promise(res=>{const A=DN[a],B=DN[b];const g=el('g',{},$('#dnsPk'));const w=[...lab].length*10.5+16;el('rect',{x:-w/2,y:-11,width:w,height:22,rx:11,fill:col,stroke:'#fff','stroke-width':2},g);const t=el('text',{'text-anchor':'middle','dominant-baseline':'central','font-size':11,'font-weight':900,fill:'#fff'},g);t.textContent=lab;
+ const D=RM?10:2400*SPD,t0=performance.now();const f=now=>{if(id!==dnsRun){g.remove();return res()}const q=Math.min(1,(now-t0)/D);g.setAttribute('transform',`translate(${A.x+(B.x-A.x)*q},${A.y+(B.y-A.y)*q})`);if(q<1)requestAnimationFrame(f);else{setTimeout(()=>g.remove(),300);res()}};requestAnimationFrame(f)})}
+$('#dnsGo').onclick=async()=>{const id=++dnsRun;const R=$('#dnsRes'),Q='#7a55d0',A='#1f9468';const S=[
+ ['pc','res','質問',Q,'① PCがキャッシュDNSサーバに「www.example.ac.jp は？」と聞く'],
+ ['res','root','質問',Q,'② まずルートサーバ（いちばん上）に聞く'],['root','res','jpへ',A,'③ ルートサーバ「jpのことはjpのDNSサーバに聞いて」'],
+ ['res','jp','質問',Q,'④ jpのDNSサーバに聞く'],['jp','res','example.ac.jpへ',A,'⑤ jpのDNSサーバ「example.ac.jpのDNSサーバに聞いて」'],
+ ['res','auth','質問',Q,'⑥ example.ac.jpのDNSサーバに聞く'],['auth','res','192.0.2.80',A,'⑦ 「www.example.ac.jp は 192.0.2.80 です」'],
+ ['res','pc','192.0.2.80',A,'⑧ PCに答えを返す。キャッシュDNSサーバはこの答えをしばらく覚えておく']];
+ $('#dnsGo').disabled=true;for(let i=0;i<S.length;i++){const x=S[i];R.textContent=x[4];$('#dnsCnt').textContent=`${i+1} / ${S.length}`;await dnsMove(x[0],x[1],x[2],x[3],id);if(id!==dnsRun)return;await sleep(500)}$('#dnsGo').disabled=false;$('#dnsGo').textContent='▶ もう一度'};
+
+/* ===== しくみ：交換方式 ===== */
+const SWN={A:{x:40,y:60,n:'A'},C:{x:40,y:200,n:'C'},B:{x:360,y:60,n:'B'},D:{x:360,y:200,n:'D'},R1:{x:130,y:130},R2:{x:270,y:130},R3:{x:200,y:225}};
+const SWL=[['A','R1'],['C','R1'],['R1','R2'],['R1','R3'],['R3','R2'],['R2','B'],['R2','D']];
+let swMode='c',swBroken=false,swRun=0,swOn=false;
+function swDraw(){const g=$('#swSvg');let s='';SWL.forEach(([a,b])=>{const br=swBroken&&a==='R1'&&b==='R2';s+=`<line data-k="${a}${b}" x1="${SWN[a].x}" y1="${SWN[a].y}" x2="${SWN[b].x}" y2="${SWN[b].y}" stroke="${br?'#f0b9b3':'#d9cbb6'}" stroke-width="6" stroke-linecap="round" ${br?'stroke-dasharray="6 6"':''}/>`});
+ if(swBroken)s+=`<text x="200" y="134" text-anchor="middle" dominant-baseline="central" font-size="26" font-weight="900" fill="#d64b3f" style="paint-order:stroke;stroke:#fff;stroke-width:4px">✕</text>`;
+ s+='<g id="swRes2"></g><g id="swPk"></g>';
+ for(const k in SWN){const n=SWN[k];if(k[0]==='R')s+=`<g transform="translate(${n.x},${n.y})">${icon('irouter')}</g>`;else s+=`<g transform="translate(${n.x},${n.y})">${icon('phone')}<text y="${n.y<100?-24:32}" text-anchor="middle" font-size="12" font-weight="900">${n.n}さん</text></g>`}
+ g.innerHTML=s}
+function swPath(from){const mid=swBroken?['R1','R3','R2']:(swMode==='p'&&Math.random()<.3?['R1','R3','R2']:['R1','R2']);return from==='A'?['A',...mid,'B']:['C',...mid,'D']}
+function swReserve(path,col){const g=$('#swRes2');for(let i=1;i<path.length;i++){const a=SWN[path[i-1]],b=SWN[path[i]];el('line',{x1:a.x,y1:a.y,x2:b.x,y2:b.y,stroke:col,'stroke-width':10,'stroke-linecap':'round',opacity:.45},g)}}
+function swPkt(path,lab,col,id){return new Promise(res=>{const pts=path.map(k=>[SWN[k].x,SWN[k].y]);const g=el('g',{},$('#swPk'));el('circle',{r:9,fill:col,stroke:'#fff','stroke-width':2.5},g);if(lab){const t=el('text',{'text-anchor':'middle','dominant-baseline':'central','font-size':9,'font-weight':900,fill:'#fff'},g);t.textContent=lab}
+ const sl=[];let tot=0;for(let i=1;i<pts.length;i++){const d=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]);sl.push(d);tot+=d}const D=RM?10:tot*7*SPD,t0=performance.now();
+ const f=now=>{if(id!==swRun){g.remove();return res()}const q=Math.min(1,(now-t0)/D);let d=q*tot,i=0;while(i<sl.length-1&&d>sl[i]){d-=sl[i];i++}const a=pts[i],b=pts[i+1],r=sl[i]?d/sl[i]:1;g.setAttribute('transform',`translate(${a[0]+(b[0]-a[0])*r},${a[1]+(b[1]-a[1])*r})`);if(q<1)requestAnimationFrame(f);else{g.remove();res()}};requestAnimationFrame(f)})}
+async function swStart(){const id=++swRun;swOn=true;swDraw();$('#swGo').textContent='止める';const R=$('#swRes');
+ if(swMode==='c'){const pA=['A','R1','R2','B'];if(swBroken){R.innerHTML='<span class="ng">つながらない</span>：AさんとBさんの間の回線が故障しているので、回線をつなげません（この例ではう回路の回線もCさんが使う想定）。';return}
+  swReserve(pA,'#e2604f');const pC=['C','R1','R3','R2','D'];swReserve(pC,'#3a78d4');
+  R.innerHTML='通話の前に、AさんからBさんまで（赤）、CさんからDさんまで（青）の回線を<b>つないで占有</b>します。話していない間も、この回線は他の人が使えません。';
+  let n=0;while(id===swRun){const talkA=Math.floor(n/4)%2===0,talkC=Math.floor((n+2)/4)%2===0;
+   if(talkA)swPkt(pA,'',"#e2604f",id);if(talkC)swPkt(pC,'',"#3a78d4",id);n++;await sleep(450);
+   if(swBroken&&id===swRun){$('#swRes2').innerHTML='';swReserve(pC,'#3a78d4');R.innerHTML='<span class="ng">AさんとBさんの通話が切れた！</span> 回線交換方式では、つないでいた回線が故障すると通信が切れてしまいます。';
+    while(id===swRun){swPkt(pC,'','#3a78d4',id);await sleep(900)}return}}}
+ else{R.innerHTML='AさんとCさんのデータを<b>パケット</b>に分けて送ります。同じ回線を<b>交代で共有</b>し、パケットごとに経路が違うこともあります。';let n=0;
+  while(id===swRun){const fromA=n%2===0;swPkt(swPath(fromA?'A':'C'),(fromA?'A':'C')+(Math.floor(n/2)%9+1),fromA?'#e2604f':'#3a78d4',id);n++;await sleep(520);
+   if(swBroken)R.innerHTML='真ん中の回線が故障しても、パケットは<b>別の経路</b>（下のルータ）を通って届きます。通信は切れません。'}}}
+function swStop(){swRun++;swOn=false;$('#swGo').textContent='通信を始める';swDraw()}
+$('#swGo').onclick=()=>{if(swOn)swStop();else swStart()};
+$('#swBreak').onclick=()=>{swBroken=!swBroken;$('#swBreak').textContent=swBroken?'回線を直す':'真ん中の回線を故障させる';if(!swOn){swDraw();return}if(swMode==='p'){const k=$('#swSvg line[data-k="R1R2"]');k.setAttribute('stroke',swBroken?'#f0b9b3':'#d9cbb6');k.setAttribute('stroke-dasharray',swBroken?'6 6':'');}else{ if(!swBroken){swStop();swStart()} } if(swMode==='c'&&swBroken){const k=$('#swSvg line[data-k="R1R2"]');k.setAttribute('stroke','#f0b9b3');k.setAttribute('stroke-dasharray','6 6')}};
+$$('#swSeg button').forEach(b=>b.onclick=()=>{$$('#swSeg button').forEach(x=>x.classList.toggle('on',x===b));swMode=b.dataset.v;swStop();$('#swRes').innerHTML=swMode==='c'?'通信を始める前に、相手までの回線を予約してつなぐ方式です。':'データを小さなパケットに分けて、回線をみんなで共有する方式です。'});
+swDraw();$('#swRes').innerHTML='通信を始める前に、相手までの回線を予約してつなぐ方式です。';
+
+/* ===== ページ切り替え ===== */
+function route(){const hs=location.hash.slice(1);let h=hs==='words'?'words':hs.startsWith('learn')?'learn':'map';
+ $('#v-map').classList.toggle('on',h==='map');$('#v-words').classList.toggle('on',h==='words');$('#v-learn').classList.toggle('on',h==='learn');
+ $('#pgMap').classList.toggle('on',h==='map');$('#pgWords').classList.toggle('on',h==='words');$('#pgLearn').classList.toggle('on',h==='learn');
+ if(h==='learn'){const sub=['learn-ip','learn-dns','learn-sw'].includes(hs)?hs.slice(6):'ip';$$('.ls').forEach(x=>x.classList.toggle('on',x.id==='ls-'+sub));$$('#subtabs a').forEach(a=>a.classList.toggle('on',a.dataset.s===sub));$('#pgLearn').setAttribute('href','#learn-'+sub)}
+ if(h!=='learn'||hs!=='learn-sw')swStop&&swRun&&swStop();
+ close();window.scrollTo(0,0);if(h==='map')requestAnimationFrame(()=>setCam(fit(cam)))}
+addEventListener('hashchange',route);
+renderTerms();renderPanel();hl();route();setCam(clampCam(readable(ALL)));overview(0);
+</script>
+</body>
+</html>
