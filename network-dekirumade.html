@@ -1,0 +1,1784 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ネットワークができるまで（ポップ版）</title>
+<style>
+:root{
+  --bg:#fff6e3; --paper:#ffffff; --ink:#23253a; --sub:#5b5f78; --line:#ece2cc; --line2:#d6c9ad;
+  --teal:#2f8cff; --teal-l:#e2efff; --coral:#ff5470; --coral-l:#ffe4e9; --gold:#ffb81c; --gold-l:#fff0c9;
+  --green:#14a874; --green-l:#d9f5e9; --gray:#9aa0b5;
+  --L0:#4f7dff; --L1:#14b3a3; --L2:#ff9f1c; --L3:#ff5470; --L4:#9b5de5;
+  --o:#23253a; --sh:4px 4px 0 var(--o); --sh2:3px 3px 0 var(--o);
+  --sp:1;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:"M PLUS Rounded 1c","Kosugi Maru","Hiragino Maru Gothic ProN","BIZ UDPGothic","Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic UI","Meiryo",sans-serif;
+  background:var(--bg);color:var(--ink);display:flex;flex-direction:column;line-height:1.7;font-size:16px}
+button,input,select,textarea{font:inherit;color:inherit}
+code,pre,.mono{font-family:"BIZ UDGothic","Consolas","Menlo",monospace}
+
+/* ---------- header ---------- */
+header{display:flex;align-items:center;gap:18px;padding:10px 20px;background:var(--paper);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand .logo{width:36px;height:36px;border-radius:10px;background:var(--teal);display:grid;place-items:center;flex:none}
+.brand .logo svg{width:24px;height:24px;stroke:#fff;fill:none;stroke-width:2.2;stroke-linecap:round}
+.brand .t1{font-weight:700;font-size:16px;line-height:1.3;white-space:nowrap}
+.brand .t2{font-size:12px;color:var(--sub);line-height:1.3;white-space:nowrap}
+.prog{flex:1;display:flex;gap:4px;align-items:center;min-width:120px}
+.prog button{flex:1;height:8px;border:none;border-radius:4px;background:var(--line);cursor:pointer;padding:0;position:relative}
+.prog button.done{background:#b9d3d1}
+.prog button.cur{background:var(--teal)}
+.prog button:hover::after{content:attr(data-t);position:absolute;top:14px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:12px;padding:2px 8px;border-radius:6px;white-space:nowrap;z-index:50}
+.tools{display:flex;gap:10px;align-items:center;font-size:13px;color:var(--sub)}
+.tools button{white-space:nowrap}
+.tools select,.tools button{border:1px solid var(--line2);background:#fff;border-radius:8px;padding:4px 10px;cursor:pointer}
+
+/* ---------- layout ---------- */
+.wrap{flex:1;display:flex;min-height:0}
+main{flex:1;overflow:auto;overflow-x:hidden;padding:22px 28px 30px;min-width:0}
+aside{width:270px;flex:none;border-left:1px solid var(--line);background:#faf7f0;overflow:auto;padding:16px 14px}
+footer{display:flex;align-items:center;gap:16px;padding:10px 20px;background:var(--paper);border-top:1px solid var(--line)}
+footer button{border:1px solid var(--line2);background:#fff;border-radius:999px;padding:8px 22px;cursor:pointer;font-weight:700;white-space:nowrap}
+.navbtns{display:flex;gap:8px;flex:none}
+footer button.primary{background:var(--teal);border-color:var(--teal);color:#fff}
+footer button:disabled{opacity:.35;cursor:default}
+#where{flex:1;font-size:13px;color:var(--sub);text-align:left}
+#where .dots{display:inline-flex;gap:5px;margin-left:8px;vertical-align:middle}
+#where .dots i{width:8px;height:8px;border-radius:50%;background:var(--line2);display:inline-block}
+#where .dots i.on{background:var(--teal)}
+
+/* ---------- slide ---------- */
+.slide{max-width:1060px;margin:0 auto;animation:fadein .35s ease}
+@keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.shead{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.chno{font-size:13px;color:var(--sub);font-weight:700}
+.tag{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;padding:2px 12px;border-radius:999px}
+.tag.p{background:var(--coral-l);color:var(--coral)}
+.tag.s{background:var(--teal-l);color:var(--teal)}
+.tag.t{background:var(--gold-l);color:#9a6f1c}
+.tag.c{background:var(--green-l);color:var(--green)}
+h2{font-size:26px;margin:4px 0 14px;line-height:1.4}
+.lead{font-size:17px;margin:0 0 14px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:16px 20px}
+.muted{color:var(--sub)}
+.small{font-size:13px}
+b.em{color:var(--teal)}
+b.ng{color:var(--coral)}
+
+/* problem */
+.say{display:flex;gap:16px;align-items:flex-start;background:var(--paper);border:1px solid var(--line);border-left:6px solid var(--coral);border-radius:14px;padding:16px 20px;margin-top:14px}
+.say .face{width:52px;height:52px;flex:none}
+.say p{margin:0;font-size:18px}
+.say p+p{margin-top:8px}
+.era{display:inline-block;font-size:13px;color:var(--sub);background:#efe9dc;border-radius:6px;padding:1px 10px;margin-top:10px}
+
+/* solve */
+.solve{display:grid;grid-template-columns:minmax(240px,1fr) 1.6fr;gap:18px;align-items:start}
+.tech{background:var(--paper);border:1px solid var(--line);border-top:6px solid var(--teal);border-radius:16px;padding:18px 20px}
+.tech .name{font-size:28px;font-weight:700;line-height:1.35}
+.tech .yr{display:inline-block;margin:8px 0 6px;font-size:13px;font-weight:700;color:var(--teal);background:var(--teal-l);border-radius:6px;padding:1px 10px}
+.tech .def{font-size:16px;margin:6px 0 0}
+.tech .lay{margin-top:12px;font-size:12px;color:#fff;display:inline-block;padding:2px 10px;border-radius:6px}
+.points{display:grid;gap:12px}
+.pt{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:12px 16px;display:flex;gap:12px}
+.pt .n{flex:none;width:28px;height:28px;border-radius:50%;background:var(--teal);color:#fff;font-weight:700;display:grid;place-items:center;font-size:14px;margin-top:2px}
+.pt p{margin:0}
+.fig{margin-top:16px}
+.story{margin-top:14px;font-size:14px;background:#f1ece0;border-radius:12px;padding:10px 16px;color:#4b5260}
+.story b{color:var(--ink)}
+
+/* try */
+.ctrl{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;margin:0 0 12px;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:10px 14px;font-size:15px}
+.ctrl input[type=text],.ctrl input:not([type]),.ctrl select{border:1px solid var(--line2);border-radius:8px;padding:4px 10px;background:#fff}
+.ctrl input[type=range]{vertical-align:middle;accent-color:var(--teal)}
+.go{background:var(--gold);color:#fff;border:none;border-radius:999px;padding:6px 18px;font-weight:700;cursor:pointer}
+.go:hover{filter:brightness(1.05)}
+.go.sub{background:#fff;color:var(--ink);border:1px solid var(--line2)}
+.go:disabled{opacity:.5;cursor:default}
+.seg{display:inline-flex;border:1px solid var(--line2);border-radius:999px;overflow:hidden;background:#fff}
+.seg button{border:none;background:none;padding:5px 14px;cursor:pointer;font-size:14px}
+.seg button.on{background:var(--ink);color:#fff}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:10px 14px;font-size:14px}
+.panel h4{margin:0 0 6px;font-size:13px;color:var(--sub)}
+.log{max-height:150px;overflow:auto;font-size:14px}
+.log div{padding:3px 0;border-bottom:1px dashed var(--line)}
+.log div:last-child{border-bottom:none;font-weight:700}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}
+
+/* network canvas */
+.net{position:relative;width:100%;background:
+  radial-gradient(circle, #e7e1d3 1px, transparent 1.2px) 0 0/18px 18px, var(--paper);
+  border:1px solid var(--line);border-radius:16px;overflow:visible;max-height:max(220px,40vh)}
+.net>svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.net line{stroke:#b9b2a2;stroke-width:3;stroke-linecap:round}
+.net line.tap{stroke-dasharray:3 6;stroke:var(--coral);stroke-width:2}
+.net line.air,.net.air line{stroke-dasharray:2 7;stroke:var(--L0)}
+.net line.hot{stroke:var(--teal)}
+.node{position:absolute;transform:translate(-50%,calc(-27px*var(--k,1)));display:flex;flex-direction:column;align-items:center;z-index:2;text-align:center;pointer-events:none}
+.node .ic{width:calc(54px*var(--k,1));height:calc(54px*var(--k,1));border-radius:calc(14px*var(--k,1));background:#fff;border:2px solid var(--line2);display:grid;place-items:center;color:var(--ink);transition:all .25s;pointer-events:auto}
+.node .ic svg{width:calc(32px*var(--k,1));height:calc(32px*var(--k,1));fill:none;stroke:currentColor;stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round}
+.node .ic svg .f{fill:currentColor;stroke:none}
+.node .nl{font-size:calc(12.5px*var(--t,1));font-weight:700;margin-top:3px;line-height:1.3;white-space:nowrap;background:rgba(255,253,248,.85);padding:0 4px;border-radius:4px}
+.node .ns{font-size:calc(11.5px*var(--t,1));color:var(--sub);line-height:1.3;white-space:nowrap;background:rgba(255,253,248,.85);padding:0 4px;border-radius:4px}
+.node.off .ic{opacity:.4;border-style:dashed}
+.node.off .nl{color:var(--gray)}
+.node.ok .ic{border-color:var(--green);background:var(--green-l);color:var(--green)}
+.node.ngf .ic{border-color:var(--gray);background:#eee;color:var(--gray)}
+.node.alert .ic{border-color:var(--coral);background:var(--coral-l);color:var(--coral)}
+.node.room{transform:translate(-50%,-50%)}
+.node.room .ic{width:auto;height:auto;padding:calc(4px*var(--k,1)) calc(10px*var(--k,1));border-radius:10px;font-weight:700;font-size:calc(14px*var(--t,1));white-space:nowrap}
+.node.down .ic{background:#e9e6e0;border-color:var(--gray);color:var(--gray)}
+.node.clickable .ic{cursor:pointer}
+.area{position:absolute;border:2px dashed #cfc7b6;border-radius:16px;background:rgba(255,255,255,.35)}
+.area span{position:absolute;top:4px;left:10px;font-size:calc(12px*var(--t,1));color:var(--sub);font-weight:700}
+.plabel{position:absolute;transform:translate(-50%,-50%);font-size:calc(11px*var(--t,1));color:var(--sub);background:var(--paper);padding:0 4px;border-radius:4px;z-index:1}
+.pkt{position:absolute;transform:translate(-50%,-50%);z-index:6;background:var(--gold);color:#fff;font-size:calc(12px*var(--t,1));font-weight:700;line-height:1.35;padding:calc(3px*var(--t,1)) calc(9px*var(--t,1));border-radius:8px;white-space:nowrap;box-shadow:0 2px 6px rgba(60,40,0,.18);pointer-events:none;text-align:center}
+.pkt.bit{padding:0;width:calc(20px*var(--t,1));height:calc(20px*var(--t,1));display:grid;place-items:center;border-radius:5px;font-size:calc(12px*var(--t,1))}
+.pkt.b1{background:var(--teal)}
+.pkt.b0{background:#fff;color:var(--teal);border:2px solid var(--teal)}
+.pkt.ack{background:var(--green);font-size:calc(11px*var(--t,1))}
+.pkt.blue{background:var(--L0)}
+.pkt.tealp{background:var(--L1)}
+.pkt.red{background:var(--coral)}
+.pkt.purple{background:var(--L4)}
+.pkt.gray{background:var(--gray)}
+.pkt.lock{background:#3b4558}
+.pkt.copy{background:var(--coral);opacity:.9}
+.bub{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:calc(12.5px*var(--t,1));line-height:1.4;padding:calc(5px*var(--t,1)) calc(10px*var(--t,1));border-radius:10px;white-space:nowrap;z-index:8;animation:pop .2s ease}
+.bub::after{content:"";position:absolute;top:100%;left:50%;margin-left:-5px;border:5px solid transparent;border-top-color:var(--ink)}
+.bub.ok{background:var(--green)}.bub.ok::after{border-top-color:var(--green)}
+.bub.ng{background:var(--coral)}.bub.ng::after{border-top-color:var(--coral)}
+.bub.g{background:var(--gray)}.bub.g::after{border-top-color:var(--gray)}
+.bub.below{bottom:auto;top:calc(100% + 4px)}
+.bub.below::after{top:auto;bottom:100%;border-top-color:transparent;border-bottom-color:var(--ink)}
+@keyframes pop{from{opacity:0;transform:translate(-50%,4px)}to{opacity:1;transform:translate(-50%,0)}}
+.load{width:calc(60px*var(--k,1));height:7px;background:#e8e2d5;border-radius:4px;margin-top:3px;overflow:hidden}
+.load i{display:block;height:100%;background:var(--green);transition:width .2s}
+.load i.mid{background:var(--gold)}.load i.hi{background:var(--coral)}
+
+/* specific */
+.bitsline{font-size:15px;margin:10px 0 4px}
+.bitsline code{background:#f1ece0;padding:2px 8px;border-radius:6px;letter-spacing:.05em}
+.big{font-size:22px;color:var(--teal)}
+.mactbl{width:100%;border-collapse:collapse;font-size:14px}
+.mactbl td,.mactbl th{border-bottom:1px solid var(--line);padding:3px 6px;text-align:left}
+.mactbl tr.new td{background:var(--gold-l)}
+.np{color:#2c6f8f;font-weight:700}
+.hp{color:var(--coral);font-weight:700}
+.ipfig{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:14px 18px}
+.iprow{font-size:32px;font-weight:700;letter-spacing:.03em;padding-bottom:26px;line-height:1.25}
+.ipp{position:relative;display:inline-block;border-bottom:4px solid currentColor}
+.ipp small{position:absolute;left:0;top:100%;margin-top:4px;font-size:13px;letter-spacing:0;white-space:nowrap}
+.ipd{display:inline-block;padding:0 2px}
+.bin{font-size:13px;margin-top:8px;color:var(--sub)}
+.term{background:#1f2630;color:#d6e2e0;font-family:"BIZ UDGothic","Consolas",monospace;font-size:13.5px;border-radius:12px;padding:12px 14px;min-height:150px;max-height:220px;overflow:auto;white-space:pre-wrap;margin-top:12px}
+.term .cmd{color:#f2c36b}.term .bad{color:#ff9d84}.term .good{color:#9fe0b5}
+.slots{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.slot{min-width:64px;border:2px dashed var(--line2);border-radius:10px;padding:2px 8px;font-size:15px;text-align:center;background:#fff}
+.slot i{display:block;font-style:normal;font-size:11px;color:var(--sub)}
+.slot.fill{border-style:solid;border-color:var(--teal);background:var(--teal-l)}
+.slot.miss{border-color:var(--coral);background:var(--coral-l)}
+.cmp{width:100%;border-collapse:collapse;background:var(--paper);border-radius:14px;overflow:hidden;font-size:15px}
+.cmp th,.cmp td{border:1px solid var(--line);padding:8px 12px;text-align:left;vertical-align:top}
+.cmp th{background:#f1ece0}
+.urlfig{font-size:22px;font-family:"BIZ UDGothic","Consolas",monospace;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:14px 18px;overflow-x:auto}
+.urlfig span{display:inline-block;padding:0 2px;border-bottom:4px solid}
+.urlfig .u1{border-color:var(--L2)}.urlfig .u2{border-color:var(--L1)}.urlfig .u3{border-color:var(--L3)}
+.urlleg{display:flex;gap:18px;font-size:13px;margin-top:8px;flex-wrap:wrap;font-family:inherit}
+.urlleg i{display:inline-block;width:14px;height:4px;vertical-align:middle;margin-right:6px}
+.http{display:grid;grid-template-columns:1.2fr 1fr .9fr;gap:12px;align-items:stretch}
+.browser{background:#fff;border:1px solid var(--line2);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;min-height:260px}
+.browser .bar{background:#efebe2;padding:6px 10px;font-size:13px;font-family:"BIZ UDGothic","Consolas",monospace;border-bottom:1px solid var(--line)}
+.browser .bar b{color:var(--green)}
+.browser .view{flex:1;padding:14px;font-size:14px}
+.browser .view h3{margin:0 0 6px;font-size:20px}
+.wire{display:flex;flex-direction:column;gap:8px;justify-content:center}
+.msg{background:#fff;border:1px solid var(--line2);border-radius:10px;font-size:12px;padding:6px 10px;white-space:pre-wrap;font-family:"BIZ UDGothic","Consolas",monospace;line-height:1.5}
+.msg.req{border-left:5px solid var(--L3)}
+.msg.res{border-left:5px solid var(--L1)}
+.msg .h{font-family:inherit;font-weight:700;font-size:11px;color:var(--sub)}
+.srv{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13.5px}
+.srv.hl{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-l)}
+.srv ul{margin:4px 0;padding-left:18px}
+.eye{font-family:"BIZ UDGothic","Consolas",monospace;word-break:break-all}
+.eye div{padding:3px 0;border-bottom:1px dashed var(--line)}
+.eye .plain{color:var(--coral);font-weight:700}
+.eye .ciph{color:#56607a}
+.addr{font-family:"BIZ UDGothic","Consolas",monospace;font-size:13px;background:#efebe2;border-radius:8px;padding:4px 10px;display:inline-block}
+.stat{display:flex;gap:16px;font-size:15px}
+.stat b{font-size:20px}
+
+/* check */
+.quiz{background:var(--paper);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 2px 0 var(--line)}
+.qh{display:flex;gap:12px;align-items:flex-start;background:#e7f0e6;padding:14px 20px;border-bottom:1px solid #d3e3d2}
+.qmark{flex:none;width:36px;height:36px;border-radius:10px;background:var(--green);color:#fff;font-weight:700;display:grid;place-items:center;font-size:19px}
+.quiz .q{font-size:18px;font-weight:700;margin:4px 0 0}
+.opts{display:grid;gap:8px;padding:14px 20px}
+.opts button{display:flex;gap:12px;align-items:center;text-align:left;border:2px solid var(--line);background:#fff;border-radius:12px;padding:8px 12px;cursor:pointer;font-size:16px;transition:transform .15s,border-color .15s}
+.opts .ol{flex:none;width:30px;height:30px;border-radius:8px;background:#f1ece0;display:grid;place-items:center;font-weight:700;color:var(--sub)}
+.opts button:hover:not(:disabled){border-color:var(--green);transform:translateX(3px)}
+.opts button.right{background:var(--green);border-color:var(--green);color:#fff;font-weight:700;opacity:1}
+.opts button.right .ol{background:#fff;color:var(--green)}
+.opts button.wrong{background:var(--coral-l);border-color:var(--coral);color:#8e3c27;opacity:1}
+.opts button.wrong .ol{background:var(--coral);color:#fff}
+.opts button:disabled{cursor:default;opacity:.5}
+.opts button.right:disabled,.opts button.wrong:disabled{opacity:1}
+.result{margin:0 20px;display:flex;align-items:center;gap:16px;border-radius:14px;padding:12px 20px;color:#fff;animation:pop2 .4s cubic-bezier(.2,1.5,.4,1)}
+.result.ok{background:var(--green)}
+.result.ng{background:var(--coral)}
+.result .rmark{flex:none;font-size:34px;font-weight:700;width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.22);display:grid;place-items:center;line-height:1}
+.result b{font-size:26px;display:block;line-height:1.3}
+.result small{font-size:14px}
+@keyframes pop2{from{transform:scale(.8);opacity:0}to{transform:none;opacity:1}}
+.exp{margin:12px 20px 18px;font-size:15.5px;background:#f6f3ec;border-left:6px solid var(--green);border-radius:8px;padding:10px 14px}
+.quiz.ng .exp{border-left-color:var(--coral)}
+.teaser{margin-top:22px;display:flex;gap:16px;align-items:center;background:linear-gradient(135deg,#fdf1eb,#f9dfd3);border:2px solid var(--coral);border-radius:18px;padding:16px 20px;box-shadow:0 4px 0 #e6b29f}
+.teaser .tface{width:60px;height:60px;flex:none}
+.teaser .tb{flex:1}
+.teaser .h{display:inline-block;background:var(--coral);color:#fff;font-weight:700;font-size:15px;padding:3px 16px;border-radius:999px}
+.teaser p{margin:8px 0 0;font-size:19px;line-height:1.65}
+.tnext{flex:none;background:var(--coral);color:#fff;border:none;border-radius:999px;padding:10px 20px;font-weight:700;cursor:pointer;white-space:nowrap;font-size:15px}
+.tnext:hover{filter:brightness(1.07)}
+.teaser.pulse{animation:tp 1.1s ease 2}
+@keyframes tp{50%{transform:translateY(-3px);box-shadow:0 7px 0 #e6b29f,0 0 0 8px rgba(207,103,75,.15)}}
+.face svg,.tface svg{width:100%;height:100%;display:block}
+/* pause */
+.net,.http{cursor:pointer;position:relative}
+.net::after{content:"図をクリックで一時停止";position:absolute;right:10px;bottom:6px;font-size:11px;color:#aaa294;pointer-events:none;z-index:1}
+body.paused .net::after{content:"一時停止中（クリックで再開）";color:var(--gold);font-weight:700}
+body.paused .net,body.paused .http{outline:3px solid var(--gold);outline-offset:2px;border-radius:16px}
+.dropmark{position:absolute;transform:translate(-50%,-190%);font-size:calc(12px*var(--t,1));font-weight:700;color:var(--coral);z-index:7;pointer-events:none;white-space:nowrap}
+
+/* hero */
+.hero{max-width:900px;margin:10px auto}
+.kicker{display:inline-block;background:var(--coral-l);color:var(--coral);font-weight:700;border-radius:999px;padding:3px 14px;font-size:14px}
+.hero h1{font-size:34px;line-height:1.45;margin:12px 0}
+.hero>p{font-size:17px}
+.flow{list-style:none;padding:0;margin:18px 0;display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.flow li{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:8px 10px;font-weight:700;font-size:15px;cursor:pointer;position:relative}
+.flow li:hover{border-color:var(--teal)}
+.flow li span{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;color:#fff;font-size:12px;margin-right:6px}
+.flow li small{display:block;font-weight:400;color:var(--sub);font-size:12px}
+.how{font-size:15px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px}
+.hint{font-size:13px;color:var(--sub)}
+
+/* sidebar */
+aside h3{font-size:14px;margin:0 0 4px}
+aside .sub{font-size:12px;color:var(--sub);margin-bottom:10px;line-height:1.5}
+.stack{display:flex;flex-direction:column-reverse;gap:6px}
+.lay{border-radius:12px;padding:8px 10px;background:#fff;border:1px solid var(--line)}
+.lay .ln{font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px}
+.lay .ln i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.lay .lr{font-size:11px;color:var(--sub);margin:1px 0 4px}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chip{font-size:12px;border-radius:999px;padding:1px 9px;border:1px dashed var(--line2);color:#b3ab9b;background:#faf8f3;cursor:default}
+.chip.lit{color:#fff;border-style:solid;cursor:pointer}
+.chip.now{animation:glow 1.6s ease-in-out infinite}
+@keyframes glow{50%{box-shadow:0 0 0 4px rgba(46,124,131,.25)}}
+.extra{margin-top:10px}
+
+/* summary */
+.bigstack{display:flex;flex-direction:column-reverse;gap:8px}
+.bigstack .lay{display:grid;grid-template-columns:200px 1fr;gap:12px;align-items:center;padding:12px 16px;border-left:8px solid}
+.bigstack .lay .ln{font-size:15px}
+.bigstack .lay .lr{font-size:13px}
+.bigstack .chip{font-size:14px;padding:3px 12px}
+.scenes{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.scenes span{font-size:13px;border-radius:999px;padding:2px 12px;background:#fff;border:1px solid var(--line)}
+.scenes span.on{color:#fff;border-color:transparent}
+.cap{min-height:56px;font-size:17px;margin:12px 0 0;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:10px 16px;border-left:6px solid var(--teal)}
+.tl{position:relative;margin:6px 0 0 8px;padding-left:22px;border-left:3px solid var(--line2)}
+.tl .ti{position:relative;padding:5px 0 5px}
+.tl .ti::before{content:"";position:absolute;left:-30px;top:13px;width:13px;height:13px;border-radius:50%;background:var(--c,var(--teal));border:3px solid var(--bg)}
+.tl .y{display:inline-block;width:88px;font-weight:700;color:var(--sub);font-size:14px}
+.tl .k{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;color:#fff;font-size:12px;margin-right:6px;vertical-align:1px}
+.kw{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.kw span{font-size:13px;border:1px solid var(--line2);border-radius:999px;padding:1px 10px;background:#fff;color:var(--sub)}
+.kw span.used{background:var(--teal);border-color:var(--teal);color:#fff}
+textarea{width:100%;min-height:170px;border:1px solid var(--line2);border-radius:12px;padding:12px;background:#fff;font-size:16px;line-height:1.7}
+
+/* menu */
+#menu{position:fixed;inset:0;background:rgba(39,48,62,.35);z-index:100;display:flex;justify-content:flex-end}
+#menu[hidden]{display:none}
+#menu .box{width:min(420px,92vw);background:var(--paper);height:100%;overflow:auto;padding:18px 20px}
+#menu .box h3{margin:0 0 10px}
+#menu .item{display:flex;gap:10px;align-items:center;padding:9px 10px;border-radius:10px;cursor:pointer;border:1px solid transparent}
+#menu .item:hover{background:#f1ece0}
+#menu .item.cur{border-color:var(--teal)}
+#menu .item .k{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:13px;flex:none}
+#menu .item small{display:block;color:var(--sub);font-size:12px}
+
+
+/* =========================================================
+   ポップデザイン（上書き）
+   ========================================================= */
+body{background:radial-gradient(circle,#ffdf9e 1.7px,transparent 2px) 0 0/24px 24px,var(--bg)}
+header{background:#ffd23f;border-bottom:3px solid var(--o)}
+.brand .logo{background:var(--coral);border:2.5px solid var(--o);box-shadow:var(--sh2);border-radius:12px;transform:rotate(-6deg)}
+.brand .t1{font-size:18px;font-weight:800;letter-spacing:.02em}
+.brand .t2{color:var(--ink)}
+.prog button{height:12px;border:2px solid var(--o);background:#fff;border-radius:7px}
+.prog button.done{background:#7cc4ff}
+.prog button.cur{background:var(--coral);transform:scaleY(1.25)}
+.tools{color:var(--ink);font-weight:700}
+.tools select,.tools button{border:2.5px solid var(--o);box-shadow:var(--sh2);border-radius:12px;font-weight:700;background:#fff}
+.tools button:active{transform:translate(3px,3px);box-shadow:none}
+.tools button.fs{background:var(--teal);border-color:var(--o);color:#fff}
+aside{background:#fffdf5;border-left:3px solid var(--o)}
+aside h3{font-size:16px}
+footer{background:#fff;border-top:3px solid var(--o)}
+footer button{border:2.5px solid var(--o);box-shadow:var(--sh2);transition:transform .1s,box-shadow .1s}
+footer button:hover:not(:disabled){transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--o)}
+footer button:active:not(:disabled){transform:translate(3px,3px);box-shadow:none}
+footer button.primary{background:var(--coral);border-color:var(--o)}
+#where{color:var(--ink);font-weight:700}
+#where .dots i{width:10px;height:10px;border:2px solid var(--o);background:#fff}
+#where .dots i.on{background:var(--coral)}
+
+.slide{animation:popin .45s cubic-bezier(.2,1.4,.4,1)}
+@keyframes popin{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+.chno{color:var(--ink)}
+.tag{border:2px solid var(--o);padding:2px 14px;transform:rotate(-2deg);box-shadow:2px 2px 0 var(--o)}
+.tag.p{background:var(--coral);color:#fff}
+.tag.s{background:var(--teal);color:#fff}
+.tag.t{background:var(--gold);color:var(--ink)}
+.tag.c{background:var(--green);color:#fff}
+h2{display:inline-block;font-size:29px;font-weight:800;background:linear-gradient(transparent 58%,#ffe066 58%);padding:0 6px;margin:8px 0 16px}
+.card,.say,.tech,.pt,.ctrl,.panel,.ipfig,.urlfig,.cap,.srv,.browser{border:2.5px solid var(--o);box-shadow:var(--sh);border-radius:18px}
+.say{background:#fff3f5;border-left:2.5px solid var(--o)}
+.say p{font-size:19px}
+.era{background:#fff;border:2px dashed var(--o);border-radius:10px;color:var(--ink)}
+.tech{background:linear-gradient(#e2efff 0,#e2efff 100%);border-top:2.5px solid var(--o)}
+.tech .name{font-weight:800}
+.tech .yr{background:#fff;border:2px solid var(--o);color:var(--ink);border-radius:999px}
+.tech .lay{border:2px solid var(--o);border-radius:999px}
+.pt .n{background:var(--coral);border:2px solid var(--o)}
+.pt:nth-child(2) .n{background:var(--teal)}
+.pt:nth-child(3) .n{background:var(--gold);color:var(--ink)}
+.story{background:#fff;border:2.5px dashed var(--o);border-radius:16px;color:var(--ink)}
+.ctrl{background:#fffbea}
+.ctrl input[type=text],.ctrl input:not([type]),.ctrl select{border:2px solid var(--o);border-radius:10px}
+.go{background:var(--gold);color:var(--ink);border:2.5px solid var(--o);box-shadow:var(--sh2);font-weight:800;transition:transform .1s,box-shadow .1s}
+.go:hover:not(:disabled){transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--o);filter:none}
+.go:active:not(:disabled){transform:translate(3px,3px);box-shadow:none}
+.go.sub{background:#fff;border:2.5px solid var(--o)}
+.seg{border:2.5px solid var(--o);box-shadow:var(--sh2)}
+.seg button{font-weight:700}
+.seg button.on{background:var(--teal);color:#fff}
+.panel h4{color:var(--ink);font-size:14px}
+.net{border:2.5px solid var(--o);box-shadow:var(--sh);border-radius:20px;
+  background:linear-gradient(#e7f1ff 1.5px,transparent 1.5px) 0 0/24px 24px,linear-gradient(90deg,#e7f1ff 1.5px,transparent 1.5px) 0 0/24px 24px,#fbfdff}
+.net line{stroke:#a7b0d0;stroke-width:4}
+.node .ic{border:2.5px solid var(--o);box-shadow:3px 3px 0 var(--o);border-radius:calc(16px*var(--k,1));background:#fff}
+.node .nl{background:#fff;border:1.5px solid var(--o);border-radius:8px;padding:0 6px;margin-top:5px}
+.node .ns{background:rgba(255,255,255,.9)}
+.node.ok .ic{border-color:var(--o);background:#c8f2df;color:var(--green)}
+.node.alert .ic{border-color:var(--o);background:#ffd3dc;color:var(--coral)}
+.node.ngf .ic{border-color:var(--o)}
+.node.room .ic{background:#fff6d6}
+.area{border:2.5px dashed #8f97bd;background:rgba(255,255,255,.55);border-radius:18px}
+.pkt{background:#ffc93c;color:var(--ink);border:2px solid var(--o);border-radius:11px;box-shadow:2px 2px 0 var(--o)}
+.pkt.b1,.pkt.ack,.pkt.blue,.pkt.tealp,.pkt.red,.pkt.purple,.pkt.gray,.pkt.lock,.pkt.copy{color:#fff}
+.pkt.b0{background:#fff;color:var(--teal);border:2px solid var(--o)}
+.bub{border-radius:12px;font-weight:700;border:2px solid var(--o)}
+.load{border:1.5px solid var(--o);height:9px}
+.term{border:2.5px solid var(--o);box-shadow:var(--sh);border-radius:16px;background:#22243a}
+.slot{border:2px dashed var(--o);border-radius:12px}
+.slot.fill{border-style:solid;border-color:var(--o);background:#d6ecff}
+.cmp{border:2.5px solid var(--o);box-shadow:var(--sh);border-collapse:separate;border-spacing:0;border-radius:16px}
+.cmp th{background:#ffe066}
+.cmp th,.cmp td{border:none;border-bottom:1.5px solid var(--line2);border-right:1.5px solid var(--line2)}
+.browser .bar{background:#ffe066;border-bottom:2.5px solid var(--o)}
+.msg{border:2px solid var(--o);box-shadow:2px 2px 0 var(--o)}
+.srv.hl{background:#fff6d6;box-shadow:0 0 0 4px var(--gold),var(--sh)}
+.addr{border:2px solid var(--o);background:#fff}
+.mactbl tr.new td{background:#ffe066}
+
+.quiz{border:2.5px solid var(--o);box-shadow:5px 5px 0 var(--o);border-radius:20px}
+.qh{background:#d9f5e9;border-bottom:2.5px solid var(--o)}
+.qmark{border:2.5px solid var(--o);border-radius:12px;transform:rotate(-6deg)}
+.quiz .q{font-weight:800}
+.opts button{border:2.5px solid var(--o);box-shadow:var(--sh2);transition:transform .1s,box-shadow .1s}
+.opts .ol{border:2px solid var(--o);background:#ffe066;color:var(--ink)}
+.opts button:hover:not(:disabled){transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--o);border-color:var(--o)}
+.opts button.right{border-color:var(--o)}
+.opts button.wrong{border-color:var(--o)}
+.result{border:2.5px solid var(--o);box-shadow:var(--sh)}
+.exp{border:2px solid var(--o);border-left:8px solid var(--green);background:#fff}
+.teaser{background:repeating-linear-gradient(-45deg,#fff3f5 0 14px,#ffe8ec 14px 28px);border:2.5px solid var(--o);box-shadow:5px 5px 0 var(--o);border-radius:20px}
+.teaser .h{border:2px solid var(--o);transform:rotate(-2deg)}
+.tnext{border:2.5px solid var(--o);box-shadow:var(--sh2)}
+.tnext:active{transform:translate(3px,3px);box-shadow:none}
+@keyframes tp{50%{transform:translateY(-4px) rotate(-.5deg)}}
+body.paused .net,body.paused .http{outline:4px solid var(--gold)}
+
+.hero h1{font-size:38px;font-weight:800;line-height:1.5}
+.hero h1{background:linear-gradient(transparent 62%,#ffe066 62%);display:inline;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.hero>p:first-of-type{margin-top:18px}
+.kicker{background:var(--coral);color:#fff;border:2.5px solid var(--o);box-shadow:var(--sh2);transform:rotate(-3deg);font-size:15px}
+.hero .kicker{display:table;margin-bottom:14px}
+.flow li{border:2.5px solid var(--o);box-shadow:var(--sh2);border-radius:16px;transition:transform .12s,box-shadow .12s;background:#fff}
+.flow li:nth-child(odd){transform:rotate(-1deg)}.flow li:nth-child(even){transform:rotate(1deg)}
+.flow li:hover{transform:translate(-2px,-3px) rotate(0);box-shadow:5px 6px 0 var(--o);border-color:var(--o)}
+.flow li span{border:2px solid var(--o);width:26px;height:26px}
+.lay{border:2px solid var(--o);border-radius:14px;box-shadow:2px 2px 0 var(--o)}
+.chip{border-radius:999px}
+.chip.lit{border:1.5px solid var(--o)!important;font-weight:700}
+.scenes span{border:2px solid var(--o);font-weight:700}
+.tl{border-left:3px solid var(--o)}
+.tl .ti::before{border:2.5px solid var(--o)}
+.tl .k{border:2px solid var(--o)}
+.kw span{border:2px solid var(--o);font-weight:700}
+textarea{border:2.5px solid var(--o);box-shadow:var(--sh);border-radius:16px}
+#menu .box{border-left:3px solid var(--o)}
+#menu .item .k{border:2px solid var(--o)}
+#menu .item.cur{border:2px solid var(--o);background:#fff6d6}
+
+[hidden]{display:none!important}
+/* 「でも、まだ困ることが…」は確認問題のあとに登場 */
+.teaser{display:none}
+.teaser.show{display:flex;animation:teaserIn .7s cubic-bezier(.2,1.35,.4,1) both}
+@keyframes teaserIn{0%{opacity:0;transform:translateY(40px) scale(.94) rotate(-1deg)}100%{opacity:1;transform:none}}
+.tech .yr{border-radius:14px;line-height:1.6;padding:3px 12px}
+
+/* ---------- 授業モード：スライド風アニメーション ---------- */
+.bld{opacity:0;transform:translateY(28px) scale(.97);transition:opacity .45s ease,transform .6s cubic-bezier(.2,1.35,.4,1)}
+.bld.in{opacity:1;transform:none}
+@keyframes prFade{from{opacity:0}}
+@keyframes prDrop{from{opacity:0;transform:translateY(-18px) rotate(-6deg) scale(.8)}}
+@keyframes prLeft{from{opacity:0;transform:translateX(-40px)}}
+@keyframes prUp{from{opacity:0;transform:translateY(30px)}}
+@keyframes prZoom{from{opacity:0;transform:scale(.85)}}
+@keyframes prPop{0%{opacity:0;transform:scale(.6)}70%{transform:scale(1.06)}}
+body.present .slide{animation:prFade .35s ease both}
+body.present .shead .tag{animation:prDrop .55s .05s cubic-bezier(.2,1.5,.4,1) both}
+body.present .shead .chno{animation:prFade .4s both}
+body.present h2{animation:prLeft .55s .12s cubic-bezier(.2,1.2,.4,1) both}
+body.present .solve .tech{animation:prZoom .6s .3s cubic-bezier(.2,1.4,.4,1) both}
+body.present .slide>.lead,body.present .slide>.ctrl{animation:prUp .5s .25s both}
+body.present .slide>.net,body.present .slide>#sc,body.present .slide>[id^="n"]{animation:prUp .6s .35s both}
+body.present .slide>.row2:not(.bld),body.present .slide>.http,body.present .slide>.term{animation:prUp .6s .45s both}
+body.present .quiz{animation:prZoom .55s .25s cubic-bezier(.2,1.3,.4,1) both}
+body.present .opts button{animation:prUp .45s both}
+body.present .opts button:nth-child(1){animation-delay:.5s}
+body.present .opts button:nth-child(2){animation-delay:.62s}
+body.present .opts button:nth-child(3){animation-delay:.74s}
+body.present .opts button:nth-child(4){animation-delay:.86s}
+body.present .result{animation:prPop .5s cubic-bezier(.2,1.5,.4,1) both}
+body.present .hero .kicker{animation:prDrop .6s cubic-bezier(.2,1.5,.4,1) both}
+body.present .hero h1{animation:prFade .7s .15s both}
+body.present .hero>p{animation:prUp .55s .35s both}
+body.present .flow li{animation:prPop .5s cubic-bezier(.2,1.4,.4,1) both}
+body.present .flow li:nth-child(1){animation-delay:0.58s}
+body.present .flow li:nth-child(2){animation-delay:0.66s}
+body.present .flow li:nth-child(3){animation-delay:0.74s}
+body.present .flow li:nth-child(4){animation-delay:0.82s}
+body.present .flow li:nth-child(5){animation-delay:0.90s}
+body.present .flow li:nth-child(6){animation-delay:0.98s}
+body.present .flow li:nth-child(7){animation-delay:1.06s}
+body.present .flow li:nth-child(8){animation-delay:1.14s}
+body.present .flow li:nth-child(9){animation-delay:1.22s}
+body.present .flow li:nth-child(10){animation-delay:1.30s}
+
+body.present .hero .how{animation:prUp .5s 1.4s both}
+body.present .hero .hint{animation:prFade .5s 1.6s both}
+body.present .tl .ti{animation:prLeft .45s both}
+body.present .tl .ti:nth-child(1){animation-delay:0.32s}
+body.present .tl .ti:nth-child(2){animation-delay:0.44s}
+body.present .tl .ti:nth-child(3){animation-delay:0.56s}
+body.present .tl .ti:nth-child(4){animation-delay:0.68s}
+body.present .tl .ti:nth-child(5){animation-delay:0.80s}
+body.present .tl .ti:nth-child(6){animation-delay:0.92s}
+body.present .tl .ti:nth-child(7){animation-delay:1.04s}
+body.present .tl .ti:nth-child(8){animation-delay:1.16s}
+body.present .tl .ti:nth-child(9){animation-delay:1.28s}
+body.present .tl .ti:nth-child(10){animation-delay:1.40s}
+body.present .tl .ti:nth-child(11){animation-delay:1.52s}
+body.present .tl .ti:nth-child(12){animation-delay:1.64s}
+body.present .tl .ti:nth-child(13){animation-delay:1.76s}
+
+body.present .scenes span{animation:prPop .4s both}
+body.present .kw span{animation:prPop .4s .3s both}
+@media (max-width:980px){
+  aside{display:none}
+  .solve{grid-template-columns:1fr}
+  .http{grid-template-columns:1fr}
+  .flow{grid-template-columns:repeat(2,1fr)}
+  .row3{grid-template-columns:1fr}
+  .brand .t2{display:none}
+  .bigstack .lay{grid-template-columns:1fr}
+}
+@media (max-width:640px){
+  .net{max-height:max(260px,56vh)}
+  .net::after{font-size:10px}
+  header{flex-wrap:wrap;gap:8px 12px;padding:8px 14px}
+  .brand{flex:1}
+  .prog{order:3;flex-basis:100%}
+  footer{padding:8px 12px;gap:10px}
+  #where{font-size:12px}
+  footer button{padding:9px 16px}
+  .teaser{flex-wrap:wrap}.tnext{width:100%}
+  main{padding:14px}
+  .row2{grid-template-columns:1fr}
+  h2{font-size:21px}
+  .hero h1{font-size:25px}
+  .tools label{display:none}
+}
+/* ---------- 授業モード（全画面） ---------- */
+.tools button.fs{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:700}
+body.present aside{display:none}
+body.present header{padding:6px 16px}
+body.present .brand .t2{display:none}
+body.present main{overflow:hidden;padding:14px 20px;position:relative}
+body.present .slide{width:980px;max-width:none;margin:0;transform-origin:0 0;animation:none}
+body.present .net{max-height:330px}
+body.present .lead{font-size:19px}
+body.present h2{font-size:30px}
+body.present .say p{font-size:21px}
+body.present .pt p{font-size:17.5px}
+body.present .tech .def{font-size:17.5px}
+body.present .quiz .q{font-size:21px}
+body.present .opts button{font-size:18.5px;padding:7px 12px}
+body.present .teaser p{font-size:20px}
+body.present .exp{font-size:17px}
+body.present .ctrl{font-size:16px;margin-bottom:10px;padding:8px 14px}
+body.present .panel{font-size:15px}
+body.present .log{max-height:110px}
+body.present .term{max-height:170px;min-height:120px;font-size:15px}
+body.present .cap{font-size:19px}
+body.present .story{font-size:15.5px}
+body.present footer{padding:6px 16px}
+body.present footer button{padding:6px 20px}
+@media print{
+  header,footer,aside,.noprint{display:none!important}
+  body{background:#fff;display:block}
+  main{overflow:visible;padding:0}
+  .wrap{display:block}
+  textarea{border:1px solid #999;min-height:0;height:auto}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="logo"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="2.5"/><circle cx="19" cy="6" r="2.5"/><circle cx="19" cy="18" r="2.5"/><path d="M7.3 11l9.3-4M7.3 13l9.3 4"/></svg></div>
+    <div><div class="t1">ネットワークができるまで</div><div class="t2">「困った！」から生まれた技術をたどる</div></div>
+  </div>
+  <nav class="prog" id="prog"></nav>
+  <div class="tools">
+    <label>動きの速さ
+      <select id="speed"><option value="0.4">ゆっくり</option><option value="0.6" selected>ふつう</option><option value="1">はやい</option></select>
+    </label>
+    <button id="menuBtn">もくじ</button>
+    <button id="fsBtn" class="fs">全画面で授業</button>
+  </div>
+</header>
+<div class="wrap">
+  <main id="stage"></main>
+  <aside id="side"></aside>
+</div>
+<footer>
+  <div id="where"></div>
+  <div class="navbtns">
+    <button id="prev">← 戻る</button>
+    <button id="next" class="primary">次へ →</button>
+  </div>
+</footer>
+<div id="menu" hidden><div class="box" id="menuBox"></div></div>
+
+<script>
+/* =========================================================
+   基本データ
+   ========================================================= */
+const LAYERS=[
+  {name:'ネットワークインタフェース層',role:'となりの機器まで運ぶ',c:'var(--L0)'},
+  {name:'インターネット層',role:'ネットワークをまたいで目的地へ',c:'var(--L1)'},
+  {name:'トランスポート層',role:'確実に・目的のアプリまで届ける',c:'var(--L2)'},
+  {name:'アプリケーション層',role:'アプリどうしの会話のルール',c:'var(--L3)'},
+  {name:'しくみの工夫',role:'たくさんのアクセスに耐える',c:'var(--L4)'}
+];
+const CH=[
+  {n:0,title:'はじめに'},
+  {n:1,title:'つなぐ',tech:'ケーブル・Wi-Fi',L:0},
+  {n:2,title:'宛先を決める',tech:'MACアドレス・スイッチ',L:0},
+  {n:3,title:'ネットワークをまたぐ',tech:'IPアドレス・ルータ',L:1},
+  {n:4,title:'届くか確かめる',tech:'ping',L:1},
+  {n:5,title:'確実に届ける',tech:'TCP・UDP',L:2},
+  {n:6,title:'アプリを見分ける',tech:'ポート番号・ファイアウォール',L:2},
+  {n:7,title:'名前でたどり着く',tech:'DNS',L:3},
+  {n:8,title:'Webで会話する',tech:'HTTP',L:3},
+  {n:9,title:'秘密を守る',tech:'TLS（HTTPS）',L:3},
+  {n:10,title:'たくさんの人に応える',tech:'ロードバランサ',L:4},
+  {n:11,title:'ふりかえり'}
+];
+const CHIPS=[
+  {t:'ケーブル・Wi-Fi',ch:1,L:0},{t:'MACアドレス',ch:2,L:0},{t:'スイッチ',ch:2,L:0},
+  {t:'IPアドレス',ch:3,L:1},{t:'ルータ',ch:3,L:1},{t:'ping',ch:4,L:1},
+  {t:'TCP',ch:5,L:2},{t:'UDP',ch:5,L:2},{t:'ポート番号',ch:6,L:2},{t:'ファイアウォール',ch:6,L:2},
+  {t:'DNS',ch:7,L:3},{t:'HTTP',ch:8,L:3},{t:'TLS',ch:9,L:3},
+  {t:'ロードバランサ',ch:10,L:4}
+];
+const IC={
+  pc:'<svg viewBox="0 0 48 48"><rect x="7" y="9" width="34" height="22" rx="3"/><path d="M18 39h12M24 31v8"/></svg>',
+  server:'<svg viewBox="0 0 48 48"><rect x="11" y="6" width="26" height="11" rx="2"/><rect x="11" y="19" width="26" height="11" rx="2"/><rect x="11" y="32" width="26" height="11" rx="2"/><circle cx="17" cy="11.5" r="1.8" class="f"/><circle cx="17" cy="24.5" r="1.8" class="f"/><circle cx="17" cy="37.5" r="1.8" class="f"/></svg>',
+  sw:'<svg viewBox="0 0 48 48"><rect x="5" y="16" width="38" height="16" rx="3"/><path d="M11 24h3M18 24h3M25 24h3M32 24h3"/></svg>',
+  router:'<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="17"/><path d="M24 12v9M24 36v-9M12 24h9M36 24h-9M21 15l3-3 3 3M21 33l3 3 3-3M15 21l-3 3 3 3M33 21l3 3-3 3"/></svg>',
+  cloud:'<svg viewBox="0 0 48 48"><path d="M14 36h21a8 8 0 0 0 0-16 11 11 0 0 0-21-2 9 9 0 0 0 0 18z"/></svg>',
+  phone:'<svg viewBox="0 0 48 48"><rect x="15" y="5" width="18" height="38" rx="4"/><path d="M22 38h4"/></svg>',
+  person:'<svg viewBox="0 0 48 48"><circle cx="24" cy="16" r="7"/><path d="M10 42c1-9 7-14 14-14s13 5 14 14"/></svg>',
+  spy:'<svg viewBox="0 0 48 48"><circle cx="20" cy="15" r="7"/><path d="M6 42c1-9 7-14 14-14 3 0 6 1 8 3"/><circle cx="35" cy="32" r="6"/><path d="M39.5 36.5l5 5"/></svg>',
+  people:'<svg viewBox="0 0 48 48"><circle cx="17" cy="16" r="6"/><circle cx="32" cy="14" r="5"/><path d="M5 40c1-8 6-12 12-12s11 4 12 12M28 25c2-1 3-1 4-1 5 0 9 3 10 10"/></svg>',
+  wall:'<svg viewBox="0 0 48 48"><rect x="7" y="9" width="34" height="30" rx="2"/><path d="M7 19h34M7 29h34M18 9v10M30 9v10M13 19v10M25 19v10M37 19v10M18 29v10M30 29v10"/></svg>',
+  book:'<svg viewBox="0 0 48 48"><path d="M10 8h24a4 4 0 0 1 4 4v28H14a4 4 0 0 1-4-4z"/><path d="M10 36a4 4 0 0 1 4-4h24M17 15h14M17 21h10"/></svg>',
+  lb:'<svg viewBox="0 0 48 48"><rect x="4" y="18" width="12" height="12" rx="2"/><path d="M16 24h7M23 24l8-11h9M23 24h17M23 24l8 11h9"/></svg>',
+  wifi:'<svg viewBox="0 0 48 48"><rect x="10" y="30" width="28" height="9" rx="2"/><path d="M17 23a10 10 0 0 1 14 0M12 18a17 17 0 0 1 24 0"/><circle cx="16" cy="34.5" r="1.6" class="f"/></svg>',
+  none:''
+};
+const FACE='<svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="24" fill="#ffe4e9" stroke="#ff5470" stroke-width="2.5"/><circle cx="18" cy="22" r="2.6" fill="#ff5470"/><circle cx="34" cy="22" r="2.6" fill="#ff5470"/><path d="M16 36c3-3 6-3 10 0s7 3 10 0" fill="none" stroke="#ff5470" stroke-width="2.5" stroke-linecap="round"/><path d="M12 14l6 2M40 14l-6 2" stroke="#ff5470" stroke-width="2.5" stroke-linecap="round"/></svg>';
+
+/* =========================================================
+   アニメーション基盤
+   ========================================================= */
+let SPEED=0.6, RUN=0, ANIMS=[], BUSY=false, PAUSED=false;
+const $=(r,s)=>r.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function sleep(ms){const r=RUN;return new Promise((res,rej)=>{let left=ms/SPEED,last=performance.now();
+  (function tick(){if(r!==RUN)return rej(new Error('stop'));const now=performance.now();if(!PAUSED)left-=now-last;last=now;if(left<=0)res();else setTimeout(tick,Math.min(40,Math.max(5,left)));})();});}
+function track(an){ANIMS.push(an);if(PAUSED)an.pause();an.finished.then(()=>{const i=ANIMS.indexOf(an);if(i>=0)ANIMS.splice(i,1);},()=>{});return an;}
+function setPause(v){PAUSED=v;ANIMS.forEach(a=>{try{v?a.pause():a.play()}catch(e){}});document.body.classList.toggle('paused',v);}
+function alive(r){return r===RUN}
+function act(fn){
+  return async(...a)=>{
+    if(BUSY) return; BUSY=true; const r=RUN;
+    try{await fn(...a)}catch(e){if(e&&e.message!=='stop'&&e.name!=='AbortError')console.error(e)}
+    finally{if(r===RUN)BUSY=false}
+  };
+}
+function quiet(p){return p.catch(e=>{if(e&&e.message!=='stop'&&e.name!=='AbortError')console.error(e)})}
+
+function makeNet(el,nodes,links,ratio){
+  el.classList.add('net'); ratio=ratio||'16/6'; el.style.aspectRatio=ratio; el.innerHTML='';
+  const [rw,rh]=ratio.split('/').map(Number);
+  const fit=()=>{const w=el.clientWidth; if(!w) return;
+    const k=Math.max(.5,Math.min(1,w/860));          // アイコンの縮小率
+    const t=Math.max(.74,Math.min(1,w/760));         // 文字の縮小率（読める大きさは保つ）
+    el.style.setProperty('--k',k.toFixed(3)); el.style.setProperty('--t',t.toFixed(3));
+    const tall=w<760?Math.min(1.9,760/w):1;          // 幅がせまいときは図を縦にのばす
+    el.style.aspectRatio=`${rw}/${(rh*tall).toFixed(2)}`;};
+  if(window.ResizeObserver){const ro=new ResizeObserver(fit);ro.observe(el);}
+  fit();
+  const N={};
+  nodes.forEach(n=>N[n.id]=n);
+  let svg='<svg viewBox="0 0 100 100" preserveAspectRatio="none">';
+  links.forEach(([a,b,c])=>{svg+=`<line x1="${N[a].x}" y1="${N[a].y}" x2="${N[b].x}" y2="${N[b].y}" class="${c||''}" data-l="${a}-${b}" vector-effect="non-scaling-stroke"/>`});
+  svg+='</svg>';
+  el.insertAdjacentHTML('beforeend',svg);
+  nodes.forEach(n=>{
+    const d=document.createElement('div');
+    d.className='node '+(n.cls||'');
+    d.style.left=n.x+'%'; d.style.top=n.y+'%';
+    d.innerHTML=`<div class="ic">${n.text||(n.icon?IC[n.icon]:'')}</div>${n.label?`<div class="nl">${n.label}</div>`:''}${n.sub?`<div class="ns">${n.sub}</div>`:''}`;
+    el.appendChild(d); n.el=d;
+  });
+  return {
+    el,N,
+    node:id=>N[id].el,
+    fly:(path,opt)=>fly(el,N,path,opt||{}),
+    line:(a,b)=>el.querySelector(`[data-l="${a}-${b}"],[data-l="${b}-${a}"]`),
+    label:(x,y,t)=>{const d=document.createElement('div');d.className='plabel';d.style.left=x+'%';d.style.top=y+'%';d.innerHTML=t;el.appendChild(d);return d;}
+  };
+}
+async function fly(el,N,path,opt){
+  const p=document.createElement('div');
+  p.className='pkt '+(opt.cls||''); p.innerHTML=opt.label||'';
+  const P=id=>typeof id==='string'?N[id]:id;
+  let a=P(path[0]);
+  p.style.left=a.x+'%'; p.style.top=a.y+'%';
+  el.appendChild(p);
+  try{
+    for(let i=1;i<path.length;i++){
+      const b=P(path[i]);
+      const dur=(Array.isArray(opt.dur)?opt.dur[i-1]:(opt.dur||800))/SPEED;
+      const an=p.animate([{left:a.x+'%',top:a.y+'%'},{left:b.x+'%',top:b.y+'%'}],{duration:dur,easing:'ease-in-out',fill:'forwards'});
+      track(an);
+      await an.finished;
+      a=b;
+      if(opt.onHop) await opt.onHop(path[i],i);
+    }
+  }finally{ if(!opt.keep) p.remove(); }
+  return p;
+}
+function bubble(nodeEl,html,cls,ms){
+  const b=document.createElement('div');
+  b.className='bub '+(cls||''); b.innerHTML=html;
+  nodeEl.appendChild(b);
+  sleep(ms||1700).then(()=>b.remove(),()=>b.remove());
+  return b;
+}
+function flash(nodeEl,cls,ms){nodeEl.classList.add(cls);sleep(ms||1200).then(()=>nodeEl.classList.remove(cls),()=>nodeEl.classList.remove(cls));}
+async function drop(net,x,y,label,cls){
+  const p=document.createElement('div');p.className='pkt '+(cls||'');p.innerHTML=label;p.style.left=x+'%';p.style.top=y+'%';net.el.appendChild(p);
+  const mk=document.createElement('div');mk.className='dropmark';mk.textContent='落ちた！';mk.style.left=x+'%';mk.style.top=y+'%';net.el.appendChild(mk);
+  const an=track(p.animate([
+    {top:y+'%',transform:'translate(-50%,-50%) rotate(0deg)',opacity:1},
+    {top:(y+6)+'%',transform:'translate(-50%,-50%) rotate(-10deg)',opacity:1,offset:.25},
+    {top:'112%',transform:'translate(-50%,-50%) rotate(50deg)',opacity:0}],{duration:1200/SPEED,easing:'cubic-bezier(.5,0,.9,.5)',fill:'forwards'}));
+  try{await an.finished;}finally{p.remove();sleep(500).then(()=>mk.remove(),()=>mk.remove());}
+}
+function logTo(el,html){const d=document.createElement('div');d.innerHTML=html;el.appendChild(d);el.scrollTop=el.scrollHeight;}
+function seg(box,cb){box.querySelectorAll('button').forEach(b=>b.onclick=()=>{if(BUSY)return;box.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));cb(b.dataset.v);});}
+const rnd=(a,b)=>Math.floor(a+Math.random()*(b-a+1));
+
+/* =========================================================
+   スライド部品
+   ========================================================= */
+const S=[];
+function add(ch,type,title,html,mount){S.push({ch,type,title,html,mount});}
+const say=(...ps)=>`<div class="say"><div class="face">${FACE}</div><div>${ps.map(p=>`<p>${p}</p>`).join('')}</div></div>`;
+const tech=(name,yr,def,L)=>`<div class="tech"><div class="name">${name}</div><div class="yr">${yr.split('／').join('<br>')}</div><p class="def">${def}</p><span class="lay" style="background:${LAYERS[L].c}">${LAYERS[L].name}</span></div>`;
+const points=(...ps)=>`<div class="points">${ps.map((p,i)=>`<div class="pt"><span class="n">${i+1}</span><p>${p}</p></div>`).join('')}</div>`;
+function quiz(q,opts,ans,exp){
+  return `<div class="quiz" data-ans="${ans}"><div class="qh"><span class="qmark">Q</span><p class="q">${q}</p></div><div class="opts">${opts.map((o,i)=>`<button data-i="${i}"><span class="ol">${'ABCD'[i]}</span><span>${o}</span></button>`).join('')}</div><div class="result" hidden></div><div class="exp" hidden>${exp}</div></div>`;
+}
+const teaser=t=>`<div class="teaser"><div class="tface">${FACE}</div><div class="tb"><div class="h">でも、まだ困ることが…</div><p>${t}</p></div><button class="tnext">次へ進む →</button></div>`;
+
+/* ---------------- 0. はじめに ---------------- */
+add(0,'title','はじめに',`
+<div class="hero">
+  <span class="kicker">日常のなぜ？</span>
+  <h1>なぜ、URLを入れるだけで<br>地球の裏側のページまで見られるの？</h1>
+  <p>この教材では、<b>たった2台のコンピュータをつなぐところ</b>から出発します。<br>
+  そして「困った！」が起きるたびに生まれた技術を、ひとつずつ積み上げていきます。</p>
+  <ol class="flow" id="flow"></ol>
+  <div class="how">各章は
+    <span class="tag p">困った！</span>→<span class="tag s">そこで生まれた</span>→<span class="tag t">動かしてみよう</span>→<span class="tag c">たしかめよう</span>
+  の順にすすみます。</div>
+  <p class="hint">「次へ」ボタンか、キーボードの → キーで進みます。右の「道具箱」に、手に入れた技術がたまっていきます。</p>
+</div>`,el=>{
+  const f=$(el,'#flow');
+  CH.slice(1,11).forEach(c=>{
+    const li=document.createElement('li');
+    li.innerHTML=`<span style="background:${LAYERS[c.L].c}">${c.n}</span>${c.title}<small>${c.tech}</small>`;
+    li.onclick=()=>goCh(c.n);
+    f.appendChild(li);
+  });
+});
+
+/* ---------------- 1. つなぐ ---------------- */
+add(1,'problem','となりのコンピュータに、データを渡したい',`
+<div id="sc"></div>
+${say('となりの席の友だちに、作ったファイルを渡したい。','USBメモリを持って歩くのは面倒…。<b>コンピュータどうしを、直接つなげないかな？</b>')}
+<span class="era">1970年代、研究所でもコンピュータどうしでデータをやりとりしたいという声が高まっていました</span>`,el=>{
+  makeNet($(el,'#sc'),[{id:'a',x:20,y:45,icon:'pc',label:'あなた'},{id:'b',x:80,y:45,icon:'pc',label:'友だち'},{id:'q',x:50,y:45,icon:'none',text:'<b style="font-size:26px;color:var(--coral)">？</b>',cls:'room'}],[],'16/4');
+});
+add(1,'solve','そこで生まれたのが…',`
+<div class="solve">
+  ${tech('イーサネット<br><span style="font-size:18px">と Wi-Fi（無線LAN）</span>','イーサネット 1973年／Wi-Fi 1997年','コンピュータどうしをケーブルや電波でつなぎ、0と1の信号を送り合う方法。',0)}
+  ${points(
+    'コンピュータの中のデータは、すべて<b class="em">0と1</b>。それを<b>電気の信号</b>（ケーブル）や<b>電波</b>（Wi-Fi）、<b>光</b>（光ファイバ）に変えて運ぶ。',
+    '受け取った側は、信号を0と1に戻して、もとのデータを復元する。',
+    'まずは「<b>0と1を、相手まで物理的に届ける</b>」こと。これがネットワークのいちばん下の土台。'
+  )}
+</div>
+<div class="story"><b>こぼれ話：</b>イーサネットは、アメリカのゼロックス社パロアルト研究所で、ボブ・メトカーフらが研究所内のコンピュータとプリンタをつなぐために考えました。</div>`);
+add(1,'try','文字を1つ、となりに送ってみよう',`
+<p class="lead">文字を入れて「送る」を押そう。文字が<b>0と1</b>に変わって運ばれ、相手のところで文字に戻る様子が見られます。</p>
+<div class="ctrl">
+  <label>送る文字 <input id="c1" value="A" style="width:60px;text-align:center" autocomplete="off"></label>
+  <div class="seg" id="m1"><button class="on" data-v="wire">ケーブル</button><button data-v="air">無線（Wi-Fi）</button></div>
+  <button class="go" id="b1">送る ▶</button>
+  <span class="small muted">1文字だけ入ります。日本語の文字も試してみよう（ビットが増える！）</span>
+</div>
+<div id="n1"></div>
+<div class="bitsline" id="bits1"></div>
+<div class="bitsline" id="o1"></div>`,el=>{
+  const N=makeNet($(el,'#n1'),[{id:'a',x:10,y:45,icon:'pc',label:'あなたのPC'},{id:'b',x:90,y:45,icon:'pc',label:'友だちのPC'}],[['a','b']],'16/3.6');
+  seg($(el,'#m1'),v=>{N.el.classList.toggle('air',v==='air');N.node('a').querySelector('.ic').innerHTML=IC[v==='air'?'wifi':'pc'];N.node('b').querySelector('.ic').innerHTML=IC[v==='air'?'wifi':'pc'];});
+  const ci=$(el,'#c1'); let comp=false;
+  const one=()=>{const a=[...ci.value];if(a.length>1)ci.value=a[a.length-1];};
+  ci.addEventListener('compositionstart',()=>comp=true);
+  ci.addEventListener('compositionend',()=>{comp=false;one();});
+  ci.addEventListener('input',()=>{if(!comp)one();});
+  ci.addEventListener('focus',()=>ci.select());
+  $(el,'#b1').onclick=act(async()=>{
+    const ch=[...$(el,'#c1').value][0]||'A';
+    const bytes=new TextEncoder().encode(ch);
+    const bits=[...bytes].map(b=>b.toString(2).padStart(8,'0')).join('');
+    $(el,'#bits1').innerHTML=`送る側：「${esc(ch)}」→ 文字コード（UTF-8）で ${bytes.length}バイト ＝ <code>${bits.match(/.{8}/g).join(' ')}</code>`;
+    const o=$(el,'#o1'); o.innerHTML='受け取る側：<code id="rx">　</code> <span id="dec"></span>';
+    let got=''; const ps=[];
+    for(const b of bits){
+      ps.push(N.fly(['a','b'],{label:b,cls:'bit b'+b,dur:1300}).then(()=>{got+=b;$(o,'#rx').textContent=got.match(/.{1,8}/g).join(' ');}));
+      await sleep(bits.length>8?90:150);
+    }
+    await Promise.all(ps);
+    const arr=new Uint8Array(got.match(/.{8}/g).map(x=>parseInt(x,2)));
+    $(o,'#dec').innerHTML=`→ 文字に戻すと <b class="big">「${esc(new TextDecoder().decode(arr))}」</b>`;
+  });
+});
+add(1,'check','たしかめよう',`
+${quiz('ケーブルの中を実際に流れているものとして、もっとも適切なものは？',
+ ['文字や画像そのもの','0と1を表す電気の信号','ファイルの名前だけ','インターネットの住所'],1,
+ 'データは0と1（ビット）に変換され、ケーブルでは電気、光ファイバでは光、Wi-Fiでは電波の信号として運ばれます。')}
+${teaser('2台なら、ケーブル1本でOK。でも<b>クラス41人のコンピュータを全部つないだら</b>？　流れてきたデータが「<b>だれ宛て</b>」なのか、わからない…！')}`);
+
+/* ---------------- 2. MAC・スイッチ ---------------- */
+add(2,'problem','このデータ、だれ宛て？',`
+<div id="sc"></div>
+${say('たくさんのコンピュータを1つにつなぐと、データはみんなのところに流れてくる。','でも「これはだれ宛て？」がわからない。<b>宛先をはっきりさせる方法</b>が必要だ。')}`,el=>{
+  const N=makeNet($(el,'#sc'),[{id:'h',x:50,y:50,icon:'sw',label:''},{id:'a',x:12,y:50,icon:'pc',label:'送った人'},{id:'b',x:40,y:12,icon:'pc'},{id:'c',x:60,y:12,icon:'pc'},{id:'d',x:88,y:50,icon:'pc'},{id:'e',x:40,y:88,icon:'pc'},{id:'f',x:60,y:88,icon:'pc'}],
+    [['h','a'],['h','b'],['h','c'],['h','d'],['h','e'],['h','f']],'16/5');
+  (async()=>{const r=RUN;while(alive(r)){await N.fly(['a','h'],{label:'データ',dur:700});
+    await Promise.all(['b','c','d','e','f'].map(t=>N.fly(['h',t],{label:'データ',dur:600}).then(()=>bubble(N.node(t),'ぼく宛て？','g',1200))));
+    await sleep(1500);}})().catch(()=>{});
+});
+add(2,'solve','そこで生まれたのが…',`
+<div class="solve">
+  ${tech('MACアドレス<br><span style="font-size:18px">と スイッチ</span>','MACアドレス：イーサネットとともに／スイッチ：1990年ごろ','ネットワーク機器1つ1つにつけられた番号。データに「宛先」と「送信元」を書いて送る。',0)}
+  ${points(
+    '<b class="em">MACアドレス</b>は、機器を作るときにつけられる<b>48ビットの番号</b>。例：<code>00:1A:2B:3C:4D:5E</code>（前半はメーカーの番号）',
+    'データの先頭に「<b>宛先MAC</b>」「<b>送信元MAC</b>」を書いて送る（この単位を<b>フレーム</b>という）。',
+    '<b>ハブ</b>は届いたデータを全員にコピーするだけ。<b class="em">スイッチ</b>は「どの差込口（ポート）の先にだれがいるか」を<b>学習</b>して、必要な相手にだけ送る。'
+  )}
+</div>`);
+add(2,'try','ハブとスイッチをくらべよう',`
+<p class="lead">送信元と宛先を選んで「送る」。<b>ハブ</b>と<b>スイッチ</b>で、データの届き方がどう違うか見てみよう。スイッチは何回か送ると…？</p>
+<div class="ctrl">
+  <div class="seg" id="m2"><button class="on" data-v="hub">ハブ</button><button data-v="switch">スイッチ</button></div>
+  <label>送信元 <select id="s2"><option>A</option><option>B</option><option>C</option><option>D</option></select></label>
+  <label>宛先 <select id="d2"><option>A</option><option>B</option><option selected>C</option><option>D</option></select></label>
+  <button class="go" id="b2">送る ▶</button>
+  <button class="go sub" id="r2">スイッチの記憶を消す</button>
+</div>
+<div id="n2"></div>
+<div class="row2">
+  <div class="panel"><h4>スイッチが覚えた表（MACアドレステーブル）</h4><div id="tb2"></div></div>
+  <div class="panel"><h4>何が起きた？</h4><div class="log" id="log2"><div class="muted">「送る」を押してみよう</div></div></div>
+</div>
+<p class="small muted">※ 本物のMACアドレスは 00:1A:2B:3C:4D:0A のような48ビット。ここでは末尾だけ表示しています。</p>`,el=>{
+  const P={A:{x:13,y:18,mac:'0A',port:1},B:{x:87,y:18,mac:'0B',port:2},C:{x:13,y:78,mac:'0C',port:3},D:{x:87,y:78,mac:'0D',port:4}};
+  const nodes=[{id:'S',x:50,y:48,icon:'sw',label:'ハブ'}];
+  for(const k in P) nodes.push({id:k,x:P[k].x,y:P[k].y,icon:'pc',label:'PC-'+k,sub:'MAC …'+P[k].mac});
+  const N=makeNet($(el,'#n2'),nodes,[['S','A'],['S','B'],['S','C'],['S','D']],'16/7');
+  for(const k in P) N.label((50+P[k].x)/2+(P[k].x<50?4:-4),(48+P[k].y)/2,'ポート'+P[k].port);
+  let mode='hub', table={}, newPort=null;
+  const tb=$(el,'#tb2'), log=$(el,'#log2');
+  const draw=()=>{
+    N.node('S').querySelector('.nl').textContent=mode==='hub'?'ハブ':'スイッチ';
+    if(mode==='hub'){tb.innerHTML='<span class="muted">ハブは表を持たない（全員に配るだけ）</span>';return;}
+    tb.innerHTML='<table class="mactbl"><tr><th>ポート</th><th>その先にいるMAC</th></tr>'+[1,2,3,4].map(p=>`<tr class="${p===newPort?'new':''}"><td>${p}</td><td>${table[p]?'…'+table[p]:'<span class="muted">？（まだ知らない）</span>'}</td></tr>`).join('')+'</table>';
+  };
+  draw();
+  seg($(el,'#m2'),v=>{mode=v;draw();});
+  $(el,'#r2').onclick=()=>{if(BUSY)return;table={};newPort=null;draw();log.innerHTML='<div>スイッチの記憶を消しました</div>';};
+  $(el,'#b2').onclick=act(async()=>{
+    const s=$(el,'#s2').value,d=$(el,'#d2').value;
+    if(s===d){logTo(log,'送信元と宛先は別のPCにしよう');return;}
+    if(log.querySelector('.muted'))log.innerHTML='';
+    const lab=`宛先 …${P[d].mac}<br>送信元 …${P[s].mac}`;
+    await N.fly([s,'S'],{label:lab,dur:700});
+    let targets, msg;
+    const others=Object.keys(P).filter(k=>k!==s);
+    if(mode==='switch'){
+      const learned=table[P[s].port]!==P[s].mac;
+      table[P[s].port]=P[s].mac; newPort=learned?P[s].port:null; draw();
+      const known=Object.keys(table).find(p=>table[p]===P[d].mac);
+      if(known){targets=[d];msg=`スイッチ：宛先 …${P[d].mac} はポート${known}の先にいると知っている → <b class="em">そこだけに送る</b>`;}
+      else{targets=others;msg=`スイッチ：宛先 …${P[d].mac} の場所をまだ知らない → しかたなく全員に送る`;}
+      if(learned)msg+=`（ついでに「…${P[s].mac} はポート${P[s].port}」と<b>覚えた</b>）`;
+    }else{targets=others;msg='ハブ：宛先を見ずに、全員にコピーして配る';}
+    logTo(log,msg);
+    await Promise.all(targets.map(t=>N.fly(['S',t],{label:lab,dur:700}).then(()=>{
+      if(t===d){bubble(N.node(t),'自分宛て！受け取る','ok');flash(N.node(t),'ok');}
+      else{bubble(N.node(t),'ちがう…捨てる','g');flash(N.node(t),'ngf');}
+    })));
+    if(targets.length>1)logTo(log,`→ 関係ない ${targets.length-1}台にも届いてしまった`);
+    await sleep(500);
+  });
+});
+add(2,'check','たしかめよう',`
+${quiz('スイッチが「どのポートの先にだれがいるか」を覚えるとき、届いたデータの何を見ている？',
+ ['宛先MACアドレス','送信元MACアドレス','データの中身','届いた時刻'],1,
+ 'データが入ってきたポートと<b>送信元MACアドレス</b>を見れば、「このMACの機器はこのポートの先にいる」とわかります。宛先は「どこへ送るか」を決めるときに使います。')}
+${teaser('学校の中ならこれでOK。でも<b>ほかの学校や海外</b>のコンピュータは？　MACアドレスは製造番号なので「<b>どこにいるか</b>」はわからない。世界中の機器を1台のスイッチが覚えるのも無理…！')}`);
+
+/* ---------------- 3. IP・ルータ ---------------- */
+add(3,'problem','別のネットワークにいる相手に届けたい',`
+<div id="sc"></div>
+${say('MACアドレスは、いわば「名前（背番号）」。<b>住所</b>になっていないから、遠くの相手を探せない。','別々に作られたネットワークどうしを、つないで行き来できないかな？')}
+<span class="era">1970年代、アメリカで「ネットワークどうしをつなぐネットワーク」＝インターネットの研究が進みました</span>`,el=>{
+  const box=$(el,'#sc');
+  makeNet(box,[{id:'a',x:12,y:50,icon:'pc',label:'A高校のPC'},{id:'a2',x:30,y:50,icon:'sw',label:'A高校'},{id:'b2',x:70,y:50,icon:'sw',label:'B高校'},{id:'b',x:88,y:50,icon:'pc',label:'B高校のPC'},{id:'q',x:50,y:50,icon:'none',text:'<b style="font-size:26px;color:var(--coral)">？</b>',cls:'room'}],[['a','a2'],['b2','b']],'16/4');
+});
+add(3,'solve','そこで生まれたのが…',`
+<div class="solve">
+  ${tech('IPアドレス<br><span style="font-size:18px">と ルータ</span>','1974年ごろ考案、1983年に本格利用','ネットワーク上の「住所」。ルータが宛先の住所を見て、次に渡す先を決める。',1)}
+  ${points(
+    '<b class="em">IPアドレス</b>は住所のように<b>前半＝どのネットワークか（ネットワーク部）</b>、<b>後半＝その中のどの機器か（ホスト部）</b>に分かれる。',
+    '<b class="em">ルータ</b>はネットワークの境目にいて、宛先IPアドレスを見て「次はどっちへ渡すか」を決める（バケツリレー）。',
+    '<b>IPアドレス＝最終目的地</b>、<b>MACアドレス＝次に渡す相手</b>。ルータを通るたびに、MACアドレスは書きかわる。'
+  )}
+</div>
+<div class="fig ipfig">
+  <div class="iprow"><span class="ipp np">192.168.1<small>ネットワーク部</small></span><span class="ipd">.</span><span class="ipp hp">10<small>ホスト部</small></span></div>
+  <div class="small">住所にたとえると、<span class="np">ネットワーク部＝町名</span>、<span class="hp">ホスト部＝番地</span>のようなもの。</div>
+  <div class="bin">2進数では <code><span class="np">11000000.10101000.00000001</span>.<span class="hp">00001010</span></code>（32ビット）<br>
+  どこまでがネットワーク部かは <b>サブネットマスク</b> で決める：255.255.255.0 ＝ <code><span class="np">11111111.11111111.11111111</span>.<span class="hp">00000000</span></code>（「/24」とも書く）</div>
+</div>
+<p class="small muted">※ IPアドレス（IPv4）は約43億個しかなく足りなくなったため、128ビットの IPv6 への移行が進んでいます。IPアドレスから相手のMACアドレスを調べるしくみ（ARP）もあります。</p>`);
+add(3,'try','ルータをこえて送ってみよう',`
+<p class="lead">送信元と宛先を選んで「送る」。<b>同じネットワーク</b>か<b>ちがうネットワーク</b>かで、データの進み方が変わります。ラベルの「宛先MAC」にも注目！</p>
+<div class="ctrl">
+  <label>送信元 <select id="s3"><option value="A">PC-A</option><option value="B">PC-B</option><option value="C">PC-C</option><option value="D">PC-D</option></select></label>
+  <label>宛先 <select id="d3"><option value="A">PC-A</option><option value="B">PC-B</option><option value="C">PC-C</option><option value="D" selected>PC-D</option></select></label>
+  <button class="go" id="b3">送る ▶</button>
+</div>
+<div id="n3"></div>
+<div class="row2">
+  <div class="panel"><h4>同じネットワーク？（/24 なので先頭3つの数字を比べる）</h4><div id="j3" style="font-size:16px"></div></div>
+  <div class="panel"><h4>何が起きた？</h4><div class="log" id="log3"><div class="muted">「送る」を押してみよう</div></div></div>
+</div>`,el=>{
+  const H={A:{ip:'192.168.1.10',x:9,y:22,net:1},B:{ip:'192.168.1.20',x:9,y:76,net:1},C:{ip:'192.168.2.10',x:91,y:22,net:2},D:{ip:'192.168.2.20',x:91,y:76,net:2}};
+  const box=$(el,'#n3');
+  const nodes=[{id:'S1',x:27,y:49,icon:'sw',label:'スイッチ'},{id:'R',x:50,y:49,icon:'router',label:'ルータ',sub:'1.1 ／ 2.1'},{id:'S2',x:73,y:49,icon:'sw',label:'スイッチ'}];
+  for(const k in H) nodes.push({id:k,x:H[k].x,y:H[k].y,icon:'pc',label:'PC-'+k,sub:H[k].ip});
+  const N=makeNet(box,nodes,[['A','S1'],['B','S1'],['S1','R'],['R','S2'],['S2','C'],['S2','D']],'16/7');
+  box.insertAdjacentHTML('afterbegin','<div class="area" style="left:1%;top:3%;width:38%;height:94%"><span>ネットワーク 192.168.1.0/24</span></div><div class="area" style="left:61%;top:3%;width:38%;height:94%"><span style="left:auto;right:10px">ネットワーク 192.168.2.0/24</span></div>');
+  const log=$(el,'#log3'), j=$(el,'#j3');
+  const split=ip=>{const a=ip.split('.');return `<span class="np">${a.slice(0,3).join('.')}</span>.<span class="hp">${a[3]}</span>`;};
+  const judge=()=>{const s=$(el,'#s3').value,d=$(el,'#d3').value;
+    j.innerHTML=`送信元 ${split(H[s].ip)}<br>宛　先 ${split(H[d].ip)}<br>→ ${s===d?'同じPCです':(H[s].net===H[d].net?'<b class="em">ネットワーク部が同じ</b>：直接届けられる':'<b class="ng">ネットワーク部がちがう</b>：ルータに預ける')}`;};
+  $(el,'#s3').onchange=judge; $(el,'#d3').onchange=judge; judge();
+  const sw=n=>n===1?'S1':'S2';
+  $(el,'#b3').onclick=act(async()=>{
+    const s=$(el,'#s3').value,d=$(el,'#d3').value; if(s===d)return;
+    if(log.querySelector('.muted'))log.innerHTML='';
+    const ip=H[d].ip;
+    if(H[s].net===H[d].net){
+      logTo(log,`同じネットワークなので、PC-${d} に直接届ける`);
+      await N.fly([s,sw(H[s].net),d],{label:`宛先IP ${ip}<br>宛先MAC PC-${d}`,cls:'tealp',dur:800});
+      bubble(N.node(d),'届いた！','ok'); flash(N.node(d),'ok');
+    }else{
+      logTo(log,`ちがうネットワーク → まず<b>ルータ</b>に預ける（宛先MACはルータ）`);
+      await N.fly([s,sw(H[s].net),'R'],{label:`宛先IP ${ip}<br>宛先MAC ルータ`,cls:'tealp',dur:800});
+      bubble(N.node('R'),`宛先IPは ${ip.split('.').slice(0,3).join('.')}… → ${H[d].net===2?'右':'左'}へ`,'',1600);
+      await sleep(1200);
+      logTo(log,`ルータが宛先IPを見て転送。<b>宛先IPはそのまま</b>、宛先MACは PC-${d} に<b>書きかわった</b>`);
+      await N.fly(['R',sw(H[d].net),d],{label:`宛先IP ${ip}<br>宛先MAC PC-${d}`,cls:'tealp',dur:800});
+      bubble(N.node(d),'届いた！','ok'); flash(N.node(d),'ok');
+    }
+    await sleep(400);
+  });
+});
+add(3,'check','たしかめよう',`
+${quiz('サブネットマスクが 255.255.255.0（/24）のとき、192.168.1.10 と<b>同じネットワーク</b>にあるのはどれ？',
+ ['192.168.2.10','192.168.1.200','192.169.1.10','10.168.1.10'],1,
+ '/24 では先頭24ビット（先頭3つの数字）がネットワーク部です。192.168.1 が一致するのは 192.168.1.200 だけ。')}
+${teaser('ルータをいくつもこえて、遠くまで送れるようになった。でも…送ったデータ、<b>ちゃんと相手まで届いてる？</b>　返事がないとき、相手が止まっているのか、<b>途中の道が切れている</b>のか、わからない…。')}`);
+
+/* ---------------- 4. ping ---------------- */
+add(4,'problem','ちゃんと届いてる？',`
+<div id="sc"></div>
+${say('送ったのに、何も返ってこない。','相手の電源が切れている？　途中のケーブルが抜けている？　<b>「届くかどうか」だけを手軽に確かめたい。</b>')}`,el=>{
+  const N=makeNet($(el,'#sc'),[{id:'a',x:12,y:50,icon:'pc',label:'あなた'},{id:'c',x:50,y:50,icon:'cloud',label:'ネットワーク'},{id:'b',x:88,y:50,icon:'pc',label:'相手',cls:'off'}],[['a','c'],['c','b']],'16/4');
+  (async()=>{const r=RUN;while(alive(r)){await N.fly(['a','c','b'],{label:'データ',dur:800});bubble(N.node('a'),'……返事がない','g',1400);await sleep(1800);}})().catch(()=>{});
+});
+add(4,'solve','そこで生まれたのが…',`
+<div class="solve">
+  ${tech('ping<br><span style="font-size:18px">（ピング）</span>','1983年','相手に小さなデータを送り、「届いたよ」という返事が戻ってくるかどうかと、その往復時間を調べる道具。',1)}
+  ${points(
+    '「届くかな？」（エコー要求）を送り、届いた相手が「届いたよ」（エコー応答）を返す。これは<b>ICMP</b>という、IPのための連絡用のしくみを使っている。',
+    '返事が来れば「<b>相手まで届いた</b>」＝そこまでの道はつながっている。<b>往復時間（ミリ秒）</b>で、近いか遠いかもわかる。',
+    '返事が来なければ「<b>タイムアウト</b>」。電源オフ、道が切れている、相手がpingに答えない設定…などが考えられる。'
+  )}
+</div>
+<div class="story"><b>こぼれ話：</b>名前の由来は、潜水艦のソナーの「ピーン」という音。音を出して、跳ね返ってくるまでの時間で相手の位置を知るのと同じ発想です。作ったのはマイク・ムースで、一晩で書き上げたといわれています。</div>`);
+add(4,'try','pingを打ってみよう',`
+<p class="lead">相手を選んで ping を送ろう。<b>届いたかどうか</b>、返事が戻るまでの時間、届かなかったときの表示を比べてみよう。</p>
+<div class="ctrl" id="t4"></div>
+<div id="n4"></div>
+<div class="term" id="term4"><span class="muted">C:\\&gt; ここに結果が表示されます</span></div>`,el=>{
+  const N=makeNet($(el,'#n4'),[
+    {id:'me',x:9,y:62,icon:'pc',label:'あなた',sub:'192.168.1.10'},
+    {id:'sw',x:27,y:62,icon:'sw',label:'スイッチ'},
+    {id:'same',x:36,y:16,icon:'pc',label:'PC-B',sub:'192.168.1.20'},
+    {id:'off',x:12,y:16,icon:'pc',label:'PC-E（電源オフ）',sub:'192.168.1.30',cls:'off'},
+    {id:'R',x:48,y:62,icon:'router',label:'ルータ'},
+    {id:'other',x:62,y:16,icon:'pc',label:'PC-C',sub:'192.168.2.10'},
+    {id:'cl',x:70,y:62,icon:'cloud',label:'インターネット'},
+    {id:'far',x:91,y:62,icon:'server',label:'海外のサーバ',sub:'203.0.113.80'}
+  ],[['me','sw'],['sw','same'],['sw','off'],['sw','R'],['R','other'],['R','cl'],['cl','far']],'16/6.4');
+  const T=[
+    {ip:'192.168.1.20',t:'同じネットワークのPC-B',path:['me','sw','same'],ms:[1,3],ttl:128},
+    {ip:'192.168.2.10',t:'隣のネットワークのPC-C',path:['me','sw','R','other'],ms:[2,5],ttl:127},
+    {ip:'203.0.113.80',t:'海外のサーバ',path:['me','sw','R','cl','far'],ms:[150,185],ttl:48,slow:true},
+    {ip:'192.168.1.30',t:'電源オフのPC-E',path:['me','sw','off'],off:true}
+  ];
+  const term=$(el,'#term4'), ctrl=$(el,'#t4');
+  const line=(h,c)=>{term.insertAdjacentHTML('beforeend',`<div class="${c||''}">${h}</div>`);term.scrollTop=term.scrollHeight;};
+  T.forEach(t=>{const b=document.createElement('button');b.className='go';b.textContent=`ping ${t.ip}（${t.t}）`;b.onclick=act(async()=>run(t));ctrl.appendChild(b);});
+  async function run(t){
+    term.innerHTML='';
+    line(`C:\\&gt; ping ${t.ip}`,'cmd'); line(`${t.ip} に ping を送信しています 32 バイトのデータ:`);
+    let ok=0;
+    const durs=t.path.slice(1).map((p,i)=>(t.slow&&i>=2)?700:380);
+    for(let i=0;i<4;i++){
+      await N.fly(t.path,{label:'届くかな？',cls:'blue',dur:durs});
+      if(t.off){bubble(N.node('off'),'（電源が切れている）','g',1200);await sleep(900);line('要求がタイムアウトしました。','bad');continue;}
+      flash(N.node(t.path[t.path.length-1]),'ok',700);
+      await N.fly([...t.path].reverse(),{label:'届いたよ',cls:'ack',dur:[...durs].reverse()});
+      ok++; line(`${t.ip} からの応答: バイト数 =32 時間 =${rnd(t.ms[0],t.ms[1])}ms TTL=${t.ttl}`,'good');
+    }
+    line(''); line(`${t.ip} の ping 統計:`);
+    line(`    パケット数: 送信 = 4、受信 = ${ok}、損失 = ${4-ok} (${(4-ok)*25}% の損失)`,ok?'':'bad');
+  }
+});
+add(4,'check','たしかめよう',`
+${quiz('ping を送ったら「要求がタイムアウトしました」と表示された。原因として<b>考えにくい</b>ものは？',
+ ['相手のコンピュータの電源が切れている','途中のケーブルが抜けている','相手が ping に応答しない設定になっている','相手からの返事が速すぎた'],3,
+ 'タイムアウトは「決められた時間内に返事が来なかった」という意味です。返事が速すぎて失敗することはありません。')}
+${teaser('届くかどうかは確かめられるようになった。でも大きなファイルを送ると、<b>途中でデータの一部が消えたり、順番が入れかわったり</b>することも…。それに気づけないと、こわれたファイルが届いてしまう！')}`);
+
+/* ---------------- 5. TCP・UDP ---------------- */
+add(5,'problem','大きなデータを、確実に届けたい',`
+<div id="sc"></div>
+${say('大きなデータを一気に送ると、そのあいだ回線をひとりじめ。ほかの人が待たされる。','しかもネットワークは混むと、データを<b>落とす</b>ことがある。一部が欠けたら、全部やり直し…？')}`,el=>{
+  const N=makeNet($(el,'#sc'),[{id:'a',x:10,y:30,icon:'pc',label:'大きなファイルを送る人'},{id:'w',x:10,y:80,icon:'pc',label:'待たされる人'},{id:'c',x:50,y:55,icon:'cloud',label:'混雑したネットワーク'},{id:'b',x:90,y:55,icon:'pc',label:'受け取る人'}],[['a','c'],['w','c'],['c','b']],'16/5');
+  (async()=>{const r=RUN;while(alive(r)){
+    bubble(N.node('w'),'まだかな…','g',3600);
+    await N.fly(['a','c'],{label:'ものすごく大きなファイル（2GB）',cls:'red',dur:1300});
+    await Promise.all([
+      N.fly(['c','b'],{label:'大きなファイル（一部欠け）',cls:'red',dur:1600}),
+      sleep(330).then(()=>drop(N,58,55,'データの一部','red')),
+      sleep(800).then(()=>drop(N,70,55,'データの一部','red'))
+    ]);
+    bubble(N.node('b'),'途中が欠けてる…！','ng',1600);
+    await sleep(2200);}})().catch(()=>{});
+});
+add(5,'solve','そこで生まれたのが…',`
+<div class="solve">
+  ${tech('TCP <span style="font-size:18px">と</span> UDP','TCP 1974年ごろ〜／UDP 1980年','データを小さな「パケット」に分けて送るときの、2つの届け方のルール。',2)}
+  ${points(
+    'データを小さな<b class="em">パケット</b>に分けて送る。回線をひとりじめせず、みんなで分け合える（<b>パケット交換</b>）。',
+    '<b class="em">TCP</b>：パケットに<b>番号</b>をつけ、受け取ったら「届いたよ（ACK）」と返す。返事がなければ<b>再送</b>。番号順に<b>並べ直す</b>。→ 確実だけど、手間がかかる。',
+    '<b class="em">UDP</b>：確認も再送もせず、とにかく送る。→ 欠けることもあるけど、<b>速い・待たない</b>。'
+  )}
+</div>
+<table class="cmp fig">
+  <tr><th></th><th>TCP</th><th>UDP</th></tr>
+  <tr><td>届いたかの確認・再送</td><td>する</td><td>しない</td></tr>
+  <tr><td>順番の並べ直し</td><td>する</td><td>しない</td></tr>
+  <tr><td>向いている用途</td><td>Webページ・メール・ファイル（1文字も欠けたら困る）</td><td>ビデオ通話・ライブ配信・オンラインゲーム（遅れる方が困る）</td></tr>
+</table>`);
+add(5,'try','パケットを落とすネットワークで送ってみよう',`
+<p class="lead">文を「送る」と、3文字ずつのパケットに分かれて運ばれます。ネットワークは混雑していて、ときどきパケットが<b>途中で落ちて</b>しまいます。TCPとUDPで結果を比べよう。</p>
+<div class="ctrl">
+  <label>送る文 <input id="msg5" value="ネットワークはパケットでできている" maxlength="24" style="width:300px"></label>
+  <div class="seg" id="m5"><button class="on" data-v="tcp">TCP</button><button data-v="udp">UDP</button></div>
+  <label>落とす確率 <input type="range" id="loss5" min="0" max="60" step="10" value="30"> <b id="lv5">30%</b></label>
+  <button class="go" id="b5">送る ▶</button>
+</div>
+<div id="n5"></div>
+<div class="row2">
+  <div class="panel"><h4 id="sh5">受け取る側（パケットの番号ごとの箱）</h4><div class="slots" id="slots5"></div><div id="res5" style="margin-top:8px;font-size:16px"></div></div>
+  <div class="panel"><h4>何が起きた？</h4><div class="log" id="log5"><div class="muted">「送る」を押してみよう</div></div></div>
+</div>`,el=>{
+  const N=makeNet($(el,'#n5'),[{id:'s',x:8,y:50,icon:'pc',label:'送る側'},{id:'c',x:50,y:50,icon:'cloud',label:'混雑したネットワーク'},{id:'r',x:92,y:50,icon:'pc',label:'受け取る側'}],[['s','c'],['c','r']],'16/4');
+  let mode='tcp';
+  seg($(el,'#m5'),v=>{mode=v;$(el,'#sh5').textContent=v==='tcp'?'受け取る側（パケットの番号ごとの箱）':'受け取る側（届いた順に並ぶ）';});
+  const loss=$(el,'#loss5'); loss.oninput=()=>$(el,'#lv5').textContent=loss.value+'%';
+  const slots=$(el,'#slots5'),res=$(el,'#res5'),log=$(el,'#log5');
+  $(el,'#b5').onclick=act(async()=>{
+    const text=($(el,'#msg5').value||'ネットワーク').slice(0,24);
+    const parts=text.match(/.{1,3}/gu); const n=parts.length;
+    const got=new Array(n).fill(null); const order=[]; let sent=0,rounds=0; const p=loss.value/100; const t0=performance.now();
+    log.innerHTML=''; res.innerHTML='';
+    slots.innerHTML=mode==='tcp'?parts.map((_,i)=>`<div class="slot" data-i="${i}"><i>${i+1}番</i><span>　</span></div>`).join(''):'';
+    logTo(log,`「${esc(text)}」を ${n}個のパケットに分けて、${mode.toUpperCase()}で送る`);
+    let pending=[...Array(n).keys()];
+    while(pending.length&&rounds<12){
+      rounds++;
+      if(rounds>1)logTo(log,`${pending.map(i=>i+1).join('・')}番の「届いたよ」が来ない → <b>もう一度送る（再送）</b>`);
+      await Promise.all(pending.map((i,k)=>(async()=>{
+        await sleep(k*230); sent++;
+        const lab=`${i+1}｜${parts[i]}`;
+        await N.fly(['s','c'],{label:lab,dur:650});
+        if(Math.random()<p){const mx=rnd(56,80);await N.fly(['c',{x:mx,y:50}],{label:lab,dur:(mx-50)*22});await drop(N,mx,50,lab);return;}
+        await sleep(Math.random()*650);
+        await N.fly(['c','r'],{label:lab,dur:650});
+        order.push(i+1);
+        if(mode==='tcp'){
+          if(got[i]===null){got[i]=parts[i];const sl=slots.querySelector(`[data-i="${i}"]`);sl.classList.add('fill');sl.querySelector('span').textContent=parts[i];}
+          await N.fly(['r','c','s'],{label:`ACK ${i+1}`,cls:'ack',dur:500});
+        }else{
+          got[i]=parts[i]; slots.insertAdjacentHTML('beforeend',`<div class="slot fill"><i>${i+1}番</i><span>${esc(parts[i])}</span></div>`);
+        }
+      })()));
+      if(mode==='udp')break;
+      pending=pending.filter(i=>got[i]===null);
+    }
+    const sec=((performance.now()-t0)/1000*SPEED).toFixed(1);
+    logTo(log,`届いた順番：${order.join(' → ')||'なし'}`);
+    if(mode==='tcp'){
+      res.innerHTML=`番号順に並べると：<b class="big">${esc(parts.join(''))}</b><br><span class="small">全部そろった！ 送ったパケット ${sent}個（うち再送 ${sent-n}個）／かかった時間 約${sec}秒</span>`;
+    }else{
+      const miss=got.filter(x=>x===null).length;
+      res.innerHTML=`届いた順につなぐと：<b class="big">${esc(order.map(k=>parts[k-1]).join(''))}</b><br><span class="small">欠け ${miss}個。確認も並べ直しもしないぶん、待ち時間なし／かかった時間 約${sec}秒</span>`;
+    }
+  });
+});
+add(5,'check','たしかめよう',`
+${quiz('ビデオ通話で UDP がよく使われる理由として、もっとも適切なものは？',
+ ['すべてのデータが確実に届くから','少し欠けても、遅れずにすぐ届くことの方が大事だから','データが自動的に暗号化されるから','IPアドレスが必要ないから'],1,
+ 'ビデオ通話では、0.5秒前の映像を再送してもらっても役に立ちません。多少の欠けより「今」の映像が遅れずに届くことが大切なので、UDPが向いています。')}
+${teaser('確実に届くようになった。でも1台のコンピュータでは、ブラウザも、メールも、ゲームも<b>同時に動いている</b>。届いたデータ、<b>どのアプリ</b>に渡せばいい？')}`);
+
+/* ---------------- 6. ポート・ファイアウォール ---------------- */
+add(6,'problem','どのアプリ宛て？　だれでも入れていいの？',`
+<div id="sc"></div>
+${say('IPアドレスでわかるのは「どのコンピュータ（建物）か」まで。','中のどのアプリ（部屋）宛てかわからない。それに、<b>だれでも好きな部屋をノックできる</b>のは危なくない？')}`,el=>{
+  const N=makeNet($(el,'#sc'),[{id:'a',x:12,y:50,icon:'pc',label:'送った人'},{id:'s',x:50,y:50,icon:'server',label:'サーバ'},{id:'w',x:84,y:14,icon:'none',text:'Web',cls:'room'},{id:'m',x:84,y:50,icon:'none',text:'メール',cls:'room'},{id:'g',x:84,y:86,icon:'none',text:'ゲーム',cls:'room'}],[['a','s'],['s','w'],['s','m'],['s','g']],'16/5');
+  (async()=>{const r=RUN;while(alive(r)){await N.fly(['a','s'],{label:'データ',dur:800});['w','m','g'].forEach(k=>bubble(N.node(k),'わたし宛て？','g',1400));await sleep(2000);}})().catch(()=>{});
+});
+add(6,'solve','そこで生まれたのが…',`
+<div class="solve">
+  ${tech('ポート番号<br><span style="font-size:18px">と ファイアウォール</span>','ポート番号：TCP・UDPとともに／ファイアウォール：1988年ごろ〜','ポート番号はコンピュータの中の「部屋番号」。ファイアウォールは、通してよい通信だけを通す門番。',2)}
+  ${points(
+    '<b class="em">ポート番号</b>は0〜65535の番号。<b>IPアドレス＋ポート番号</b>で、目的のアプリまで届く（マンションの住所＋部屋番号）。',
+    'よく使う番号は決まっている（下の表）。たとえば Webページは 443番（HTTPS）や 80番（HTTP）。',
+    '<b class="em">ファイアウォール</b>は、<b>内側から始めた通信（とその返事）は通し</b>、<b>外側から来る通信は許可したポートだけ</b>通す。外からの不要な通信をブロックする。'
+  )}
+</div>
+<table class="cmp fig">
+  <tr><th>ポート番号</th><th>使い道</th><th>ポート番号</th><th>使い道</th></tr>
+  <tr><td>80</td><td>Web（HTTP）</td><td>25</td><td>メールの送信（SMTP）</td></tr>
+  <tr><td>443</td><td>Web（HTTPS・暗号化あり）</td><td>53</td><td>DNS（第7章で登場）</td></tr>
+  <tr><td>22</td><td>遠隔操作（SSH）</td><td>…</td><td>全部で65536個</td></tr>
+</table>`);
+add(6,'try','ポートとファイアウォールを体験しよう',`
+<p class="lead">ボタンを押して通信を送ろう。ファイアウォールは、<b>内側（学校）から始めた通信は通し</b>、<b>外側から来る通信は「通す」と決めたポートだけ</b>を通します。</p>
+<div class="ctrl">
+  <label><input type="checkbox" id="fw6"> ファイアウォールを使う</label>
+  <span id="al6" class="small">外から通すポート：
+    <label><input type="checkbox" data-p="443" checked>443</label>
+    <label><input type="checkbox" data-p="80" checked>80</label>
+    <label><input type="checkbox" data-p="25" checked>25</label>
+    <label><input type="checkbox" data-p="22">22</label>
+  </span>
+</div>
+<div class="ctrl"><b class="small">外から：</b><span id="bt6" style="display:contents"></span><b class="small" style="margin-left:8px">内から：</b><span id="bi6" style="display:contents"></span></div>
+<div id="n6"></div>
+<div class="panel" style="margin-top:12px"><h4>何が起きた？</h4><div class="log" id="log6"><div class="muted">ボタンを押してみよう</div></div></div>`,el=>{
+  const R=[{p:443,n:'Web（HTTPS）',y:12},{p:80,n:'Web（HTTP）',y:33},{p:25,n:'メール（SMTP）',y:54},{p:22,n:'遠隔操作（SSH）',y:75}];
+  const nodes=[
+    {id:'you',x:10,y:17,icon:'pc',label:'外の利用者'},
+    {id:'bad',x:10,y:50,icon:'spy',label:'あやしい人'},
+    {id:'ext',x:10,y:83,icon:'server',label:'外部のWebサイト'},
+    {id:'fw',x:34,y:50,icon:'wall',label:'ファイアウォール',cls:'off'},
+    {id:'gate',x:62,y:43,icon:'server',label:'校内のサーバ',sub:'203.0.113.80'},
+    {id:'pc',x:62,y:80,icon:'pc',label:'校内のPC'}];
+  R.forEach(r=>nodes.push({id:'r'+r.p,x:89,y:r.y,icon:'none',text:`${r.p}番`,sub:r.n,cls:'room'}));
+  const box=$(el,'#n6');
+  const N=makeNet(box,nodes,[['you','fw'],['bad','fw'],['ext','fw'],['fw','gate'],['fw','pc'],...R.map(r=>['gate','r'+r.p])],'16/8');
+  box.insertAdjacentHTML('afterbegin','<div class="area" style="left:1%;top:3%;width:21%;height:94%"><span>インターネット（外側）</span></div><div class="area" style="left:45%;top:3%;width:54%;height:94%"><span>学校のネットワーク（内側）</span></div>');
+  const fw=$(el,'#fw6'), log=$(el,'#log6');
+  const upd=()=>{N.node('fw').classList.toggle('off',!fw.checked);N.node('fw').querySelector('.nl').textContent=fw.checked?'ファイアウォール':'（ファイアウォールなし）';$(el,'#al6').style.opacity=fw.checked?1:.4;};
+  fw.onchange=upd; upd();
+  const allow=p=>!fw.checked||$(el,`[data-p="${p}"]`).checked;
+  const clr=()=>{if(log.querySelector('.muted'))log.innerHTML='';};
+  const B=[{f:'you',p:443,t:'Web（443番）'},{f:'you',p:25,t:'メール（25番）'},{f:'you',p:80,t:'古いWeb（80番）'},{f:'bad',p:22,t:'あやしい人：遠隔操作（22番）'}];
+  B.forEach(b=>{const e=document.createElement('button');e.className='go'+(b.f==='bad'?' sub':'');e.textContent=b.t;e.onclick=act(async()=>send(b));$(el,'#bt6').appendChild(e);});
+  const ib=document.createElement('button');ib.className='go';ib.textContent='校内PC → 外部のWebサイト';ib.onclick=act(inside);$(el,'#bi6').appendChild(ib);
+  async function send(b){
+    clr();
+    const lab=`203.0.113.80 : <b>${b.p}</b>`, cls=b.f==='bad'?'red':'';
+    await N.fly([b.f,'fw'],{label:lab,cls,dur:700});
+    if(!allow(b.p)){
+      bubble(N.node('fw'),`外から ${b.p}番 は通さない！`,'ng');flash(N.node('fw'),'alert');
+      logTo(log,`外からの通信。<b>${b.p}番</b> は許可していないので、ファイアウォールが<b class="em">ブロック</b>した`);
+      await N.fly(['fw',b.f],{label:'×',cls:'gray',dur:500});return;
+    }
+    if(fw.checked){bubble(N.node('fw'),`${b.p}番は許可されている → 通す`,'ok',1300);await sleep(700);}
+    await N.fly(['fw','gate','r'+b.p],{label:lab,cls,dur:600});
+    const r=R.find(x=>x.p===b.p);
+    if(b.f==='bad'){bubble(N.node('r'+b.p),'ノックされた…！','ng');flash(N.node('r'+b.p),'alert');logTo(log,`<b class="ng">22番に届いてしまった！</b> パスワードを総当たりで試されるかも…`);}
+    else{bubble(N.node('r'+b.p),`${r.n}が受け取った`,'ok');flash(N.node('r'+b.p),'ok');logTo(log,`ポート番号 ${b.p} を見て、${r.n}のアプリに渡した`);}
+    await sleep(300);
+  }
+  async function inside(){
+    clr();
+    await N.fly(['pc','fw'],{label:'外部サイト : 443',cls:'tealp',dur:650});
+    if(fw.checked){bubble(N.node('fw'),'内側から始めた通信 → 通す','ok',1400);await sleep(800);}
+    await N.fly(['fw','ext'],{label:'外部サイト : 443',cls:'tealp',dur:650});
+    bubble(N.node('ext'),'ページをどうぞ','ok',1200);await sleep(500);
+    await N.fly(['ext','fw'],{label:'返事（ページ）',cls:'ack',dur:650});
+    if(fw.checked){bubble(N.node('fw'),'さっきの通信への返事 → 通す','ok',1400);await sleep(800);}
+    await N.fly(['fw','pc'],{label:'返事（ページ）',cls:'ack',dur:650});
+    bubble(N.node('pc'),'表示できた！','ok');flash(N.node('pc'),'ok');
+    logTo(log,fw.checked?'ファイアウォールは<b>内側から始めた通信</b>と、<b>その返事</b>を覚えていて通す（外から通すポートの設定とは関係なし）':'ファイアウォールなし：外への通信も、外からの通信も、全部そのまま通る');
+    await sleep(300);
+  }
+});
+add(6,'check','たしかめよう',`
+${quiz('IPアドレスとポート番号を「マンション」にたとえると？',
+ ['IPアドレス＝部屋番号、ポート番号＝マンションの住所','IPアドレス＝マンションの住所、ポート番号＝部屋番号','IPアドレス＝住んでいる人の名前、ポート番号＝郵便番号','どちらもマンションの住所'],1,
+ 'IPアドレスで「どのコンピュータ（建物）か」、ポート番号で「その中のどのアプリ（部屋）か」が決まります。')}
+${teaser('これで世界中のコンピュータの、目的のアプリと通信できる！　…でも「<b>203.0.113.80 の 443番</b>」なんて、<b>覚えていられる？</b>')}`);
+
+/* ---------------- 7. DNS ---------------- */
+add(7,'problem','数字の住所なんて、覚えられない',`
+<div class="row2" style="margin-top:0">
+  <div class="panel"><h4>みんなが持っていた「対応表」（HOSTS.TXT）</h4><div class="eye" id="hosts" style="max-height:170px;overflow:hidden;font-size:13px"></div></div>
+  <div class="panel" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center"><h4>登録されたコンピュータの数</h4><div style="font-size:44px;font-weight:700;color:var(--coral)" id="cnt">10</div><div class="small muted">増えるほど、表は大きく、更新は追いつかない</div></div>
+</div>
+${say('昔は、すべてのコンピュータの「名前とIPアドレスの対応表」を<b>1か所</b>で管理し、みんながそれをコピーして使っていた。','でもコンピュータが爆発的に増えると、表は巨大になり、更新も間に合わない…！')}
+<span class="era">1980年代前半、インターネットにつながるコンピュータが急増しました</span>`,el=>{
+  const h=$(el,'#hosts'),c=$(el,'#cnt'); let n=10;
+  const names=['ucla','sri','mit','stanford','utah','harvard','bbn','cmu','rand','ucsb','nasa','berkeley','yale','ibm','xerox','nyu'];
+  (async()=>{const r=RUN;while(alive(r)&&n<4000){
+    n=Math.floor(n*1.35)+3; c.textContent=n.toLocaleString();
+    const nm=names[rnd(0,names.length-1)]+'-'+rnd(1,99);
+    h.insertAdjacentHTML('afterbegin',`<div>HOST : 10.${rnd(0,9)}.${rnd(0,255)}.${rnd(1,254)} : ${nm.toUpperCase()}</div>`);
+    await sleep(500);}})().catch(()=>{});
+});
+add(7,'solve','そこで生まれたのが…',`
+<div class="solve">
+  ${tech('DNS<br><span style="font-size:18px">（ドメインネームシステム）</span>','1983年','「www.example.jp」のような名前を、IPアドレスに変換するしくみ。世界中で分担して管理する電話帳。',3)}
+  ${points(
+    '名前を「.」で区切って<b>階層</b>にする。<b>ルート</b> → <b>jp</b> → <b>example.jp</b> → <b>www</b> と、右から順に担当が分かれている。',
+    '1か所で全部を持たず、<b>それぞれの担当者が自分の部分だけ</b>を管理する（<b>分散管理</b>）。だから増えても大丈夫。',
+    '一度調べた答えは、しばらく覚えておく（<b>キャッシュ</b>）。2回目からは速い。'
+  )}
+</div>
+<div class="story"><b>こぼれ話：</b>DNSを設計したのはポール・モカペトリス。インターネットの住所録を「1枚の表」から「みんなで分担する木構造」に変えました。この考え方は今も変わらず使われています。</div>`);
+add(7,'try','名前からIPアドレスを調べてみよう',`
+<p class="lead">名前を選んで「調べる」。DNSキャッシュサーバが、担当のサーバに<b>順番に聞いていく</b>様子を見よう。<b>同じ名前をもう一度</b>調べたり、<b>shop.example.jp</b>や<b>www.sample.jp</b>を調べたりすると…？</p>
+<div class="ctrl">
+  <label>調べる名前 <select id="q7"><option>www.example.jp</option><option>shop.example.jp</option><option>www.sample.jp</option></select></label>
+  <button class="go" id="b7">調べる ▶</button>
+  <button class="go sub" id="c7">キャッシュを消す</button>
+</div>
+<div id="n7"></div>
+<div class="row2">
+  <div class="panel"><h4>キャッシュサーバが覚えていること</h4><div id="cache7" class="small"></div></div>
+  <div class="panel"><h4>何が起きた？</h4><div class="log" id="log7"><div class="muted">「調べる」を押してみよう</div></div></div>
+</div>`,el=>{
+  const Z={'www.example.jp':{ip:'203.0.113.80',zone:'example.jp',node:'ex'},'shop.example.jp':{ip:'203.0.113.81',zone:'example.jp',node:'ex'},'www.sample.jp':{ip:'198.51.100.25',zone:'sample.jp',node:'sm'}};
+  const N=makeNet($(el,'#n7'),[
+    {id:'you',x:7,y:50,icon:'pc',label:'あなた'},
+    {id:'res',x:30,y:50,icon:'book',label:'DNSキャッシュサーバ',sub:'学校やプロバイダにある'},
+    {id:'root',x:60,y:14,icon:'book',label:'ルートサーバ',sub:'いちばん上の担当'},
+    {id:'jp',x:60,y:84,icon:'book',label:'jp 担当'},
+    {id:'ex',x:90,y:30,icon:'book',label:'example.jp 担当'},
+    {id:'sm',x:90,y:72,icon:'book',label:'sample.jp 担当'}
+  ],[['you','res'],['res','root'],['res','jp'],['res','ex'],['res','sm']],'16/7.5');
+  let C={names:{},zones:{},jp:false};
+  const cache=$(el,'#cache7'),log=$(el,'#log7');
+  const draw=()=>{const a=[];
+    if(C.jp)a.push('・jp 担当の場所');
+    for(const z in C.zones)a.push(`・${z} 担当の場所`);
+    for(const n in C.names)a.push(`・<b>${n} → ${C.names[n]}</b>`);
+    cache.innerHTML=a.length?a.join('<br>'):'<span class="muted">（まだ何も覚えていない）</span>';};
+  draw();
+  $(el,'#c7').onclick=()=>{if(BUSY)return;C={names:{},zones:{},jp:false};draw();log.innerHTML='<div>キャッシュを消しました</div>';};
+  const D=650;
+  $(el,'#b7').onclick=act(async()=>{
+    const name=$(el,'#q7').value, z=Z[name]; let q=0;
+    log.innerHTML='';
+    await N.fly(['you','res'],{label:`${name} は？`,cls:'red',dur:D});
+    if(C.names[name]){
+      bubble(N.node('res'),'キャッシュにあった！','ok');logTo(log,'キャッシュサーバが<b>答えを覚えていた</b> → だれにも聞かずにすぐ返事');
+      await sleep(600);
+    }else{
+      if(!C.zones[z.zone]){
+        if(!C.jp){
+          q++; logTo(log,`${q}. ルートサーバに聞く`);
+          await N.fly(['res','root'],{label:`${name} は？`,cls:'red',dur:D});
+          bubble(N.node('root'),'jp のことは jp担当に聞いて','',1500); await sleep(900);
+          await N.fly(['root','res'],{label:'jp担当はこちら',cls:'gray',dur:D}); C.jp=true; draw();
+        }else{bubble(N.node('res'),'jp担当の場所は覚えている','',1300);logTo(log,'jp担当の場所は覚えているので、ルートサーバはとばす');await sleep(700);}
+        q++; logTo(log,`${q}. jp担当に聞く`);
+        await N.fly(['res','jp'],{label:`${name} は？`,cls:'red',dur:D});
+        bubble(N.node('jp'),`${z.zone} のことは ${z.zone}担当に聞いて`,'',1500); await sleep(900);
+        await N.fly(['jp','res'],{label:`${z.zone}担当はこちら`,cls:'gray',dur:D}); C.zones[z.zone]=true; draw();
+      }else{bubble(N.node('res'),`${z.zone}担当の場所は覚えている`,'',1300);logTo(log,`${z.zone}担当の場所は覚えているので、直接聞く`);await sleep(700);}
+      q++; logTo(log,`${q}. ${z.zone}担当に聞く`);
+      await N.fly(['res',z.node],{label:`${name} は？`,cls:'red',dur:D});
+      bubble(N.node(z.node),`${name} は ${z.ip} です`,'ok',1500); await sleep(900);
+      await N.fly([z.node,'res'],{label:z.ip,cls:'tealp',dur:D}); C.names[name]=z.ip; draw();
+    }
+    await N.fly(['res','you'],{label:z.ip,cls:'tealp',dur:D});
+    bubble(N.node('you'),`わかった！ ${z.ip}`,'ok');
+    logTo(log,`${name} → ${z.ip}（キャッシュサーバが外に聞いた回数：${q}回）`);
+  });
+});
+add(7,'check','たしかめよう',`
+${quiz('DNSが、1か所ではなく<b>分散して</b>管理されている利点として、もっとも適切なものは？',
+ ['名前が短くてすむ','1か所に負担や故障が集中せず、それぞれの担当が自分の部分を更新できる','通信内容が暗号化される','IPアドレスが不要になる'],1,
+ '世界中の名前を1か所で管理すると、問い合わせも更新もそこに集中します。担当を分けることで、規模が大きくなっても動き続けられます。')}
+${teaser('名前から相手のサーバにたどり着けた。でも、サーバに<b>なんて話しかければ</b>ページを送ってもらえる？　コンピュータもソフトもバラバラなのに…。')}`);
+
+/* ---------------- 8. HTTP ---------------- */
+add(8,'problem','共通の「頼み方」がほしい',`
+<div id="sc"></div>
+${say('世界中の研究者で文書を共有したい。でも、使っているコンピュータもソフトもバラバラ。','どの機械にも通じる、<b>共通の「頼み方」と「答え方」</b>が必要だ。')}
+<span class="era">1989年、スイスの研究所CERNで、ティム・バーナーズ＝リーがWWW（World Wide Web）を提案しました</span>`,el=>{
+  const N=makeNet($(el,'#sc'),[{id:'a',x:12,y:22,icon:'pc',label:'研究者A'},{id:'b',x:12,y:78,icon:'pc',label:'研究者B'},{id:'s',x:85,y:50,icon:'server',label:'文書のあるサーバ'}],[['a','s'],['b','s']],'16/5');
+  (async()=>{const r=RUN;while(alive(r)){
+    await Promise.all([N.fly(['a','s'],{label:'文書ちょうだい',dur:1000}),N.fly(['b','s'],{label:'SEND FILE #12',cls:'blue',dur:1000})]);
+    bubble(N.node('s'),'？？？　何て言ってるの？','g',1600);await sleep(2200);}})().catch(()=>{});
+});
+add(8,'solve','そこで生まれたのが…',`
+<div class="solve">
+  ${tech('HTTP<br><span style="font-size:18px">と WWW</span>','1991年に一般公開','ブラウザが「このページください」と頼み（リクエスト）、サーバが「はい、どうぞ」と返す（レスポンス）ための会話のルール。',3)}
+  ${points(
+    'ブラウザ → サーバ：<b class="em">リクエスト</b>「GET /index.html（このファイルをください）」',
+    'サーバ → ブラウザ：<b class="em">レスポンス</b>「200 OK（どうぞ）」＋ページの中身（<b>HTML</b>）。ないときは「404 Not Found」。',
+    'ルールが決まっているので、どんなコンピュータ・どんなブラウザでも同じようにページが見られる。'
+  )}
+</div>
+<div class="fig">
+  <div class="urlfig"><span class="u1">https://</span><span class="u2">www.example.jp</span><span class="u3">/news/index.html</span>
+    <div class="urlleg"><span><i style="background:var(--L2)"></i>プロトコル（どのルールで話すか）</span><span><i style="background:var(--L1)"></i>ドメイン名（DNSでIPアドレスに変換）</span><span><i style="background:var(--L3)"></i>パス（サーバの中のファイルの場所）</span></div>
+  </div>
+</div>`);
+add(8,'try','ブラウザとサーバの会話をのぞこう',`
+<p class="lead">開きたいページを選んで「ページを開く」。ブラウザとサーバのあいだで、<b>どんな文字</b>がやりとりされているか見てみよう。</p>
+<div class="ctrl">
+  <label>ページ <select id="p8"><option>/index.html</option><option>/news.html</option><option>/himitsu.html</option></select></label>
+  <label><input type="checkbox" id="busy8"> サーバが大混雑している</label>
+  <button class="go" id="b8">ページを開く ▶</button>
+</div>
+<div class="http">
+  <div class="browser"><div class="bar" id="bar8">http://www.example.jp/index.html</div><div class="view" id="view8"><span class="muted">（まだ何も表示されていない）</span></div></div>
+  <div class="wire" id="wire8"><div class="muted small" style="text-align:center">ここに、やりとりされる<br>メッセージが流れます</div></div>
+  <div class="srv" id="srv8"><b>サーバ www.example.jp</b><br>持っているファイル：<ul><li>index.html</li><li>news.html</li></ul><div id="st8" class="small muted"></div></div>
+</div>`,el=>{
+  const files={'/index.html':{title:'ようこそ example高校へ',body:'<p>今日の時間割、部活動のお知らせ…</p><p><a href="#" onclick="return false">ニュース一覧</a></p>'},'/news.html':{title:'ニュース',body:'<ul><li>文化祭の日程が決まりました</li><li>情報科：ネットワークの授業がはじまりました</li></ul>'}};
+  const wire=$(el,'#wire8'),view=$(el,'#view8'),srv=$(el,'#srv8'),st=$(el,'#st8');
+  $(el,'#p8').onchange=()=>$(el,'#bar8').textContent='http://www.example.jp'+$(el,'#p8').value;
+  const show=async(cls,head,text,from)=>{
+    const m=document.createElement('div');m.className='msg '+cls;m.innerHTML=`<div class="h">${head}</div>${esc(text)}`;wire.appendChild(m);
+    const an=m.animate([{transform:`translateX(${from}px)`,opacity:0},{transform:'translateX(0)',opacity:1}],{duration:700/SPEED,easing:'ease-out'});track(an);await an.finished;
+  };
+  $(el,'#b8').onclick=act(async()=>{
+    const p=$(el,'#p8').value,busy=$(el,'#busy8').checked;
+    wire.innerHTML='';view.innerHTML='<span class="muted">読み込み中…</span>';st.textContent='';
+    await show('req','ブラウザ → サーバ（リクエスト）',`GET ${p} HTTP/1.1\nHost: www.example.jp\nUser-Agent: MyBrowser`,-60);
+    srv.classList.add('hl');st.textContent=busy?'処理が追いつかない…！':`${p.slice(1)} を探しています…`;await sleep(1000);srv.classList.remove('hl');
+    let res,html;
+    if(busy){res='HTTP/1.1 503 Service Unavailable\nContent-Type: text/html\n\n<h1>ただいま混雑しています</h1>';html='<h3>503 Service Unavailable</h3><p class="muted">サーバが混雑していて、応答できませんでした。</p>';st.textContent='503 を返した';}
+    else if(files[p]){const f=files[p];res=`HTTP/1.1 200 OK\nContent-Type: text/html\n\n<h1>${f.title}</h1>…`;html=`<h3>${f.title}</h3>${f.body}`;st.textContent='見つかった → 200 OK を返した';}
+    else{res='HTTP/1.1 404 Not Found\nContent-Type: text/html\n\n<h1>Not Found</h1>';html='<h3>404 Not Found</h3><p class="muted">お探しのページは見つかりませんでした。</p>';st.textContent=`${p.slice(1)} は持っていない → 404 を返した`;}
+    await show('res','サーバ → ブラウザ（レスポンス）',res,60);
+    await sleep(500);
+    view.innerHTML=html;
+    track(view.animate([{opacity:0},{opacity:1}],{duration:400}));
+  });
+});
+add(8,'check','たしかめよう',`
+${quiz('ブラウザに「404 Not Found」と表示された。このとき起きていることとして、もっとも適切なものは？',
+ ['DNSで名前をIPアドレスに変換できなかった','サーバには届いたが、頼んだページがサーバになかった','サーバが混雑していて応答できなかった','通信が暗号化されていなかった'],1,
+ '404 は<b>サーバからの返事</b>です。つまりサーバまではちゃんと届いていて、「そのファイルはないよ」と言われた状態。混雑なら 503 などが返ります。')}
+${teaser('Webで<b>買い物やログイン</b>もするようになった（1990年代半ば）。でも、いま見たとおり HTTP の中身は<b>そのまま読める文字</b>。途中で、だれかにパスワードをのぞかれたら…？')}`);
+
+/* ---------------- 9. TLS ---------------- */
+add(9,'problem','途中で、のぞかれていない？',`
+<div id="sc"></div>
+${say('データは、目的地に着くまでにたくさんの機器を通る。<b>フリーWi-Fi</b>などでは、だれかがのぞいているかも。','それに、つながった相手が<b>本物のお店</b>だと、どうしてわかる？')}`,el=>{
+  const N=makeNet($(el,'#sc'),[{id:'a',x:10,y:62,icon:'pc',label:'あなた'},{id:'r',x:45,y:62,icon:'wifi',label:'フリーWi-Fi'},{id:'e',x:45,y:12,icon:'spy',label:'のぞき見する人'},{id:'s',x:88,y:62,icon:'server',label:'ネットショップ'}],[['a','r'],['r','s'],['r','e','tap']],'16/5');
+  (async()=>{const r=RUN;while(alive(r)){await N.fly(['a','r'],{label:'pass=neko1234',dur:800});
+    await Promise.all([N.fly(['r','s'],{label:'pass=neko1234',dur:800}),N.fly(['r','e'],{label:'pass=neko1234',cls:'copy',dur:800}).then(()=>bubble(N.node('e'),'パスワード、見えた！','ng',1500))]);
+    await sleep(1800);}})().catch(()=>{});
+});
+add(9,'solve','そこで生まれたのが…',`
+<div class="solve">
+  ${tech('TLS<br><span style="font-size:18px">（HTTPS の S）</span>','SSL 1995年 → TLS 1999年〜','通信を暗号化し、相手が本物かを確かめるしくみ。HTTP を TLS で守ったものが HTTPS。',3)}
+  ${points(
+    '<b class="em">暗号化</b>：途中でのぞかれても、意味のわからない文字の列にしか見えない。',
+    '<b class="em">証明書</b>：「このサーバは本物の www.example.jp です」と、<b>認証局</b>がお墨付きを与えたもの。なりすましを防ぐ。',
+    'しくみの考え方：はじめに<b>公開鍵暗号</b>を使って<b>共通鍵</b>を安全に共有し、そのあとは処理の速い<b>共通鍵暗号</b>でやりとりする。'
+  )}
+</div>
+<p class="small muted">※ 最新のTLSでは、共通鍵を「送る」かわりに、両者が計算で同じ鍵を作り出す方法（鍵共有）が主に使われています。「安全に共通鍵を共有してから暗号化する」という考え方は同じです。</p>`);
+add(9,'try','のぞき見する人に、何が見える？',`
+<p class="lead">HTTP と HTTPS を切りかえて、ログイン情報を送ってみよう。<b>のぞき見する人の画面</b>に何が表示されるか比べよう。</p>
+<div class="ctrl">
+  <div class="seg" id="m9"><button class="on" data-v="http">HTTP（暗号化なし）</button><button data-v="https">HTTPS（TLSで暗号化）</button></div>
+  <label>ID <input id="id9" value="taro" style="width:90px"></label>
+  <label>パスワード <input id="pw9" value="neko1234" style="width:120px"></label>
+  <button class="go" id="b9">ログイン ▶</button>
+  <span class="addr" id="url9">http://www.example.jp/login</span>
+</div>
+<div id="n9"></div>
+<div class="row2">
+  <div class="panel" style="border-color:var(--coral)"><h4 style="color:var(--coral)">のぞき見する人が見たもの</h4><div class="eye log" id="eve9"><div class="muted">まだ何も見えていない</div></div></div>
+  <div class="panel"><h4>ネットショップ（サーバ）が受け取ったもの</h4><div class="eye log" id="srv9"><div class="muted">まだ何も届いていない</div></div></div>
+</div>`,el=>{
+  const N=makeNet($(el,'#n9'),[{id:'you',x:8,y:62,icon:'pc',label:'あなた'},{id:'r',x:44,y:62,icon:'wifi',label:'途中の機器（フリーWi-Fi）'},{id:'eve',x:44,y:13,icon:'spy',label:'のぞき見する人'},{id:'srv',x:91,y:62,icon:'server',label:'ネットショップ',sub:'www.example.jp'}],[['you','r'],['r','srv'],['r','eve','tap']],'16/6');
+  let mode='http';
+  seg($(el,'#m9'),v=>{mode=v;$(el,'#url9').innerHTML=v==='https'?'<b style="color:var(--green)">[鍵]</b> https://www.example.jp/login':'http://www.example.jp/login';});
+  const eve=$(el,'#eve9'),srvL=$(el,'#srv9');
+  const ciph=(s,seed)=>{let h=seed>>>0;return [...new TextEncoder().encode(s)].map(b=>{h=(Math.imul(h,1103515245)+12345)>>>0;return ((b^(h>>>16))&255).toString(16).padStart(2,'0');}).join('');};
+  async function hop(from,to,label,cls,eveHtml){
+    const rev=from==='srv';
+    await N.fly([from,'r'],{label,cls,dur:650});
+    await Promise.all([
+      N.fly(['r',to],{label,cls,dur:650}),
+      N.fly(['r','eve'],{label:'コピー',cls:'copy',dur:500}).then(()=>{if(eve.querySelector('.muted'))eve.innerHTML='';logTo(eve,eveHtml);})
+    ]);
+  }
+  $(el,'#b9').onclick=act(async()=>{
+    const id=$(el,'#id9').value,pw=$(el,'#pw9').value,data=`id=${id}&pass=${pw}`;
+    eve.innerHTML='';srvL.innerHTML='';
+    if(mode==='http'){
+      await hop('you','srv',esc(data),'',`<span class="plain">POST /login　${esc(data)}</span>`);
+      logTo(srvL,`POST /login　${esc(data)}`);
+      bubble(N.node('eve'),'パスワード、丸見え！','ng',2000);
+    }else{
+      await hop('you','srv','こんにちは（TLSで話そう）','blue','<span class="ciph">こんにちは（TLSで話そう）← これは見える</span>');
+      await hop('srv','you','証明書＋公開鍵','tealp','<span class="ciph">サーバの証明書と公開鍵 ← 見えても困らない</span>');
+      bubble(N.node('you'),'認証局のお墨付きOK → 本物のお店！','ok',1800);await sleep(1300);
+      bubble(N.node('you'),'共通鍵を作って、公開鍵で暗号化','',1600);await sleep(1100);
+      const seed=rnd(1,1e9);
+      await hop('you','srv','[鍵] 暗号化した共通鍵','lock',`<span class="ciph">${ciph('KEY'+seed,seed).slice(0,32)}… ← サーバの秘密鍵がないと開けない</span>`);
+      bubble(N.node('srv'),'秘密鍵で開けて、共通鍵を手に入れた','ok',1600);await sleep(1100);
+      const c=ciph(data,seed);
+      await hop('you','srv','[鍵] '+c.slice(0,14)+'…','lock',`<span class="ciph">${c}</span>`);
+      logTo(srvL,`共通鍵で復号 → ${esc(data)}`);
+      bubble(N.node('eve'),'……読めない','g',2000);
+    }
+  });
+});
+add(9,'check','たしかめよう',`
+${quiz('HTTPS で通信しているとき、途中でのぞき見した人に<b>わかる</b>ものとして、もっとも適切なものは？',
+ ['入力したパスワード','ページの文章や画像','どのIPアドレスのサーバと通信しているか','何もわからない'],2,
+ 'TLSで暗号化されるのは通信の<b>中身</b>です。パケットを届けるために必要な宛先のIPアドレスなどは、暗号化されずに見えています。「HTTPSだから何もかも秘密」ではない点に注意。')}
+${teaser('安心して使えるようになり、だれもがWebを使う時代に。人気のサイトには<b>1秒に何万ものアクセス</b>が…。<b>1台のサーバ</b>で、さばききれる？')}`);
+
+/* ---------------- 10. ロードバランサ ---------------- */
+add(10,'problem','アクセスが集中して、サーバがパンク！',`
+<div id="sc"></div>
+${say('チケットの発売開始や、合格発表の瞬間。<b>みんなが一斉に</b>アクセスする。','1台のサーバでは処理が追いつかず、ページが表示されない…！')}`,el=>{
+  const N=makeNet($(el,'#sc'),[{id:'u',x:10,y:50,icon:'people',label:'アクセスする人たち'},{id:'s',x:85,y:50,icon:'server',label:'サーバ1台'}],[['u','s']],'16/4');
+  (async()=>{const r=RUN;while(alive(r)){for(let i=0;i<12;i++){quiet(N.fly(['u','s'],{label:'見せて',dur:900}));await sleep(120);}
+    await sleep(900);bubble(N.node('s'),'503 もう無理…','ng',1600);flash(N.node('s'),'alert',1600);await sleep(2200);}})().catch(()=>{});
+});
+add(10,'solve','そこで生まれたのが…',`
+<div class="solve">
+  <div class="tech" style="border-top-color:var(--L4)"><div class="name">ロードバランサ</div><div class="yr" style="color:var(--L4);background:#efe9f5">1990年代後半〜</div><p class="def">サーバの入口に立って、届いたアクセスを、たくさんのサーバに振り分ける装置（ソフトウェア）。</p><span class="lay" style="background:var(--L4)">しくみの工夫</span></div>
+  ${points(
+    'サーバを何台も並べて、処理する力を増やす（<b>スケールアウト</b>）。',
+    '<b class="em">ロードバランサ</b>が入口で受け取り、<b>空いているサーバ</b>に振り分ける（負荷分散）。',
+    '1台が故障しても、ほかのサーバで続けられる。サービスが<b>止まりにくく</b>なる。'
+  )}
+</div>
+<div class="story"><b>つながり：</b>大きなサービスでは、DNSで地域ごとに違うIPアドレスを返して近いデータセンターへ案内するなど、これまでの技術を組み合わせて負荷を分けています。</div>`);
+add(10,'try','アクセス集中をさばいてみよう',`
+<p class="lead">「アクセス集中」を押すと30人が一斉にアクセスします。サーバは1台ずつ順番に処理し、<b>6件以上たまると「503 混雑」</b>でエラーになります。<b>サーバをクリックすると故障</b>させられます。</p>
+<div class="ctrl">
+  <label><input type="checkbox" id="lb10"> ロードバランサを使う</label>
+  <label>サーバの台数 <select id="n10s"><option>1</option><option>2</option><option selected>3</option><option>4</option></select></label>
+  <button class="go" id="b10">アクセス集中（30人）▶</button>
+  <button class="go sub" id="one10">1人だけアクセス</button>
+  <div class="stat">成功 <b id="ok10" style="color:var(--green)">0</b>　エラー <b id="ng10" style="color:var(--coral)">0</b></div>
+</div>
+<div id="n10"></div>
+<div class="panel" style="margin-top:12px"><h4>ヒント</h4><div id="hint10" style="font-size:15px"></div></div>`,el=>{
+  let N,S=[],ok=0,ng=0;
+  const box=$(el,'#n10'),lbc=$(el,'#lb10'),cnt=$(el,'#n10s'),hint=$(el,'#hint10');
+  const stat=()=>{$(el,'#ok10').textContent=ok;$(el,'#ng10').textContent=ng;};
+  function build(){
+    const n=+cnt.value, ys=[[50],[28,72],[16,50,84],[12,37,63,88]][n-1];
+    const nodes=[{id:'u',x:8,y:50,icon:'people',label:'アクセスする人たち'},{id:'lb',x:40,y:50,icon:'lb',label:lbc.checked?'ロードバランサ':'（ロードバランサなし）',cls:lbc.checked?'':'off'}];
+    S=ys.map((y,i)=>({id:'s'+i,x:86,y,q:0,down:false}));
+    S.forEach((s,i)=>nodes.push({id:s.id,x:s.x,y:s.y,icon:'server',label:'サーバ'+(i+1),cls:'clickable'}));
+    N=makeNet(box,nodes,[['u','lb'],...S.map(s=>['lb',s.id])],'16/7');
+    S.forEach(s=>{
+      const nd=N.node(s.id); nd.insertAdjacentHTML('beforeend','<div class="load"><i></i></div>');
+      if(!lbc.checked && s.id!=='s0'){N.line('lb',s.id).style.opacity=.25;}
+      nd.querySelector('.ic').onclick=()=>{s.down=!s.down;nd.classList.toggle('down',s.down);nd.querySelector('.nl').textContent=s.down?'こわれた！':'サーバ'+(+s.id.slice(1)+1);};
+    });
+    hint.innerHTML=lbc.checked?'ロードバランサが<b>いちばん空いている、動いているサーバ</b>に振り分けます。故障したサーバはさけてくれる？':
+      (+cnt.value>1?'ロードバランサがないと、アクセスは全部<b>サーバ1</b>に行ってしまいます。台数を増やしても意味がある？':'まずはこのまま「アクセス集中」を押してみよう。');
+    draw();
+  }
+  function draw(){S.forEach(s=>{const i=N.node(s.id).querySelector('.load i');const w=Math.min(100,s.q/6*100);i.style.width=w+'%';i.className=w>=80?'hi':w>=50?'mid':'';});}
+  lbc.onchange=build; cnt.onchange=build; build();
+  async function request(){
+    let t;
+    if(lbc.checked){const live=S.filter(s=>!s.down);if(!live.length){await N.fly(['u','lb'],{label:'見せて',dur:450});bubble(N.node('lb'),'動いているサーバがない！','ng',900);ng++;stat();return;}
+      t=live.reduce((a,b)=>b.q<a.q?b:a);}
+    else t=S[0];
+    await N.fly(['u','lb',t.id],{label:'見せて',dur:450});
+    if(t.down){ng++;bubble(N.node(t.id),'応答なし','ng',800);}
+    else if(t.q>=6){ng++;bubble(N.node(t.id),'503 混雑','ng',800);flash(N.node(t.id),'alert',600);}
+    else t.q++;
+    stat();draw();
+  }
+  (async()=>{const r=RUN;while(alive(r)){await sleep(420);S.forEach(s=>{if(!s.down&&s.q>0){s.q--;ok++;}});stat();draw();}})().catch(()=>{});
+  $(el,'#one10').onclick=()=>quiet(request());
+  $(el,'#b10').onclick=act(async()=>{for(let i=0;i<30;i++){quiet(request());await sleep(90);}await sleep(600);});
+});
+add(10,'check','たしかめよう',`
+${quiz('ロードバランサを使う利点として<b>適切でない</b>ものは？',
+ ['アクセスを複数のサーバに分散できる','1台が故障しても、ほかのサーバでサービスを続けられる','サーバを増やすことで、処理できるアクセス数を増やせる','通信内容が自動的に暗号化される'],3,
+ '暗号化はTLSの役割です。ロードバランサの役割は、負荷の分散と、故障に強くすること。')}
+${teaser('これで旅はおしまい。最後に、ここまで積み上げてきた技術を<b>ひとつにまとめて</b>みよう！')}`);
+
+/* ---------------- 11. ふりかえり ---------------- */
+add(11,'summary','積み上がった道具たち',`
+<p class="lead">「困った！」を1つずつ解決してきた技術は、役割ごとに<b>4つの階層（TCP/IPモデル）</b>に整理できます。</p>
+<div class="bigstack" id="bs"></div>
+<div class="story" style="margin-top:14px"><b>なぜ階層に分けるの？</b>　下の層は「運ぶこと」に専念し、上の層は下のしくみを気にしなくてよい。たとえばWi-Fiが光回線に変わっても、HTTPはそのまま使えます。<b>役割分担</b>しているから、それぞれの技術を別々に改良できるのです。<br><span class="small muted">※ TLSは厳密にはトランスポート層とアプリケーション層のあいだで働きます。チップをクリックするとその章に戻れます。</span></div>`,el=>{
+  const bs=$(el,'#bs');
+  [0,1,2,3].forEach(L=>{
+    const d=document.createElement('div');d.className='lay';d.style.borderLeftColor=LAYERS[L].c;
+    d.innerHTML=`<div><div class="ln"><i style="background:${LAYERS[L].c}"></i>${LAYERS[L].name}</div><div class="lr">${LAYERS[L].role}</div></div><div class="chips"></div>`;
+    CHIPS.filter(c=>c.L===L).forEach(c=>{const s=document.createElement('span');s.className='chip lit';s.style.background=LAYERS[L].c;s.style.borderColor=LAYERS[L].c;s.textContent=c.t;s.onclick=()=>goCh(c.ch,'solve');d.querySelector('.chips').appendChild(s);});
+    bs.appendChild(d);
+  });
+});
+add(11,'summary','ぜんぶ通して見てみよう',`
+<p class="lead">スマホで <span class="addr">https://www.example.jp</span> を開いたとき、ほんの一瞬のあいだに、これまでの技術が<b>次々に</b>はたらいています。</p>
+<div class="ctrl"><button class="go" id="nx">次の場面 ▶</button><button class="go sub" id="rs">最初から</button><span id="pg" class="small muted"></span></div>
+<div id="nj"></div>
+<div class="cap" id="cap">「次の場面」を押してスタート</div>
+<div class="scenes" id="scs"></div>`,el=>{
+  const N=makeNet($(el,'#nj'),[
+    {id:'ph',x:6,y:64,icon:'phone',label:'スマホ'},
+    {id:'ap',x:22,y:64,icon:'wifi',label:'Wi-Fi<br>ルータ'},
+    {id:'isp',x:41,y:64,icon:'router',label:'プロバイダ<br>のルータ'},
+    {id:'dns',x:41,y:14,icon:'book',label:'DNSサーバ'},
+    {id:'net',x:59,y:64,icon:'cloud',label:'インター<br>ネット'},
+    {id:'lb',x:76,y:64,icon:'lb',label:'ロード<br>バランサ'},
+    {id:'sv',x:93,y:64,icon:'server',label:'Web<br>サーバ',sub:'203.0.113.80'}
+  ],[['ph','ap','air'],['ap','isp'],['isp','dns'],['isp','net'],['net','lb'],['lb','sv']],'16/6.2');
+  const F=['ph','ap','isp','net','lb','sv'], B=[...F].reverse(), d=420;
+  const SC=[
+    {t:'DNS',L:3,cap:'① まず <b>DNS</b> で「www.example.jp」のIPアドレスを調べる → 203.0.113.80 とわかった',run:async()=>{await N.fly(['ph','ap','isp','dns'],{label:'www.example.jp は？',cls:'red',dur:d});await N.fly(['dns','isp','ap','ph'],{label:'203.0.113.80',cls:'tealp',dur:d});}},
+    {t:'TCP',L:2,cap:'② <b>TCP</b> で 203.0.113.80 の <b>443番ポート</b>に「つないでいい？」「どうぞ」「では」と3回やりとりして接続する（3ウェイハンドシェイク）',run:async()=>{await N.fly(F,{label:'つないでいい？（443番）',dur:300});await N.fly(B,{label:'どうぞ',cls:'ack',dur:300});await N.fly(F,{label:'では',dur:300});}},
+    {t:'TLS',L:3,cap:'③ <b>TLS</b> で証明書を確かめて「本物のサイトだ」と確認し、暗号化に使う共通鍵を共有する',run:async()=>{await N.fly(F,{label:'TLSで話そう',cls:'blue',dur:300});await N.fly(B,{label:'証明書＋公開鍵',cls:'tealp',dur:300});await N.fly(F,{label:'[鍵] 共通鍵',cls:'lock',dur:300});}},
+    {t:'HTTP',L:3,cap:'④ <b>HTTP</b> で「GET /index.html」を送る（中身はTLSで暗号化）。運ぶ途中では、下の層がはたらく →',run:async()=>{
+      await N.fly(F,{label:'[鍵] GET /index.html',cls:'lock',dur:[700,700,600,600,500],onHop:async id=>{
+        if(id==='ap'){bubble(N.node('ap'),'<b>Wi-Fi・MACアドレス</b>：電波でとなりの機器へ','',1700);await sleep(1300);}
+        if(id==='isp'){bubble(N.node('isp'),'<b>IPアドレス・ルータ</b>：宛先を見て次へ','',1700);await sleep(1300);}
+        if(id==='lb'){bubble(N.node('lb'),'<b>ロードバランサ</b>：空いているサーバへ','',1700);await sleep(1300);}
+      }});}},
+    {t:'レスポンス',L:2,cap:'⑤ サーバが「<b>200 OK</b>」とページを返す。大きなページは<b>パケット</b>に分かれ、TCPが欠けや順番をチェックしながら届ける',run:async()=>{await Promise.all([1,2,3,4].map(async i=>{await sleep(i*220);await N.fly(B,{label:`200 OK ${i}/4`,cls:'tealp',dur:280});}));}},
+    {t:'表示',L:3,cap:'⑥ ブラウザがHTMLを読んで画面に表示！　ここまでの全部が、<b>わずか0.数秒</b>のできごと',run:async()=>{flash(N.node('ph'),'ok',2000);bubble(N.node('ph'),'表示された！','ok',2000);await sleep(800);}}
+  ];
+  let i=-1;
+  const scs=$(el,'#scs'),cap=$(el,'#cap'),pg=$(el,'#pg');
+  const drawS=()=>{scs.innerHTML=SC.map((s,k)=>`<span class="${k===i?'on':''}" style="${k===i?'background:'+LAYERS[s.L].c:''}">${k+1}. ${s.t}</span>`).join('');pg.textContent=i>=0?`場面 ${i+1} / ${SC.length}`:'';};
+  drawS();
+  $(el,'#nx').onclick=act(async()=>{if(i>=SC.length-1)return;i++;drawS();cap.innerHTML=SC[i].cap;cap.style.borderLeftColor=LAYERS[SC[i].L].c;await SC[i].run();if(i===SC.length-1)$(el,'#nx').disabled=true;});
+  $(el,'#rs').onclick=()=>{if(BUSY)return;i=-1;drawS();cap.textContent='「次の場面」を押してスタート';cap.style.borderLeftColor='';$(el,'#nx').disabled=false;};
+});
+add(11,'summary','「必要になった順」と「年代順」',`
+<p class="lead">この教材は「困った！」が起きた順に並べました。実際の年代順に並べると、こうなります。丸の中の数字は<b>この教材の章の番号</b>です。</p>
+<div class="row2" style="align-items:start">
+  <div class="card"><div class="tl" id="tl"></div></div>
+  <div>
+    <div class="card"><b>気づいたこと</b>
+      <ul style="margin:6px 0 0;padding-left:20px">
+        <li>DNS（⑦）は、Web（⑧）より<b>前</b>に生まれている。Webより先に、メールなどで名前の問題が起きていた。</li>
+        <li>暗号化（⑨）が広まったのは、Web（⑧）で<b>買い物やログイン</b>をするようになってから。</li>
+        <li>技術は「だれかが困ったとき」に生まれる。<b>使われ方が変わると、新しい「困った！」</b>が生まれる。</li>
+      </ul>
+    </div>
+    <div class="card" style="margin-top:12px"><b>考えてみよう</b><br>いま、ネットワークで「困っていること」は何だろう？　そこから、どんな技術が生まれそう？</div>
+  </div>
+</div>`,el=>{
+  const T=[['1973年',1,'イーサネット'],['1974年',3,'TCP/IP の考え方が発表される'],['1980年',5,'UDP'],['1983年',3,'ARPANET が TCP/IP に切りかえ'],['1983年',4,'ping'],['1983年',7,'DNS'],['1988年ごろ',6,'ファイアウォール'],['1990年ごろ',2,'スイッチ（商用化）'],['1991年',8,'WWW・HTTP が公開'],['1995年',9,'SSL（TLS の前身）'],['1997年',1,'Wi-Fi（IEEE 802.11）'],['1990年代後半',10,'ロードバランサが広まる'],['1999年',9,'TLS']];
+  $(el,'#tl').innerHTML=T.map(([y,ch,t])=>{const c=LAYERS[CH[ch].L].c;return `<div class="ti" style="--c:${c}"><span class="y">${y}</span><span class="k" style="background:${c}">${ch}</span>${t}</div>`;}).join('');
+});
+add(11,'summary','ふりかえり',`
+<div class="card" style="border-left:6px solid var(--coral)">
+  <span class="kicker">今日の問い</span>
+  <h3 style="margin:8px 0 4px;font-size:22px">なぜ、URLを入れるだけで地球の裏側のページまで見られるの？</h3>
+  <p class="muted" style="margin:0">学んだ用語を使って、自分のことばで説明してみよう。使えた用語は色がつきます。</p>
+</div>
+<div class="kw" id="kw"></div>
+<textarea id="ans" placeholder="例：URLを入れると、まずDNSで……"></textarea>
+<div class="ctrl noprint" style="margin-top:12px">
+  <button class="go" id="cp">文章をコピー</button>
+  <button class="go sub" id="pr">印刷・PDFに保存</button>
+  <span class="small muted" id="msg"></span>
+</div>
+<p class="small muted noprint">※ この画面を閉じると、書いた文章は消えます。提出する場合はコピーするか、PDFに保存してください。</p>`,el=>{
+  const K=['MACアドレス','スイッチ','IPアドレス','ルータ','パケット','TCP','UDP','ポート','DNS','HTTP','TLS','暗号化','ロードバランサ'];
+  const kw=$(el,'#kw'),ta=$(el,'#ans');
+  kw.innerHTML=K.map(k=>`<span data-k="${k}">${k}</span>`).join('');
+  const up=()=>{const v=ta.value.replace(/[Ａ-Ｚａ-ｚ]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0)).toUpperCase();kw.querySelectorAll('span').forEach(s=>s.classList.toggle('used',v.includes(s.dataset.k.toUpperCase())));};
+  ta.oninput=up;
+  $(el,'#cp').onclick=async()=>{try{await navigator.clipboard.writeText(ta.value);}catch(e){ta.select();document.execCommand('copy');}$(el,'#msg').textContent='コピーしました';};
+  $(el,'#pr').onclick=()=>window.print();
+});
+
+/* =========================================================
+   画面の制御
+   ========================================================= */
+let cur=0;
+const stage=$(document,'#stage'),side=$(document,'#side');
+const TYPEN={problem:['p','困った！'],solve:['s','そこで生まれた'],try:['t','動かしてみよう'],check:['c','たしかめよう'],summary:['s','まとめ']};
+function chSlides(ch){return S.map((s,i)=>i).filter(i=>S[i].ch===ch);}
+function render(){
+  RUN++; BUSY=false; PAUSED=false; document.body.classList.remove('paused'); ANIMS.forEach(a=>{try{a.cancel()}catch(e){}}); ANIMS=[];
+  const s=S[cur];
+  let head='';
+  if(s.type!=='title'){
+    const [c,t]=TYPEN[s.type];
+    head=`<div class="shead"><span class="chno">${s.ch===11?'ふりかえり':`第${s.ch}章　${CH[s.ch].title}`}</span><span class="tag ${c}">${t}</span></div><h2>${s.title}</h2>`;
+  }
+  stage.innerHTML=`<div class="slide">${head}${s.html}</div>`;
+  stage.scrollTop=0;
+  const el=$(stage,'.slide');
+  if(s.mount) s.mount(el);
+  el.querySelectorAll('.quiz').forEach(q=>{
+    const ans=+q.dataset.ans;
+    q.querySelectorAll('.opts button').forEach(b=>b.onclick=()=>{
+      const i=+b.dataset.i;
+      q.querySelectorAll('.opts button').forEach(x=>{x.disabled=true;if(+x.dataset.i===ans)x.classList.add('right');});
+      const ok=i===ans; if(!ok)b.classList.add('wrong');
+      q.classList.add(ok?'ok':'ng');
+      const r=q.querySelector('.result');r.hidden=false;r.className='result '+(ok?'ok':'ng');
+      r.innerHTML=ok?'<span class="rmark">○</span><div><b>正解！</b><small>よく考えられました。下の解説も読んでみよう。</small></div>'
+                    :`<span class="rmark">×</span><div><b>おしい！</b><small>正解は ${'ABCD'[ans]} です。解説を読んで、どこがちがったか確かめよう。</small></div>`;
+      q.querySelector('.exp').hidden=false;
+
+    });
+  });
+  el.querySelectorAll('.tnext').forEach(b=>b.onclick=()=>{if(revealPending())return;go(cur+1);});
+  markBuilds(el,s);
+  ui();
+  if(typeof observeSlide==='function')observeSlide();
+  try{history.replaceState(null,'','#'+cur);}catch(e){}
+}
+function ui(){
+  const s=S[cur];
+  $(document,'#prev').disabled=cur===0;
+  $(document,'#next').disabled=cur===S.length-1;
+  updNext();
+  const list=chSlides(s.ch), k=list.indexOf(cur);
+  $(document,'#where').innerHTML=`${s.ch===0?'はじめに':s.ch===11?'ふりかえり':'第'+s.ch+'章　'+CH[s.ch].title}<span class="dots">${list.map((_,j)=>`<i class="${j===k?'on':''}"></i>`).join('')}</span>`;
+  // progress
+  const pr=$(document,'#prog');
+  pr.innerHTML=CH.map(c=>`<button data-c="${c.n}" data-t="${c.n===0?'はじめに':c.n===11?'ふりかえり':c.n+'. '+c.title}" class="${c.n===s.ch?'cur':c.n<s.ch?'done':''}"></button>`).join('');
+  pr.querySelectorAll('button').forEach(b=>b.onclick=()=>goCh(+b.dataset.c));
+  // sidebar
+  const solvedIdx=ch=>S.findIndex(x=>x.ch===ch&&x.type==='solve');
+  const lit=ch=>cur>=solvedIdx(ch);
+  let h='<h3>道具箱</h3><div class="sub">「困った！」を解決するたびに、技術がたまっていきます。下から上へ積み上がる <b>TCP/IPの4階層</b>です。</div><div class="stack">';
+  [0,1,2,3].forEach(L=>{
+    h+=`<div class="lay"><div class="ln"><i style="background:${LAYERS[L].c}"></i>${LAYERS[L].name}</div><div class="lr">${LAYERS[L].role}</div><div class="chips">`;
+    CHIPS.filter(c=>c.L===L).forEach(c=>{const on=lit(c.ch);h+=`<span class="chip ${on?'lit':''} ${on&&c.ch===s.ch?'now':''}" data-ch="${c.ch}" style="${on?`background:${LAYERS[L].c};border-color:${LAYERS[L].c}`:''}">${c.t}</span>`;});
+    h+='</div></div>';
+  });
+  h+='</div>';
+  const c=CHIPS.find(x=>x.L===4),on=lit(c.ch);
+  h+=`<div class="lay extra"><div class="ln"><i style="background:${LAYERS[4].c}"></i>${LAYERS[4].name}</div><div class="lr">${LAYERS[4].role}</div><div class="chips"><span class="chip ${on?'lit':''} ${on&&s.ch===10?'now':''}" data-ch="10" style="${on?`background:${LAYERS[4].c};border-color:${LAYERS[4].c}`:''}">${c.t}</span></div></div>`;
+  side.innerHTML=h;
+  side.querySelectorAll('.chip.lit').forEach(x=>x.onclick=()=>goCh(+x.dataset.ch,'solve'));
+}
+function go(i){if(i<0||i>=S.length)return;cur=i;render();}
+function goCh(ch,type){const list=chSlides(ch);const t=type?list.find(i=>S[i].type===type):list[0];go(t!==undefined?t:list[0]);closeMenu();}
+$(document,'#prev').onclick=()=>go(cur-1);
+function showTeaser(t){
+  if(t.classList.contains('show'))return;
+  t.classList.add('show');
+  if(!document.body.classList.contains('present'))setTimeout(()=>t.scrollIntoView({behavior:'smooth',block:'nearest'}),200);
+}
+// 「でも、まだ困ることが…」がまだ出ていなければ、次へで先にそれを出す
+// ---- 授業モードのスライド風アニメーション ----
+// 「次へ」を押すたびに、要素を1つずつ表示する（クリックで出てくるアニメーション）
+function markBuilds(el,s){
+  if(!document.body.classList.contains('present'))return;
+  const kids=[...el.children], hi=kids.findIndex(k=>k.tagName==='H2');
+  let items=[];
+  if(s.type==='problem') items=kids.slice(hi+2);
+  else if(s.type==='solve'){
+    items=[...el.querySelectorAll('.points > .pt')];
+    items.push(...kids.slice(hi+1).filter(k=>!k.classList.contains('solve')));
+  }else if(s.type==='summary'){
+    items=[...el.querySelectorAll('#bs > .lay')];
+    if(items.length) items.push(...kids.filter(k=>k.classList.contains('story')));
+    el.querySelectorAll('.row2 > div > .card').forEach(c=>items.push(c));
+  }
+  items.forEach(x=>x.classList.add('bld'));
+}
+function updNext(){
+  const nb=$(document,'#next');
+  const more=stage.querySelector('.bld:not(.in), .teaser:not(.show)');
+  nb.textContent=cur===0?'はじめる →':(more?'つづき ▶':'次へ →');
+  nb.disabled=cur===S.length-1&&!more;
+}
+function revealPending(){
+  const b=stage.querySelector('.bld:not(.in)');
+  if(b){b.classList.add('in');updNext();return true;}
+  const t=stage.querySelector('.teaser:not(.show)');
+  if(t){showTeaser(t);updNext();return true;}
+  return false;
+}
+$(document,'#next').onclick=()=>{if(revealPending())return;go(cur+1);};
+document.addEventListener('keydown',e=>{
+  if(['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName))return;
+  if(e.key==='ArrowRight'||e.key==='PageDown'){e.preventDefault();if(revealPending())return;go(cur+1);}
+  if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();go(cur-1);}
+  if(e.key==='Escape')closeMenu();
+  if(e.key===' '&&document.querySelector('#stage .net, #stage .http')){e.preventDefault();setPause(!PAUSED);}
+});
+stage.addEventListener('click',e=>{
+  if(e.target.closest('.clickable .ic')||e.target.closest('button,input,select,a'))return;
+  if(e.target.closest('.net, .http'))setPause(!PAUSED);
+});
+$(document,'#speed').onchange=e=>{SPEED=+e.target.value;};
+// menu
+const menu=$(document,'#menu');
+function openMenu(){
+  $(document,'#menuBox').innerHTML='<h3>もくじ</h3>'+CH.map(c=>{const col=c.L!==undefined?LAYERS[c.L].c:'var(--ink)';return `<div class="item ${S[cur].ch===c.n?'cur':''}" data-c="${c.n}"><span class="k" style="background:${col}">${c.n===0?'・':c.n===11?'★':c.n}</span><div>${c.title}${c.tech?`<small>${c.tech}</small>`:''}</div></div>`;}).join('')+'<p class="small muted" style="margin-top:14px">URLの末尾に「#番号」をつけると、そのページから開けます（いまのページは #'+cur+'）。</p>';
+  menu.hidden=false;
+  menu.querySelectorAll('.item').forEach(x=>x.onclick=()=>goCh(+x.dataset.c));
+}
+function closeMenu(){menu.hidden=true;}
+$(document,'#menuBtn').onclick=openMenu;
+menu.onclick=e=>{if(e.target===menu)closeMenu();};
+// 授業モード（全画面＋1画面に収める）
+const PW=980;
+function fit(){
+  const sl=$(stage,'.slide'); if(!sl) return;
+  if(!document.body.classList.contains('present')){sl.style.transform='';return;}
+  const cs=getComputedStyle(stage);
+  const W=stage.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight);
+  const H=stage.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom);
+  const sc=Math.max(.3,Math.min(W/PW,H/sl.offsetHeight,2.2));
+  sl.style.transform=`translate(${Math.max(0,(W-PW*sc)/2)}px,0) scale(${sc})`;
+}
+let slideRO=window.ResizeObserver?new ResizeObserver(()=>fit()):null;
+function observeSlide(){const sl=$(stage,'.slide');if(slideRO&&sl){slideRO.disconnect();slideRO.observe(sl);}fit();}
+window.addEventListener('resize',fit);
+function setPresent(on){
+  document.body.classList.toggle('present',on);
+  $(document,'#fsBtn').textContent=on?'全画面を終了':'全画面で授業';
+  const d=document.documentElement;
+  try{
+    if(on&&!document.fullscreenElement&&d.requestFullscreen)d.requestFullscreen().catch(()=>{});
+    if(!on&&document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen().catch(()=>{});
+  }catch(e){}
+  render();
+  setTimeout(fit,60);setTimeout(fit,400);
+}
+$(document,'#fsBtn').onclick=()=>setPresent(!document.body.classList.contains('present'));
+document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&document.body.classList.contains('present'))setPresent(false);});
+document.addEventListener('keydown',e=>{if(['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName))return;if(e.key==='f'||e.key==='F')setPresent(!document.body.classList.contains('present'));});
+// start
+const h=parseInt((location.hash||'').slice(1),10);
+cur=(h>=0&&h<S.length)?h:0;
+render();
+</script>
+</body>
+</html>

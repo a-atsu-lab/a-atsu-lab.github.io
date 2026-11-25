@@ -119,5 +119,13 @@ const APPS = [
     category: ["情報Ⅰ", "共通テスト対策"],
     icon: "📚",
     added: "2026-11-06"
+  },
+  {
+    title: "ネットワークができるまで",
+    url: "https://a-atsu-lab.github.io/network-dekirumade.html",
+    description: "ネットワークのしくみを段階的に見ていきます。",
+    category: ["情報Ⅰ", "共通テスト対策"],
+    icon: "📚",
+    added: "2026-11-25"
   }
 ];
