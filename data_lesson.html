@@ -1,0 +1,1665 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>データ分析トレーニング ― こむぎ堂の60日</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#ECEEED; --panel:#FFFFFF; --ink:#16324F; --ink-soft:#6B7C87; --rule:#DCE0DE; --grid:#E7EAE9;
+  --accent:#C0392B; --blue:#1F5E80; --blue-l:#4F87A3; --band:#DCE8EF; --orange:#D08C2B; --green:#3E8E5A;
+  --ok:#2F7A4A; --ng:#B23A2E;
+  --mincho:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",serif;
+  --gothic:"Hiragino Kaku Gothic ProN","Yu Gothic","YuGothic","Noto Sans JP",sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Courier New",monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--gothic);font-size:15px;line-height:1.8}
+header{background:var(--ink);padding:18px 26px;display:flex;align-items:baseline;gap:18px;flex-wrap:wrap}
+h1{font-family:var(--mincho);font-size:26px;font-weight:600;margin:0;letter-spacing:.08em;color:#fff}
+header p{margin:0;color:#C3D2DC;font-size:13px;letter-spacing:.04em}
+.progress{margin-left:auto;display:flex;align-items:center;gap:10px;color:#C3D2DC;font-size:12px;font-family:var(--mono)}
+.progress .bar{width:140px;height:6px;background:#2E4A66}
+.progress .bar i{display:block;height:100%;background:#fff;transition:width .3s}
+
+.app{display:grid;grid-template-columns:250px 1fr;max-width:1240px;margin:0 auto;gap:22px;padding:22px 20px 80px;align-items:start}
+@media(max-width:860px){.app{grid-template-columns:1fr}.side{position:static!important}}
+.side{position:sticky;top:16px}
+.nav{background:var(--panel);border:1px solid var(--rule)}
+.savebox{background:var(--panel);border:1px solid var(--rule);border-top:3px solid var(--ink);padding:12px 14px;margin-top:12px}
+.savebox h4{margin:0 0 6px;font-size:13px;letter-spacing:.12em}
+.savebox label{display:block;font-size:12px;color:var(--ink-soft);margin-top:6px}
+.savebox select,.savebox input{width:100%;margin-top:2px}
+.savebox input[type=text]{padding:7px 10px;font-family:var(--gothic);font-size:14px;color:var(--ink);border:1px solid var(--rule)}
+.savebox .btn{width:100%;margin-top:8px}
+.savebox .msg{font-size:12px;margin:6px 0 0;min-height:0}
+.linkbtn{background:none;border:0;color:var(--ink-soft);font-size:11px;text-decoration:underline;cursor:pointer;padding:0;margin-top:6px;font-family:var(--gothic)}
+.nav button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;border-bottom:1px solid var(--rule);background:#fff;padding:11px 14px;font-family:var(--gothic);font-size:14px;color:var(--ink);cursor:pointer}
+.nav button:last-child{border-bottom:0}
+.nav button:hover{background:#F5F7F6}
+.nav button.cur{background:var(--ink);color:#fff}
+.nav .no{font-family:var(--mono);font-size:12px;width:22px;height:22px;border:1px solid currentColor;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.nav .done .no{background:var(--ok);border-color:var(--ok);color:#fff}
+.nav button.cur.done .no{background:#fff;color:var(--ok)}
+
+main{min-width:0}
+.lesson-head{margin-bottom:16px}
+.lesson-head .kicker{font-family:var(--mono);font-size:12px;color:var(--ink-soft);letter-spacing:.14em}
+.lesson-head h2{font-family:var(--mincho);font-size:28px;font-weight:600;margin:2px 0 0;letter-spacing:.04em}
+.card{background:var(--panel);border:1px solid var(--rule);padding:20px 22px;margin-bottom:14px}
+.card h3{font-size:18px;font-weight:700;letter-spacing:.06em;color:var(--ink);margin:-20px -22px 14px;padding:10px 22px;background:#EEF1F3;border-bottom:2px solid var(--ink);display:flex;align-items:center;gap:10px}
+.card h3::before{content:"";width:6px;height:20px;background:var(--accent);flex:none}
+.card p{margin:.4em 0}
+.card .lead{font-size:16px}
+
+/* 会話 */
+.talk{display:flex;gap:12px;margin:10px 0;align-items:flex-start}
+.talk .who{flex:none;width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff}
+.talk .who.t{background:var(--orange)}
+.talk .who.h{background:var(--blue)}
+.talk .say{flex:1;min-width:0;background:#F7F5F0;border:1px solid #E8E2D6;padding:10px 16px;position:relative}
+.talk .say::before{content:"";position:absolute;left:-7px;top:16px;width:12px;height:12px;background:inherit;border-left:1px solid #E8E2D6;border-bottom:1px solid #E8E2D6;transform:rotate(45deg)}
+.talk .who.h + .say::before{border-color:#D5E1EA}
+.talk .who.h + .say{background:#EEF3F7;border-color:#D5E1EA}
+
+/* 用語ボックス */
+.term{border:2px solid var(--blue);background:#F4F8FB;margin:16px 0 6px}
+.term .th{background:var(--blue);color:#fff;font-size:15px;font-weight:700;letter-spacing:.08em;padding:7px 14px;display:flex;align-items:center;gap:10px}
+.term .th::before{content:"用語・知識";background:#fff;color:var(--blue);font-size:11px;font-weight:700;padding:1px 8px;letter-spacing:.1em}
+.term .tb{padding:12px 16px}
+.term dl{margin:0;display:grid;grid-template-columns:max-content 1fr;gap:10px 16px;align-items:baseline}
+.term dt{font-weight:700;color:var(--blue);font-size:16px;border-bottom:2px solid #C9DBE7;padding-bottom:2px}
+.term dd{margin:0}
+@media(max-width:600px){.term dl{grid-template-columns:1fr;gap:2px}.term dd{margin-bottom:10px}}
+.term .ex{margin-top:10px;padding-top:10px;border-top:1px dashed #C9DBE7;font-size:14px}
+.term .formula{background:#fff}
+.formula{font-family:var(--mono);background:#FBFBFB;border:1px solid var(--rule);padding:8px 12px;display:inline-block;margin:4px 0}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:760px){.grid4{grid-template-columns:1fr 1fr}.grid2{grid-template-columns:1fr}}
+.scale-card{border:1px solid var(--rule);padding:12px;background:#FBFBFB}
+.scale-card .tag{font-size:11px;letter-spacing:.12em;color:var(--ink-soft)}
+.scale-card h4{margin:2px 0 6px;font-family:var(--mincho);font-size:19px}
+.scale-card ul{margin:6px 0 0;padding-left:1.1em;font-size:13px}
+.qual{color:var(--orange)} .quan{color:var(--blue)}
+
+/* ボタン類 */
+button.btn{font-family:var(--gothic);font-size:14px;padding:8px 14px;background:#fff;color:var(--ink);border:1px solid var(--ink);cursor:pointer;letter-spacing:.04em}
+button.btn:hover{background:var(--ink);color:#fff}
+button.btn.primary{background:var(--ink);color:#fff}
+button.btn.primary:hover{background:#0E2236}
+button.btn:disabled{opacity:.4;cursor:default;background:#fff;color:var(--ink)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+select,input[type=number]{padding:7px 10px;font-family:var(--gothic);font-size:14px;color:var(--ink);background:#fff;border:1px solid var(--rule)}
+input[type=number]{width:100px;font-family:var(--mono)}
+input[type=range]{width:100%}
+:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.seg{display:inline-flex;border:1px solid var(--ink)}
+.seg button{border:0;border-right:1px solid var(--ink);background:#fff;padding:6px 12px;font-family:var(--gothic);font-size:13px;cursor:pointer;color:var(--ink)}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--ink);color:#fff}
+
+/* 表 */
+.tbl-wrap{overflow:auto;max-height:420px;border:1px solid var(--rule);scrollbar-gutter:stable}
+.tbl-wrap table{width:max-content;min-width:100%}
+.tbl-wrap td:last-child,.tbl-wrap th:last-child{padding-right:14px}
+.excerpt{display:block;width:fit-content;max-width:100%;margin:12px auto 0}
+.excerpt + .legend{text-align:center}
+.excerpt table{min-width:0}
+.excerpt td.gap{text-align:center;color:var(--ink-soft);background:#FAFAFA;letter-spacing:.3em}
+.excerpt td.focus{outline:2px solid var(--orange);outline-offset:-2px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--rule);padding:5px 8px;text-align:right;white-space:nowrap}
+th{background:#F7F8F8;font-weight:400;color:var(--ink-soft);font-size:12px;position:sticky;top:0}
+td.l,th.l{text-align:left}
+td{font-family:var(--mono)}
+td.miss{background:#FBEFD9;color:var(--orange)}
+td.err{background:#F8E1DE;color:var(--ng);font-weight:700}
+td.fest{background:#E6EEF4;color:var(--blue);font-weight:700}
+table.stat td{font-size:14px}
+table.stat th{position:static}
+.chg{color:var(--accent)}
+
+/* 尺度分類 */
+.classify{display:grid;gap:8px}
+.cl-row{display:grid;grid-template-columns:minmax(220px,1.1fr) minmax(280px,1fr) 28px;gap:14px;align-items:center;border:1px solid var(--rule);padding:10px 14px;background:#FCFCFC}
+.cl-row .seg{display:grid;grid-template-columns:repeat(4,1fr);width:100%}
+.cl-row .seg button{padding:8px 4px;font-size:14px}
+.cl-row.checked{background:#fff}
+.cl-row .name{font-weight:700}
+.cl-row .name small{display:block;font-weight:400;color:var(--ink-soft);font-size:12px;line-height:1.5}
+.cl-row .name .ex{font-family:var(--mono);font-size:11px;color:var(--ink-soft)}
+.cl-row .mark{font-weight:700;font-size:18px}
+.cl-row .why{grid-column:1/-1;font-size:13px;color:var(--ink-soft);display:none;border-top:1px dotted var(--rule);padding-top:6px}
+.cl-row.checked .why{display:block}
+@media(max-width:600px){.cl-row{grid-template-columns:1fr 24px}.cl-row .seg{grid-column:1/-1;order:3}}
+
+/* クイズ */
+.quiz{border:1px solid var(--rule);padding:14px 16px;margin:12px 0;background:#FCFCFC}
+.quiz .q{font-weight:700;margin-bottom:8px}
+.quiz .q .qn{font-family:var(--mono);color:var(--accent);margin-right:6px}
+.quiz .opts{display:grid;gap:6px}
+.quiz .opt{text-align:left;border:1px solid var(--rule);background:#fff;padding:8px 12px;font-family:var(--gothic);font-size:14px;cursor:pointer;color:var(--ink)}
+.quiz .opt:hover{border-color:var(--ink)}
+.quiz .opt.right{border-color:var(--ok);background:#E7F3EB}
+.quiz .opt.wrong{border-color:var(--ng);background:#F8E5E2;text-decoration:line-through}
+.quiz .fb{margin-top:10px;padding:8px 12px;font-size:14px;display:none}
+.quiz .fb.show{display:block}
+.quiz .fb.ok{background:#E7F3EB;border-left:3px solid var(--ok)}
+.quiz .fb.ng{background:#F8E5E2;border-left:3px solid var(--ng)}
+.quiz.solved{border-color:var(--ok)}
+
+/* 数値パネル */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-top:10px}
+.stat{border:1px solid var(--rule);padding:8px 10px;background:#FBFBFB}
+.stat span{display:block;font-size:11px;color:var(--ink-soft);letter-spacing:.06em}
+.stat b{font-family:var(--mono);font-size:20px;font-weight:400}
+.stat.hl{border-color:var(--accent)}
+.stat.hl b{color:var(--accent)}
+
+svg{display:block;width:100%;height:auto}
+.axis{stroke:#93A0A8;stroke-width:1}
+.gl{stroke:var(--grid);stroke-width:1}
+.tk{font-family:var(--mono);font-size:11px;fill:var(--ink-soft)}
+.an{font-family:var(--gothic);font-size:13px;fill:var(--ink)}
+.lb{font-family:var(--gothic);font-size:12px;fill:var(--ink)}
+.legend{font-size:12px;color:var(--ink-soft);margin-top:4px}
+.legend i{display:inline-block;width:12px;height:10px;vertical-align:middle;margin:0 4px 0 10px}
+
+/* 相関の5段階 */
+.rgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+@media(max-width:760px){.rgrid{grid-template-columns:repeat(2,1fr)}}
+.rcell{border:1px solid var(--rule);border-top:4px solid var(--c);background:#fff;padding:8px;text-align:center}
+.rcell svg{border:1px solid var(--grid)}
+.rcell b{display:block;color:var(--c);font-size:14px;margin-top:4px}
+.rcell span{display:block;font-family:var(--mono);font-size:12px}
+.rcell small{display:block;font-size:12px;color:var(--ink-soft);line-height:1.5;margin-top:2px}
+
+/* 手計算 */
+.calc td input{width:72px;padding:4px 6px;font-size:13px}
+.calc td.okc input{border-color:var(--ok);background:#E7F3EB}
+.calc td.ngc input{border-color:var(--ng);background:#F8E5E2}
+.msg{font-size:14px;margin-top:8px;min-height:1.6em}
+.msg.ok{color:var(--ok)} .msg.ng{color:var(--ng)}
+
+/* 当てっこ */
+.guess-score{font-family:var(--mono);font-size:13px;color:var(--ink-soft)}
+.rbig{font-family:var(--mono);font-size:30px}
+
+.pager{display:flex;justify-content:space-between;margin-top:18px}
+.done-badge{display:none;background:#E7F3EB;border:1px solid var(--ok);color:var(--ok);padding:8px 14px;font-size:14px;margin-top:6px}
+.done-badge.show{display:block}
+.warn{color:var(--ng);font-size:13px}
+.hidden{display:none!important}
+.summary li{margin:6px 0}
+#gsvg,#esvg,#xsct{max-width:560px;margin-left:auto;margin-right:auto}
+#tip{position:fixed;pointer-events:none;background:var(--ink);color:#fff;font-family:var(--mono);font-size:12px;padding:5px 8px;opacity:0;transition:opacity .12s;z-index:9;white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ================= ポップ版 ================= */
+:root{
+  --paper:#FFF7E8; --panel:#FFFFFF; --ink:#263046; --ink-soft:#7A6F66; --rule:#EADFCF; --grid:#F3EADB;
+  --accent:#FF5A5F; --blue:#2E86DE; --blue-l:#4DA3F0; --band:#FFE9A8; --orange:#FF9F1C; --green:#2EC4B6;
+  --ok:#22A866; --ng:#F0474D; --dark:#2B2B2B; --yellow:#FFD23F; --mint:#2EC4B6;
+  --mincho:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Kosugi Maru","Yu Gothic",sans-serif;
+  --gothic:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Kosugi Maru","Yu Gothic",sans-serif;
+}
+body{background:#FFF7E8 radial-gradient(#F1DFBF 1.3px, transparent 1.5px) 0 0/20px 20px;font-weight:500}
+/* カフェの日よけ（ストライプ＋波形のふち）と、コーヒー色の看板 */
+header{position:relative;background:#5C3D2E;border-bottom:4px solid var(--dark);padding:52px 26px 18px}
+header::before{content:"";position:absolute;left:0;right:0;top:0;height:26px;
+  background:repeating-linear-gradient(90deg,#E8574C 0 36px,#FFF4E0 36px 72px);border-bottom:2.5px solid var(--dark)}
+header::after{content:"";position:absolute;left:0;right:0;top:28px;height:14px;
+  background:radial-gradient(circle at 18px 0,#E8574C 13px,transparent 13.5px) 0 0/72px 14px repeat-x,
+             radial-gradient(circle at 54px 0,#FFF4E0 13px,transparent 13.5px) 0 0/72px 14px repeat-x;
+  filter:drop-shadow(0 2px 0 rgba(0,0,0,.35))}
+h1{font-weight:900;font-size:28px;letter-spacing:.04em;color:#FFF4E0;text-shadow:3px 3px 0 #2B1A12}
+header p{color:#F2D7B6;font-weight:700}
+.logo{width:44px;height:44px;flex:none;align-self:center}
+.progress{color:#F2D7B6;font-weight:700}
+.progress .bar{width:160px;height:14px;background:rgba(255,255,255,.45);border:2.5px solid var(--dark);border-radius:99px;overflow:hidden}
+.progress .bar i{background:var(--yellow)}
+
+.lesson-head .kicker{display:inline-block;background:var(--dark);color:var(--yellow);border-radius:99px;padding:1px 12px;font-weight:700}
+.lesson-head h2{font-size:32px;font-weight:900;margin-top:6px}
+
+.card{border:3px solid var(--dark);border-radius:20px;box-shadow:5px 5px 0 var(--dark);overflow:hidden}
+.card h3{margin:-20px -22px 16px;background:var(--yellow);border-bottom:3px solid var(--dark);color:var(--dark);font-weight:900;font-size:19px}
+.card h3::before{width:16px;height:16px;border-radius:50%;background:var(--accent);border:2.5px solid var(--dark)}
+
+.nav{border:3px solid var(--dark);border-radius:18px;overflow:hidden;box-shadow:4px 4px 0 var(--dark)}
+.nav button{border-bottom:2px dashed var(--rule);font-weight:700}
+.nav button:hover{background:#FFF4D6}
+.nav button.cur{background:var(--blue);color:#fff}
+.nav .no{border-radius:50%;border:2.5px solid currentColor;width:26px;height:26px;font-weight:700}
+.nav .done .no{background:var(--ok);border-color:var(--dark)}
+
+.savebox{border:3px solid var(--dark);border-radius:18px;box-shadow:4px 4px 0 var(--dark);background:#fff}
+.savebox h4{font-size:15px;font-weight:900}
+.savebox select,.savebox input[type=text]{border:2px solid var(--dark);border-radius:10px}
+
+button.btn{border:2.5px solid var(--dark);border-radius:99px;box-shadow:3px 3px 0 var(--dark);font-weight:700;transition:transform .08s,box-shadow .08s}
+button.btn:hover{background:#FFF1C9;color:var(--dark)}
+button.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--dark)}
+button.btn.primary{background:var(--accent);color:#fff}
+button.btn.primary:hover{background:#FF7478;color:#fff}
+button.btn:disabled{box-shadow:none}
+select,input[type=number]{border:2px solid var(--dark);border-radius:10px}
+
+.seg{border:2.5px solid var(--dark);border-radius:99px;overflow:hidden}
+.seg button{border-right:2px solid var(--dark);font-weight:700}
+.seg button:hover{background:#FFF1C9}
+.seg button.on{background:var(--blue);color:#fff}
+
+/* キャラクター */
+.talk{gap:14px;align-items:flex-start}
+.talk .who{width:74px;height:auto;border-radius:0;background:none!important;display:flex;flex-direction:column;align-items:center;color:var(--dark)}
+.talk .who svg{width:70px;height:70px;border:3px solid var(--dark);border-radius:50%;background:#fff}
+.talk .who .nm{font-size:12px;font-weight:900;background:var(--dark);color:#fff;border-radius:99px;padding:0 10px;margin-top:-10px;position:relative}
+.talk .who.h .nm{background:var(--blue)}
+.talk .who.t .nm{background:var(--orange)}
+.talk .say{background:#FFF1DE;border:2.5px solid var(--dark);border-radius:18px;padding:12px 18px;margin-top:8px;font-size:15.5px}
+.talk .say::before{border-color:var(--dark)!important;border-width:0 0 2.5px 2.5px;border-style:solid;top:22px;left:-8px;width:13px;height:13px}
+.talk .who.h + .say{background:#E3F2FF;border-color:var(--dark)}
+
+/* 用語・知識 */
+.term{border:3px solid var(--dark);border-radius:18px;overflow:hidden;background:#EFFBF8;box-shadow:4px 4px 0 var(--dark)}
+.term .th{background:var(--mint);color:var(--dark);border-bottom:3px solid var(--dark);font-weight:900;font-size:17px}
+.term .th::before{content:"用語・知識";background:#fff;color:var(--dark);border:2px solid var(--dark);border-radius:99px;padding:0 10px}
+.term dt{color:#14857A;border-bottom:3px dotted var(--mint)}
+.term .ex{border-top:2px dashed #9ADDD5}
+.term .formula{border:2px solid var(--dark);border-radius:8px}
+.scale-card{border:2.5px solid var(--dark);border-radius:14px;background:#fff}
+.scale-card h4{font-weight:900}
+
+.cl-row{border:2.5px solid var(--dark);border-radius:16px;background:#fff}
+.cl-row .seg{border-radius:12px}
+
+.quiz{border:2.5px solid var(--dark);border-radius:18px;background:#FFFDF6}
+.quiz .q .qn{display:inline-block;background:var(--accent);color:#fff;border-radius:99px;padding:0 9px;margin-right:8px}
+.quiz .opt{border:2px solid var(--dark);border-radius:12px;font-weight:500}
+.quiz .opt:hover{background:#FFF1C9;border-color:var(--dark)}
+.quiz .opt.right{background:#D4F5E3;border-color:var(--ok)}
+.quiz .opt.wrong{background:#FFE0E1;border-color:var(--ng)}
+.quiz .fb{border-radius:12px}
+.quiz.solved{border-color:var(--ok);box-shadow:0 0 0 4px #C6F0D8}
+
+.stat{border:2px solid var(--dark);border-radius:14px;background:#fff}
+.stat.hl{background:#FFE0E1;border-color:var(--dark)}
+.tbl-wrap{border:2.5px solid var(--dark);border-radius:14px}
+th{background:var(--band);color:var(--dark);font-weight:700}
+.done-badge{border:2.5px solid var(--dark);border-radius:16px;background:#D4F5E3;color:#17804C;font-weight:900;box-shadow:3px 3px 0 var(--dark)}
+.rcell{border:2px solid var(--dark);border-top:7px solid var(--c);border-radius:14px}
+.rcell svg{border-radius:8px}
+.calc td input{border:2px solid var(--dark);border-radius:8px}
+#zval,#px{border-radius:10px}
+
+/* ================= 用語・注意・対処の区別 ================= */
+.term dt.t-warn,.term dt.t-how{justify-self:start;color:#fff;border:0;border-radius:4px;padding:2px 12px;font-size:14px;letter-spacing:.12em}
+.term dt.t-warn{background:#C0392B}
+.term dt.t-how{background:#2F7A4A}
+.term dt.t-warn::before{content:"！";margin-right:2px}
+.term dt.t-how::before{content:"→";margin-right:4px}
+.term dd.t-warn{background:#FCECEA;border-left:4px solid #C0392B;padding:6px 12px}
+.term dd.t-how{background:#E8F4EC;border-left:4px solid #2F7A4A;padding:6px 12px}
+.qhint{font-size:12px;color:var(--ink-soft);margin-top:8px}
+
+/* ================= 授業モード ================= */
+.pres-btn{margin-left:16px;font-family:var(--gothic);font-size:14px;font-weight:700;padding:7px 16px;border:2px solid #fff;background:transparent;color:#fff;cursor:pointer;border-radius:6px;letter-spacing:.06em}
+.pres-btn:hover{background:#fff;color:var(--ink)}
+body.present{overflow:hidden}
+body.present header,body.present .side,body.present .pager,body.present .done-badge{display:none!important}
+body.present .app{display:block;max-width:none;padding:0;margin:0}
+body.present #main{position:fixed;left:0;right:0;top:0;bottom:64px;overflow-y:auto;padding:4vh 4vw 8vh;background:var(--paper);scroll-behavior:smooth}
+body.present #main > *{zoom:var(--pz,1.35);max-width:1080px;margin-left:auto;margin-right:auto}
+body.present #main > .pv-off{display:none!important}
+body.present #main > .pv-on{animation:pvSlide .5s ease both}
+body.present .lesson-head.pv-on{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-height:calc(78vh / var(--pz,1.35))}
+body.present .lesson-head.pv-on .kicker{font-size:20px;letter-spacing:.2em}
+body.present .lesson-head.pv-on h2{font-size:64px;margin-top:10px}
+body.present .lesson-head.pv-on::after{content:"→ キーまたは「進む」で始めます";display:block;margin-top:28px;font-size:15px;color:var(--ink-soft)}
+.pv-h{visibility:hidden!important;opacity:0}
+.pv-in{animation:pvIn .5s ease both}
+@keyframes pvIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+@keyframes pvSlide{from{opacity:0;transform:translateX(48px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.pv-in,body.present #main > .pv-on{animation:none}}
+.pv-bar{display:none}
+body.present .pv-bar{display:flex;position:fixed;left:0;right:0;bottom:0;height:64px;align-items:center;gap:10px;padding:0 18px;background:var(--ink);color:#fff;z-index:50}
+.pv-bar button,.pv-bar select{font-family:var(--gothic);font-size:15px;font-weight:700;padding:6px 14px;background:transparent;color:#fff;border:2px solid rgba(255,255,255,.85);border-radius:6px;cursor:pointer}
+.pv-bar select option{color:#222}
+.pv-bar button:hover{background:#fff;color:var(--ink)}
+.pv-bar #pvNext{background:#fff;color:var(--ink)}
+.pv-bar .pv-info{flex:1;text-align:center;font-size:15px;font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pv-bar .sep{width:1px;height:30px;background:rgba(255,255,255,.35)}
+
+/* ポップ版の調整 */
+.term dt.t-warn,.term dt.t-how{border:2px solid var(--dark);border-radius:99px}
+.term dt.t-warn{background:var(--ng)}
+.term dt.t-how{background:var(--ok)}
+.term dd.t-warn{background:#FFE8E9;border-left-color:var(--ng);border-radius:0 10px 10px 0}
+.term dd.t-how{background:#DFF6EA;border-left-color:var(--ok);border-radius:0 10px 10px 0}
+.pres-btn{border-radius:99px;border:2.5px solid #FFF4E0;color:#FFF4E0;box-shadow:3px 3px 0 #2B1A12}
+.pres-btn:hover{background:#FFF4E0;color:#5C3D2E}
+body.present .pv-bar{background:#5C3D2E;border-top:4px solid var(--dark)}
+.pv-bar button,.pv-bar select{border-radius:99px}
+.pv-bar #pvNext{background:var(--yellow);color:var(--dark);border-color:var(--dark)}
+body.present #main{background:#FFF7E8 radial-gradient(#F1DFBF 1.3px, transparent 1.5px) 0 0/20px 20px}
+
+/* 図：四分位数 */
+.qfig{max-width:760px;margin:6px auto 4px;display:block;background:#fff;border:2px solid var(--dark);border-radius:14px}
+.qf-cap{text-align:center;font-weight:700;margin:4px 0}
+.qf-step{font-size:15px;font-weight:900;fill:#2B2B2B}
+.qf-num{font-size:11px;font-weight:900;fill:#fff;font-family:var(--mono)}
+.qf-lab{font-size:14px;font-weight:700}
+.qf-sm{font-size:12.5px;font-weight:700}
+.qf-val{font-size:15px;font-weight:900;font-family:var(--mono)}
+/* やってみよう：正解・不正解をはっきり */
+.card .msg.ok,.card .msg.ng{display:inline-block;padding:8px 16px;border-radius:12px;border:2.5px solid;font-weight:700;margin-top:10px}
+.card .msg.ok{background:#D4F5E3;border-color:var(--ok);color:#13643D}
+.card .msg.ng{background:#FFE0E1;border-color:var(--ng);color:#B0262C}
+.card .msg.ok::before{content:"⭕ "}
+.card .msg.ng::before{content:"✕ "}
+.badge-ok,.badge-ng{display:inline-block;font-size:12px;font-weight:900;color:#fff;border:2px solid var(--dark);border-radius:99px;padding:0 8px;white-space:nowrap}
+.badge-ok{background:var(--ok)}
+.badge-ng{background:var(--ng)}
+.cl-row{grid-template-columns:minmax(220px,1.1fr) minmax(280px,1fr) 64px}
+.cl-row.ok{background:#E9F9F0;border-color:var(--ok);box-shadow:0 0 0 3px #C6F0D8}
+.cl-row.ng{background:#FFF0F0;border-color:var(--ng);box-shadow:0 0 0 3px #FFD3D5}
+.cl-row.ok .seg button.on{background:var(--ok)}
+.cl-row.ng .seg button.on{background:var(--ng)}
+.cl-row.ng .why{color:#B0262C;font-weight:700}
+.seg button.on.good{background:var(--ok)}
+.seg button.on.bad{background:var(--ng)}
+.calc td.okc input{border:2.5px solid var(--ok);background:#D4F5E3;color:#13643D;font-weight:700}
+.calc td.ngc input{border:2.5px solid var(--ng);background:#FFE0E1;color:#B0262C;font-weight:700}
+</style>
+</head>
+<body>
+<header>
+  <svg class="logo" viewBox="0 0 48 48" aria-hidden="true"><defs><clipPath id="lg"><ellipse cx="24" cy="26" rx="20" ry="16"/></clipPath></defs>
+  <ellipse cx="24" cy="26" rx="20" ry="16" fill="#F7C873"/><g clip-path="url(#lg)" stroke="#D9963A" stroke-width="2.2"><path d="M0 10 L40 50 M10 0 L50 40 M-10 20 L30 60 M20 -6 L56 30 M48 6 L8 46 M38 -4 L-2 36 M58 16 L18 56"/></g>
+  <ellipse cx="24" cy="26" rx="20" ry="16" fill="none" stroke="#2B2B2B" stroke-width="2.8"/></svg>
+  <h1>データ分析トレーニング</h1>
+  <p>こむぎ堂の60日 ― 売れ残りを減らすために、データを調べよう</p>
+  <div class="progress"><span id="progtext">0 / 6</span><div class="bar"><i id="progbar" style="width:0"></i></div></div>
+  <button class="pres-btn" id="presBtn" title="先生が説明するための全画面表示">授業モード（全画面）</button>
+</header>
+<div class="app">
+  <div class="side">
+    <nav class="nav" id="nav"></nav>
+    <div class="savebox">
+      <h4>保存用ファイル</h4>
+      <label>クラス<select id="sv-class"><option value="">選んでください</option></select></label>
+      <label>出席番号<select id="sv-num"><option value="">選んでください</option></select></label>
+      <label>名前<input type="text" id="sv-name" placeholder="例：情報 太郎" autocomplete="off"></label>
+      <button class="btn primary" id="sv-save">保存する</button>
+      <button class="btn" id="sv-load">保存したファイルを読み込む</button>
+      <button class="btn" id="sv-img">達成状況を画像で保存</button>
+      <input type="file" id="sv-file" accept=".json,application/json" hidden>
+      <p class="msg" id="sv-msg"></p>
+      <button class="linkbtn" id="sv-reset">学習の記録をリセット</button>
+    </div>
+  </div>
+  <main id="main"></main>
+</div>
+<div id="tip"></div>
+
+<script>
+"use strict";
+/* ================= キャラクターのイラスト ================= */
+const AV = {
+  /* 店長（こむぎの父）：コック帽・口ひげ・赤いスカーフ */
+  t: `<svg viewBox="0 0 100 100" aria-hidden="true">
+    <circle cx="50" cy="50" r="50" fill="#FFE3B8"/>
+    <path d="M14 104 Q16 76 50 74 Q84 76 86 104Z" fill="#fff" stroke="#2B2B2B" stroke-width="2.5"/>
+    <circle cx="44" cy="90" r="2" fill="#2B2B2B"/><circle cx="56" cy="90" r="2" fill="#2B2B2B"/>
+    <path d="M38 73 L50 84 L62 73Z" fill="#FF5A5F" stroke="#2B2B2B" stroke-width="2.2" stroke-linejoin="round"/>
+    <ellipse cx="29" cy="55" rx="4" ry="5.5" fill="#F8D3B0" stroke="#2B2B2B" stroke-width="2.2"/>
+    <ellipse cx="71" cy="55" rx="4" ry="5.5" fill="#F8D3B0" stroke="#2B2B2B" stroke-width="2.2"/>
+    <ellipse cx="50" cy="54" rx="21" ry="21" fill="#F8D3B0" stroke="#2B2B2B" stroke-width="2.5"/>
+    <path d="M29 38 Q20 24 33 19 Q37 6 50 10 Q63 6 67 19 Q80 24 71 38 Z" fill="#fff" stroke="#2B2B2B" stroke-width="2.5" stroke-linejoin="round"/>
+    <rect x="29" y="34" width="42" height="9" rx="3" fill="#fff" stroke="#2B2B2B" stroke-width="2.5"/>
+    <path d="M38 49 q3 -2.5 6 0 M56 49 q3 -2.5 6 0" stroke="#6B4226" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+    <path d="M39 55 q2.5 -3.5 5 0 M56 55 q2.5 -3.5 5 0" stroke="#2B2B2B" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <circle cx="37" cy="61" r="3.6" fill="#FF8A93" opacity=".55"/><circle cx="63" cy="61" r="3.6" fill="#FF8A93" opacity=".55"/>
+    <path d="M50 61 q-6 -4 -13 1 q6 6 13 1 q7 5 13 -1 q-7 -5 -13 -1z" fill="#6B4226" stroke="#2B2B2B" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M45 66.5 q5 4 10 0" stroke="#2B2B2B" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+  </svg><span class="nm">店長</span>`,
+  /* こむぎ（娘）：ボブヘア・星のヘアピン・緑のエプロン */
+  h: `<svg viewBox="0 0 100 100" aria-hidden="true">
+    <circle cx="50" cy="50" r="50" fill="#CFE8FF"/>
+    <path d="M24 60 Q20 24 50 22 Q80 24 76 60 L77 72 Q71 76 67 70 L33 70 Q29 76 23 72Z" fill="#5A3B2A" stroke="#2B2B2B" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M14 104 Q16 78 50 76 Q84 78 86 104Z" fill="#fff" stroke="#2B2B2B" stroke-width="2.5"/>
+    <path d="M32 104 L35 84 Q50 80 65 84 L68 104Z" fill="#3DBE8B" stroke="#2B2B2B" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M43 76 L50 82 L57 76" fill="none" stroke="#2B2B2B" stroke-width="2.2" stroke-linejoin="round"/>
+    <ellipse cx="50" cy="53" rx="19" ry="20" fill="#FBDCC0" stroke="#2B2B2B" stroke-width="2.5"/>
+    <path d="M30 50 Q29 30 50 29 Q71 30 70 50 Q64 41 57 44 Q53 35 46 41 Q38 37 30 50Z" fill="#5A3B2A" stroke="#2B2B2B" stroke-width="2.3" stroke-linejoin="round"/>
+    <ellipse cx="42.5" cy="55" rx="3" ry="4" fill="#2B2B2B"/><circle cx="43.6" cy="53.6" r="1.2" fill="#fff"/>
+    <ellipse cx="57.5" cy="55" rx="3" ry="4" fill="#2B2B2B"/><circle cx="58.6" cy="53.6" r="1.2" fill="#fff"/>
+    <circle cx="36" cy="62" r="3.5" fill="#FF8A93" opacity=".6"/><circle cx="64" cy="62" r="3.5" fill="#FF8A93" opacity=".6"/>
+    <path d="M45 62.5 q5 6 10 0 z" fill="#F0474D" stroke="#2B2B2B" stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="M67 33 l1.6 3.4 3.7 .5 -2.7 2.6 .7 3.7 -3.3 -1.8 -3.3 1.8 .7 -3.7 -2.7 -2.6 3.7 -.5z" fill="#FFD23F" stroke="#2B2B2B" stroke-width="1.6" stroke-linejoin="round"/>
+  </svg><span class="nm">こむぎ</span>`,
+};
+/* ロゴ：メロンパン */
+const LOGO = `<svg class="logo" viewBox="0 0 48 48" aria-hidden="true"><ellipse cx="24" cy="27" rx="20" ry="15" fill="#F7C873" stroke="#2B2B2B" stroke-width="2.5"/>
+  <path d="M10 21 L34 39 M18 14 L40 31 M38 18 L14 37 M30 13 L8 30" stroke="#E3A54A" stroke-width="2"/>
+  <ellipse cx="24" cy="27" rx="20" ry="15" fill="none" stroke="#2B2B2B" stroke-width="2.5"/></svg>`;
+
+/* ================= データ（架空） ================= */
+const RAW = [{"date":"6/1","wd":"月","weather":"雨","crowd":1,"temp":23.4,"rain":13,"cust":140,"iced":3,"hot":51,"kaki":2,"melon":38,"curry":27},{"date":"6/2","wd":"火","weather":"くもり","crowd":4,"temp":26.8,"rain":0,"cust":202,"iced":27,"hot":35,"kaki":13,"melon":42,"curry":38},{"date":"6/3","wd":"水","weather":"くもり","crowd":2,"temp":21.9,"rain":0,"cust":179,"iced":7,"hot":50,"kaki":0,"melon":42,"curry":27},{"date":"6/4","wd":"木","weather":"雨","crowd":1,"temp":21.0,"rain":47,"cust":80,"iced":4,"hot":54,"kaki":0,"melon":40,"curry":43},{"date":"6/5","wd":"金","weather":"晴れ","crowd":3,"temp":27.2,"rain":0,"cust":194,"iced":28,"hot":44,"kaki":11,"melon":42,"curry":60},{"date":"6/6","wd":"土","weather":"雨","crowd":5,"temp":24.1,"rain":7,"cust":221,"iced":27,"hot":38,"kaki":0,"melon":39,"curry":38},{"date":"6/7","wd":"日","weather":"雨","crowd":2,"temp":22.7,"rain":19,"cust":179,"iced":16,"hot":52,"kaki":0,"melon":40,"curry":55},{"date":"6/8","wd":"月","weather":"晴れ","crowd":1,"temp":25.7,"rain":0,"cust":172,"iced":25,"hot":40,"kaki":9,"melon":41,"curry":43},{"date":"6/9","wd":"火","weather":"雨","crowd":1,"temp":22.8,"rain":15,"cust":155,"iced":13,"hot":51,"kaki":2,"melon":40,"curry":27},{"date":"6/10","wd":"水","weather":"雨","crowd":1,"temp":22.5,"rain":12,"cust":165,"iced":11,"hot":49,"kaki":0,"melon":42,"curry":36},{"date":"6/11","wd":"木","weather":"晴れ","crowd":3,"temp":26.8,"rain":0,"cust":187,"iced":28,"hot":41,"kaki":7,"melon":37,"curry":28},{"date":"6/12","wd":"金","weather":"くもり","crowd":2,"temp":24.4,"rain":0,"cust":null,"iced":23,"hot":51,"kaki":3,"melon":44,"curry":48},{"date":"6/13","wd":"土","weather":"雨","crowd":4,"temp":23.4,"rain":17,"cust":216,"iced":19,"hot":50,"kaki":0,"melon":38,"curry":27},{"date":"6/14","wd":"日","weather":"雨","crowd":4,"temp":23.5,"rain":14,"cust":212,"iced":16,"hot":50,"kaki":0,"melon":40,"curry":55},{"date":"6/15","wd":"月","weather":"晴れ","crowd":4,"temp":27.5,"rain":0,"cust":203,"iced":34,"hot":39,"kaki":6,"melon":36,"curry":47},{"date":"6/16","wd":"火","weather":"雨","crowd":1,"temp":23.0,"rain":18,"cust":149,"iced":13,"hot":47,"kaki":5,"melon":42,"curry":14},{"date":"6/17","wd":"水","weather":"くもり","crowd":2,"temp":24.4,"rain":0,"cust":183,"iced":18,"hot":48,"kaki":4,"melon":43,"curry":49},{"date":"6/18","wd":"木","weather":"くもり","crowd":3,"temp":25.5,"rain":0,"cust":189,"iced":20,"hot":42,"kaki":5,"melon":42,"curry":56},{"date":"6/19","wd":"金","weather":"雨","crowd":1,"temp":25.3,"rain":7,"cust":155,"iced":18,"hot":41,"kaki":3,"melon":42,"curry":30},{"date":"6/20","wd":"土","weather":"くもり","crowd":5,"temp":26.2,"rain":0,"cust":233,"iced":25,"hot":41,"kaki":0,"melon":36,"curry":51},{"date":"6/21","wd":"日","weather":"雨","crowd":5,"temp":22.1,"rain":8,"cust":243,"iced":5,"hot":51,"kaki":0,"melon":38,"curry":17},{"date":"6/22","wd":"月","weather":"晴れ","crowd":3,"temp":30.2,"rain":0,"cust":197,"iced":42,"hot":33,"kaki":24,"melon":39,"curry":43},{"date":"6/23","wd":"火","weather":"くもり","crowd":2,"temp":27.5,"rain":0,"cust":182,"iced":31,"hot":38,"kaki":8,"melon":38,"curry":21},{"date":"6/24","wd":"水","weather":"くもり","crowd":3,"temp":29.7,"rain":0,"cust":196,"iced":36,"hot":30,"kaki":19,"melon":43,"curry":46},{"date":"6/25","wd":"木","weather":"晴れ","crowd":2,"temp":28.9,"rain":0,"cust":182,"iced":37,"hot":39,"kaki":17,"melon":40,"curry":19},{"date":"6/26","wd":"金","weather":"くもり","crowd":3,"temp":26.6,"rain":0,"cust":null,"iced":28,"hot":43,"kaki":2,"melon":40,"curry":12},{"date":"6/27","wd":"土","weather":"晴れ","crowd":5,"temp":27.2,"rain":0,"cust":236,"iced":32,"hot":43,"kaki":13,"melon":41,"curry":45},{"date":"6/28","wd":"日","weather":"雨","crowd":4,"temp":26.6,"rain":27,"cust":205,"iced":18,"hot":42,"kaki":12,"melon":38,"curry":61},{"date":"6/29","wd":"月","weather":"雨","crowd":1,"temp":28.3,"rain":16,"cust":140,"iced":28,"hot":35,"kaki":13,"melon":38,"curry":33},{"date":"6/30","wd":"火","weather":"晴れ","crowd":4,"temp":28.4,"rain":0,"cust":207,"iced":35,"hot":34,"kaki":13,"melon":38,"curry":50},{"date":"7/1","wd":"水","weather":"くもり","crowd":2,"temp":27.0,"rain":0,"cust":178,"iced":32,"hot":38,"kaki":11,"melon":41,"curry":41},{"date":"7/2","wd":"木","weather":"晴れ","crowd":1,"temp":30.5,"rain":0,"cust":171,"iced":44,"hot":33,"kaki":13,"melon":41,"curry":36},{"date":"7/3","wd":"金","weather":"晴れ","crowd":2,"temp":28.8,"rain":0,"cust":186,"iced":38,"hot":35,"kaki":14,"melon":42,"curry":47},{"date":"7/4","wd":"土","weather":"雨","crowd":5,"temp":25.2,"rain":5,"cust":228,"iced":20,"hot":38,"kaki":7,"melon":43,"curry":59},{"date":"7/5","wd":"日","weather":"くもり","crowd":5,"temp":27.9,"rain":0,"cust":249,"iced":26,"hot":37,"kaki":7,"melon":36,"curry":26},{"date":"7/6","wd":"月","weather":"晴れ","crowd":2,"temp":30.5,"rain":0,"cust":177,"iced":40,"hot":25,"kaki":22,"melon":39,"curry":46},{"date":"7/7","wd":"火","weather":"くもり","crowd":3,"temp":30.0,"rain":0,"cust":197,"iced":38,"hot":32,"kaki":16,"melon":40,"curry":43},{"date":"7/8","wd":"水","weather":"晴れ","crowd":5,"temp":305,"rain":0,"cust":243,"iced":45,"hot":26,"kaki":12,"melon":36,"curry":23,"tempTrue":30.5},{"date":"7/9","wd":"木","weather":"雨","crowd":1,"temp":27.4,"rain":15,"cust":null,"iced":25,"hot":34,"kaki":9,"melon":39,"curry":58},{"date":"7/10","wd":"金","weather":"晴れ","crowd":3,"temp":30.2,"rain":0,"cust":197,"iced":39,"hot":31,"kaki":15,"melon":43,"curry":62},{"date":"7/11","wd":"土","weather":"晴れ","crowd":5,"temp":31.3,"rain":0,"cust":250,"iced":40,"hot":28,"kaki":22,"melon":43,"curry":29},{"date":"7/12","wd":"日","weather":"晴れ","crowd":5,"temp":28.2,"rain":0,"cust":250,"iced":36,"hot":30,"kaki":8,"melon":43,"curry":60},{"date":"7/13","wd":"月","weather":"晴れ","crowd":1,"temp":29.3,"rain":0,"cust":165,"iced":32,"hot":36,"kaki":19,"melon":40,"curry":40},{"date":"7/14","wd":"火","weather":"くもり","crowd":2,"temp":30.5,"rain":0,"cust":177,"iced":39,"hot":37,"kaki":16,"melon":39,"curry":37},{"date":"7/15","wd":"水","weather":"雨","crowd":1,"temp":26.2,"rain":15,"cust":166,"iced":25,"hot":36,"kaki":8,"melon":43,"curry":57},{"date":"7/16","wd":"木","weather":"くもり","crowd":3,"temp":30.5,"rain":0,"cust":192,"iced":38,"hot":36,"kaki":17,"melon":39,"curry":41},{"date":"7/17","wd":"金","weather":"晴れ","crowd":4,"temp":32.4,"rain":0,"cust":220,"iced":48,"hot":23,"kaki":23,"melon":41,"curry":43},{"date":"7/18","wd":"土","weather":"晴れ","crowd":5,"temp":33.5,"rain":0,"cust":520,"iced":148,"hot":20,"kaki":40,"melon":43,"curry":57},{"date":"7/19","wd":"日","weather":"晴れ","crowd":5,"temp":33.0,"rain":0,"cust":261,"iced":54,"hot":23,"kaki":27,"melon":39,"curry":55},{"date":"7/20","wd":"月","weather":"雨","crowd":3,"temp":29.0,"rain":26,"cust":189,"iced":35,"hot":29,"kaki":13,"melon":38,"curry":50},{"date":"7/21","wd":"火","weather":"くもり","crowd":2,"temp":30.2,"rain":0,"cust":181,"iced":35,"hot":35,"kaki":14,"melon":40,"curry":23},{"date":"7/22","wd":"水","weather":"くもり","crowd":2,"temp":29.6,"rain":0,"cust":178,"iced":33,"hot":34,"kaki":20,"melon":42,"curry":21},{"date":"7/23","wd":"木","weather":"晴れ","crowd":3,"temp":31.5,"rain":0,"cust":194,"iced":48,"hot":25,"kaki":24,"melon":41,"curry":53},{"date":"7/24","wd":"金","weather":"晴れ","crowd":3,"temp":319,"rain":0,"cust":195,"iced":43,"hot":25,"kaki":22,"melon":40,"curry":28,"tempTrue":31.9},{"date":"7/25","wd":"土","weather":"雨","crowd":4,"temp":26.8,"rain":23,"cust":220,"iced":32,"hot":34,"kaki":9,"melon":41,"curry":42},{"date":"7/26","wd":"日","weather":"くもり","crowd":5,"temp":30.3,"rain":0,"cust":254,"iced":43,"hot":29,"kaki":15,"melon":36,"curry":28},{"date":"7/27","wd":"月","weather":"晴れ","crowd":3,"temp":32.8,"rain":0,"cust":187,"iced":44,"hot":27,"kaki":22,"melon":38,"curry":37},{"date":"7/28","wd":"火","weather":"晴れ","crowd":4,"temp":33.4,"rain":0,"cust":202,"iced":46,"hot":16,"kaki":24,"melon":40,"curry":25},{"date":"7/29","wd":"水","weather":"晴れ","crowd":5,"temp":32.7,"rain":0,"cust":234,"iced":49,"hot":23,"kaki":26,"melon":38,"curry":59},{"date":"7/30","wd":"木","weather":"晴れ","crowd":4,"temp":30.8,"rain":0,"cust":211,"iced":42,"hot":30,"kaki":21,"melon":37,"curry":28}];
+/* 列の説明 */
+const COLS = [
+  { k:"date",    name:"日付",            unit:"",    desc:"記録した日" },
+  { k:"wd",      name:"曜日",            unit:"",    desc:"その日の曜日" },
+  { k:"weather", name:"天気",            unit:"",    desc:"晴れ・くもり・雨のどれか" },
+  { k:"crowd",   name:"混雑度",          unit:"1〜5", desc:"店員がその日の混み具合を、1（すいている）〜5（とても混んでいる）の5段階で記録したもの" },
+  { k:"temp",    name:"最高気温",        unit:"℃",  desc:"その日の最高気温" },
+  { k:"rain",    name:"降水量",          unit:"mm",  desc:"その日に降った雨の量" },
+  { k:"cust",    name:"来客数",          unit:"人",  desc:"レジで会計したお客さんの人数" },
+  { k:"iced",    name:"アイスコーヒー",  unit:"杯",  desc:"その日に売れたアイスコーヒーの杯数" },
+  { k:"hot",     name:"ホットコーヒー",  unit:"杯",  desc:"その日に売れたホットコーヒーの杯数" },
+  { k:"kaki",    name:"かき氷",          unit:"杯",  desc:"その日に売れたかき氷の杯数" },
+  { k:"melon",   name:"メロンパン",      unit:"個",  desc:"その日に売れたメロンパンの個数" },
+  { k:"curry",   name:"カレーパン",      unit:"個",  desc:"その日に売れたカレーパンの個数" },
+];
+const colName = k => { const c = COLS.find(c => c.k === k); return c.name + (c.unit && c.unit !== "1〜5" ? `(${c.unit})` : ""); };
+/* 整えたデータ：7/8・7/24 の気温を直し（305 → 30.5、319 → 31.9）、来客数の空欄はそのまま（計算では除く） */
+const CLEAN = RAW.map(r => Object.assign({}, r, r.tempTrue ? { temp: r.tempTrue } : {}));
+
+/* ================= 統計 ================= */
+const S = {
+  nums: a => a.filter(v => v !== null && v !== undefined && Number.isFinite(v)),
+  mean: a => a.reduce((s, x) => s + x, 0) / a.length,
+  varp(a){ const m = S.mean(a); return a.reduce((s, x) => s + (x-m)*(x-m), 0) / a.length; },
+  sd: a => Math.sqrt(S.varp(a)),
+  med(a){ const v = [...a].sort((x, y) => x - y), n = v.length; return n % 2 ? v[(n-1)/2] : (v[n/2-1] + v[n/2]) / 2; },
+  quart(a){ /* 教科書の方法 */
+    const v = [...a].sort((x, y) => x - y), n = v.length, h = Math.floor(n/2);
+    const lo = v.slice(0, h), hi = v.slice(n % 2 ? h+1 : h);
+    return { min: v[0], q1: S.med(lo), q2: S.med(v), q3: S.med(hi), max: v[n-1] };
+  },
+  corr(xs, ys){ const mx = S.mean(xs), my = S.mean(ys); let a = 0, b = 0, c = 0;
+    xs.forEach((x, i) => { const dx = x-mx, dy = ys[i]-my; a += dx*dy; b += dx*dx; c += dy*dy; }); return a / Math.sqrt(b*c); },
+  lsq(xs, ys){ const mx = S.mean(xs), my = S.mean(ys); let a = 0, b = 0;
+    xs.forEach((x, i) => { a += (x-mx)*(ys[i]-my); b += (x-mx)*(x-mx); }); const sl = a/b; return { a: sl, b: my - sl*mx }; },
+};
+function pairsOf(data, xk, yk){
+  const out = [];
+  data.forEach(r => { const x = r[xk], y = r[yk]; if (Number.isFinite(x) && Number.isFinite(y)) out.push({ x, y, r }); });
+  return out;
+}
+const f1 = (v, d = 1) => Number.isFinite(v) ? Number(v.toFixed(d)).toString() : "—";
+const sgn = v => (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(2);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
+const $ = id => document.getElementById(id);
+
+/* 用語・知識の囲み：items は [[用語, 説明], ...]、extra は下に添える文 */
+function term(title, items, extra){
+  return `<div class="term"><div class="th">${title}</div><div class="tb">
+    <dl>${items.map(([w, d]) => { const k = w === "注意" ? "t-warn" : w.startsWith("対処") ? "t-how" : "t-word";
+      return `<dt class="${k}">${w}</dt><dd class="${k}">${d}</dd>`; }).join("")}</dl>
+    ${extra ? `<div class="ex">${extra}</div>` : ""}</div></div>`;
+}
+/* データ表の抜き出し：dates に並べた日付を表示（とびとびのところに「…」を入れる）。mark(r, k) で td に付けるクラス */
+function excerpt(dates, keys, mark){
+  const idx = dates.map(d => RAW.findIndex(r => r.date === d));
+  let h = `<div class="tbl-wrap excerpt" style="max-height:none"><table><thead><tr>${keys.map(k => { const c = COLS.find(c => c.k === k); return `<th class="${["date","wd","weather"].includes(k) ? "l" : ""}">${c.name}${c.unit ? `<br>(${c.unit})` : ""}</th>`; }).join("")}</tr></thead><tbody>`;
+  idx.forEach((ri, j) => {
+    if (j > 0 && ri !== idx[j-1] + 1) h += `<tr><td class="gap" colspan="${keys.length}">…</td></tr>`;
+    const r = RAW[ri];
+    h += `<tr>${keys.map(k => { const v = r[k], c = (["date","wd","weather"].includes(k) ? "l " : "") + (mark ? mark(r, k) || "" : "");
+      return v === null ? `<td class="miss ${c}">空欄</td>` : `<td class="${c}">${v}</td>`; }).join("")}</tr>`;
+  });
+  return h + `</tbody></table></div>`;
+}
+const around = (d, n = 2) => { const i = RAW.findIndex(r => r.date === d); return RAW.slice(Math.max(0, i-n), i+n+1).map(r => r.date); };
+
+
+/* 図：四分位数と外れ値の求め方（11個の例）
+   用語の名前は②の箱ひげ図に1回ずつだけ書き、①とは同じ色の点線で結ぶ */
+function quartileFigure(){
+  const V = [2, 4, 5, 6, 7, 8, 9, 10, 12, 13, 24], px = v => 60 + v * 25;
+  const B = "#2E86DE", R = "#F0474D", G = "#14A08F", K = "#2B2B2B", T = "#263046";
+  const key = { 5: B, 8: R, 12: G };
+  let g = `<svg viewBox="0 0 760 436" class="qfig" role="img" aria-label="四分位数と外れ値の求め方">`;
+  /* ① 並べて分ける */
+  g += `<text x="18" y="26" class="qf-step">① 小さい順に並べて、真ん中で前半・後半に分ける</text>`;
+  g += `<text x="${px(8)}" y="60" text-anchor="middle" class="qf-lab" fill="${R}">全体の真ん中</text>`;
+  V.forEach((v, i) => {
+    const c = i < 5 ? "#8CC2F5" : i === 5 ? R : "#86DCCF";
+    g += `<circle cx="${px(v)}" cy="88" r="10.5" fill="${key[v] || c}" stroke="${K}" stroke-width="2"/><text x="${px(v)}" y="92.5" text-anchor="middle" class="qf-num">${v}</text>`;
+    if (key[v]) g += `<circle cx="${px(v)}" cy="88" r="14.5" fill="none" stroke="${key[v]}" stroke-width="3"/>`;
+  });
+  g += `<path d="M${px(2)-12} 110 v7 H${px(7)+12} v-7" fill="none" stroke="${B}" stroke-width="2.5"/>`;
+  g += `<path d="M${px(9)-12} 110 v7 H${px(24)+12} v-7" fill="none" stroke="${G}" stroke-width="2.5"/>`;
+  g += `<text x="${px(5)}" y="138" text-anchor="middle" class="qf-lab" fill="${B}">前半の真ん中</text>`;
+  g += `<text x="${px(12)}" y="138" text-anchor="middle" class="qf-lab" fill="${G}">後半の真ん中</text>`;
+  /* ①と②を結ぶ点線 */
+  [[5, 146], [8, 106], [12, 146]].forEach(([v, y]) => { g += `<line x1="${px(v)}" y1="${y}" x2="${px(v)}" y2="190" stroke="${key[v]}" stroke-width="2" stroke-dasharray="5 4"/>`; });
+  /* ② 箱ひげ図 */
+  g += `<text x="18" y="172" class="qf-step">② 箱ひげ図にする</text>`;
+  const cy = 262, two = (x, a, b, y, c) => `<text x="${x}" y="${y}" text-anchor="middle" class="qf-lab" fill="${c}">${a}</text><text x="${x}" y="${y + 17}" text-anchor="middle" class="qf-val" fill="${c}">${b}</text>`;
+  g += two(px(5), "第1四分位数", "5", 204, B) + two(px(8), "中央値", "8", 204, R) + two(px(12), "第3四分位数", "12", 204, G);
+  [5, 8, 12].forEach(v => { g += `<line x1="${px(v)}" y1="226" x2="${px(v)}" y2="${cy - 21}" stroke="${key[v]}" stroke-width="2"/>`; });
+  g += `<line x1="${px(2)}" y1="${cy}" x2="${px(5)}" y2="${cy}" stroke="${K}" stroke-width="2.5"/><line x1="${px(12)}" y1="${cy}" x2="${px(13)}" y2="${cy}" stroke="${K}" stroke-width="2.5"/>`;
+  g += `<line x1="${px(2)}" y1="${cy-12}" x2="${px(2)}" y2="${cy+12}" stroke="${K}" stroke-width="2.5"/><line x1="${px(13)}" y1="${cy-12}" x2="${px(13)}" y2="${cy+12}" stroke="${K}" stroke-width="2.5"/>`;
+  g += `<rect x="${px(5)}" y="${cy-20}" width="${px(12)-px(5)}" height="40" fill="#FFE9A8" stroke="${K}" stroke-width="2.5"/>`;
+  g += `<line x1="${px(5)}" y1="${cy-20}" x2="${px(5)}" y2="${cy+20}" stroke="${B}" stroke-width="4"/><line x1="${px(12)}" y1="${cy-20}" x2="${px(12)}" y2="${cy+20}" stroke="${G}" stroke-width="4"/><line x1="${px(8)}" y1="${cy-20}" x2="${px(8)}" y2="${cy+20}" stroke="${R}" stroke-width="4"/>`;
+  g += `<circle cx="${px(24)}" cy="${cy}" r="8" fill="${R}" stroke="${K}" stroke-width="2"/>`;
+  /* 外れ値の境目 */
+  g += `<line x1="${px(22.5)}" y1="226" x2="${px(22.5)}" y2="${cy+30}" stroke="${R}" stroke-width="2" stroke-dasharray="6 4"/>`;
+  g += two(px(22.5), "外れ値の境目", "22.5（12＋1.5×7）", 204, R);
+  /* 箱の下：最小値・最大値・外れ値 */
+  [[2, "最小値", "2"], [13, "最大値", "13"], [24, "外れ値", "24"]].forEach(([v, a, b]) => {
+    g += `<line x1="${px(v)}" y1="${cy + 14}" x2="${px(v)}" y2="${cy + 28}" stroke="${v === 24 ? R : T}" stroke-width="1.5"/>` + two(px(v), a, b, cy + 44, v === 24 ? R : T);
+  });
+  g += `<text x="${px(13)}" y="${cy + 78}" text-anchor="middle" class="qf-sm" fill="${T}">（外れ値を除く）</text>`;
+  /* 四分位範囲 */
+  g += `<path d="M${px(5)} ${cy + 26} v7 H${px(12)} v-7" fill="none" stroke="${K}" stroke-width="2.5"/>`;
+  g += `<line x1="${(px(5) + px(12)) / 2}" y1="${cy + 33}" x2="${(px(5) + px(12)) / 2}" y2="${cy + 84}" stroke="${K}" stroke-width="1.5"/><text x="${(px(5) + px(12)) / 2}" y="${cy + 102}" text-anchor="middle" class="qf-lab" fill="${K}">四分位範囲</text><text x="${(px(5) + px(12)) / 2}" y="${cy + 120}" text-anchor="middle" class="qf-sm" fill="${K}">12 − 5 ＝ 7（箱の長さ）</text>`;
+  /* 目盛り */
+  g += `<line x1="${px(0)}" y1="402" x2="${px(26)}" y2="402" stroke="#93A0A8"/>`;
+  for (let t = 0; t <= 25; t += 5) g += `<line x1="${px(t)}" y1="398" x2="${px(t)}" y2="406" stroke="#93A0A8"/><text x="${px(t)}" y="424" text-anchor="middle" class="tk">${t}</text>`;
+  return g + `</svg>`;
+}
+/* ================= グラフ ================= */
+function niceTicks(min, max, n = 5){
+  if (min === max){ min -= 1; max += 1; }
+  const raw = (max-min)/n, mag = Math.pow(10, Math.floor(Math.log10(raw))), nm = raw/mag;
+  const st = (nm < 1.5 ? 1 : nm < 3 ? 2 : nm < 7 ? 5 : 10) * mag, out = [];
+  for (let t = Math.ceil(min/st)*st; t <= max + st*1e-6; t += st) out.push(Number(t.toFixed(10)));
+  return out;
+}
+/* 散布図 */
+function scatter(svg, o){
+  const W = o.w || 640, H = o.h || 400, P = { l:62, r:20, t:16, b:52 };
+  const xs = o.pts.map(p => p.x), ys = o.pts.map(p => p.y);
+  let [x0, x1] = o.xr || [Math.min(...xs), Math.max(...xs)], [y0, y1] = o.yr || [Math.min(...ys), Math.max(...ys)];
+  if (!o.xr){ const p = (x1-x0||1)*.08; x0 -= p; x1 += p; }
+  if (!o.yr){ const p = (y1-y0||1)*.08; y0 -= p; y1 += p; }
+  const px = v => P.l + (v-x0)/(x1-x0)*(W-P.l-P.r), py = v => H-P.b - (v-y0)/(y1-y0)*(H-P.t-P.b);
+  let s = "";
+  niceTicks(y0, y1).forEach(t => { if (t < y0 || t > y1) return; s += `<line class="gl" x1="${P.l}" y1="${py(t)}" x2="${W-P.r}" y2="${py(t)}"/><text class="tk" x="${P.l-8}" y="${py(t)+4}" text-anchor="end">${t}</text>`; });
+  niceTicks(x0, x1).forEach(t => { if (t < x0 || t > x1) return; s += `<line class="gl" x1="${px(t)}" y1="${P.t}" x2="${px(t)}" y2="${H-P.b}"/><text class="tk" x="${px(t)}" y="${H-P.b+17}" text-anchor="middle">${t}</text>`; });
+  s += `<line class="axis" x1="${P.l}" y1="${H-P.b}" x2="${W-P.r}" y2="${H-P.b}"/><line class="axis" x1="${P.l}" y1="${P.t}" x2="${P.l}" y2="${H-P.b}"/>`;
+  s += `<text class="an" x="${(P.l+W-P.r)/2}" y="${H-12}" text-anchor="middle">${esc(o.xl)}</text>`;
+  s += `<text class="an" transform="rotate(-90)" x="${-(P.t+H-P.b)/2}" y="16" text-anchor="middle">${esc(o.yl)}</text>`;
+  const clipId = "c" + Math.random().toString(36).slice(2);
+  s += `<clipPath id="${clipId}"><rect x="${P.l}" y="${P.t}" width="${W-P.l-P.r}" height="${H-P.t-P.b}"/></clipPath>`;
+  if (o.resid && o.line) o.pts.forEach(p => { if (p.off) return; s += `<line x1="${px(p.x)}" y1="${py(p.y)}" x2="${px(p.x)}" y2="${py(o.line.a*p.x+o.line.b)}" stroke="var(--orange)" stroke-width="1.2" clip-path="url(#${clipId})"/>`; });
+  (o.lines || []).forEach(L => { s += `<line x1="${px(x0)}" y1="${py(L.a*x0+L.b)}" x2="${px(x1)}" y2="${py(L.a*x1+L.b)}" stroke="${L.color}" stroke-width="${L.w || 2}" ${L.dash ? `stroke-dasharray="${L.dash}"` : ""} clip-path="url(#${clipId})"/>`; });
+  if (o.pivot && o.pivot.y >= y0 && o.pivot.y <= y1){ const cx = px(o.pivot.x), cy = py(o.pivot.y);
+    s += `<path d="M${cx} ${cy-8} L${cx+8} ${cy} L${cx} ${cy+8} L${cx-8} ${cy} Z" fill="#fff" stroke="var(--blue)" stroke-width="2"/>`; }
+  if (o.pred) s += `<line x1="${px(o.pred.x)}" y1="${H-P.b}" x2="${px(o.pred.x)}" y2="${py(o.pred.y)}" stroke="var(--accent)" stroke-dasharray="4 4" clip-path="url(#${clipId})"/><line x1="${P.l}" y1="${py(o.pred.y)}" x2="${px(o.pred.x)}" y2="${py(o.pred.y)}" stroke="var(--accent)" stroke-dasharray="4 4" clip-path="url(#${clipId})"/><circle cx="${px(o.pred.x)}" cy="${py(o.pred.y)}" r="7" fill="none" stroke="var(--accent)" stroke-width="2" clip-path="url(#${clipId})"/>`;
+  o.pts.forEach(p => {
+    const c = p.off ? "#C9D0D4" : p.hl ? "var(--accent)" : "var(--ink)";
+    s += `<circle cx="${px(p.x).toFixed(1)}" cy="${py(p.y).toFixed(1)}" r="${p.hl ? 6.5 : 5.5}" fill="${c}" fill-opacity="${p.off ? .9 : .66}" stroke="#fff" stroke-width=".8" data-t="${esc((p.r ? p.r.date + "　" : "") + f1(p.x) + ", " + f1(p.y))}"/>`;
+    if (p.hl && p.label) s += `<text class="lb" x="${px(p.x)-10}" y="${py(p.y)+4}" text-anchor="end" style="fill:var(--accent)">${esc(p.label)}</text>`;
+  });
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  svg.innerHTML = s;
+}
+/* 箱ひげ図（横向き・1本） */
+function boxplot(svg, o){
+  const W = 640, H = 150, P = { l:24, r:24, t:34, b:40 };
+  const vals = o.vals, q = S.quart(vals), iqr = q.q3 - q.q1, lo = q.q1 - 1.5*iqr, hi = q.q3 + 1.5*iqr;
+  const isOut = v => v <= lo || v >= hi;
+  const inside = vals.filter(v => !isOut(v)).sort((a, b) => a - b);
+  let x0 = Math.min(...vals), x1 = Math.max(...vals); const pd = (x1-x0||1)*.05; x0 -= pd; x1 += pd;
+  if (o.xr){ x0 = o.xr[0]; x1 = o.xr[1]; }   /* 数直線を固定するとき */
+  let nl = 0;
+  const px = v => P.l + (v-x0)/(x1-x0)*(W-P.l-P.r), cy = P.t + 34;
+  let s = "";
+  niceTicks(x0, x1, 7).forEach(t => { if (t < x0 || t > x1) return; s += `<line class="gl" x1="${px(t)}" y1="${P.t-8}" x2="${px(t)}" y2="${H-P.b}"/><text class="tk" x="${px(t)}" y="${H-P.b+16}" text-anchor="middle">${t}</text>`; });
+  s += `<line class="axis" x1="${P.l}" y1="${H-P.b}" x2="${W-P.r}" y2="${H-P.b}"/>`;
+  const wl = inside[0], wh = inside[inside.length-1];
+  s += `<line x1="${px(wl)}" y1="${cy}" x2="${px(q.q1)}" y2="${cy}" stroke="var(--ink)" stroke-width="1.5"/><line x1="${px(q.q3)}" y1="${cy}" x2="${px(wh)}" y2="${cy}" stroke="var(--ink)" stroke-width="1.5"/>`;
+  s += `<line x1="${px(wl)}" y1="${cy-9}" x2="${px(wl)}" y2="${cy+9}" stroke="var(--ink)" stroke-width="1.5"/><line x1="${px(wh)}" y1="${cy-9}" x2="${px(wh)}" y2="${cy+9}" stroke="var(--ink)" stroke-width="1.5"/>`;
+  s += `<rect x="${px(q.q1)}" y="${cy-15}" width="${Math.max(1, px(q.q3)-px(q.q1))}" height="30" fill="var(--band)" stroke="var(--ink)" stroke-width="1.5" data-t="Q1 ${f1(q.q1)} ／ 中央値 ${f1(q.q2)} ／ Q3 ${f1(q.q3)}"/>`;
+  s += `<line x1="${px(q.q2)}" y1="${cy-15}" x2="${px(q.q2)}" y2="${cy+15}" stroke="var(--ink)" stroke-width="2.6"/>`;
+  const m = px(S.mean(vals));
+  s += `<path d="M${m-5} ${cy-5} L${m+5} ${cy+5} M${m-5} ${cy+5} L${m+5} ${cy-5}" stroke="var(--accent)" stroke-width="2.2" data-t="平均値 ${f1(S.mean(vals))}"/>`;
+  (o.items || vals.map(v => ({ v }))).forEach(it => {
+    if (!isOut(it.v)) return;
+    s += `<circle cx="${px(it.v)}" cy="${cy}" r="5" fill="var(--accent)" data-t="外れ値 ${f1(it.v)}${it.label ? "（" + it.label + "）" : ""}"/>`;
+    if (it.label){ nl++; s += `<text class="lb" x="${px(it.v)}" y="${nl % 2 ? cy-20 : cy+30}" text-anchor="middle" style="fill:var(--accent)">${esc(it.label)}</text>`; }
+  });
+  s += `<text class="an" x="${W/2}" y="${H-6}" text-anchor="middle">${esc(o.xl)}</text>`;
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  svg.innerHTML = s;
+  return { q, iqr, lo, hi, isOut };
+}
+/* ドットプロット（値ごとに点を積む）。帯＝平均±標準偏差 */
+function dotplot(svg, o){
+  const W = 640, H = o.h || 210, P = { l:24, r:24, t:26, b:40 };
+  const vals = o.vals, w = o.bin || 1;
+  const [x0, x1] = o.xr;
+  const px = v => P.l + (v-x0)/(x1-x0)*(W-P.l-P.r);
+  const stack = {}; let s = "";
+  niceTicks(x0, x1, 8).forEach(t => { if (t < x0 || t > x1) return; s += `<line class="gl" x1="${px(t)}" y1="${P.t}" x2="${px(t)}" y2="${H-P.b}"/><text class="tk" x="${px(t)}" y="${H-P.b+16}" text-anchor="middle">${t}</text>`; });
+  if (o.band){
+    const m = S.mean(vals), sd = S.sd(vals);
+    s += `<rect x="${px(m-sd)}" y="${P.t}" width="${px(m+sd)-px(m-sd)}" height="${H-P.t-P.b}" fill="var(--band)"/>`;
+    s += `<line x1="${px(m)}" y1="${P.t-6}" x2="${px(m)}" y2="${H-P.b}" stroke="var(--accent)" stroke-width="2"/>`;
+    s += `<text class="lb" x="${px(m)}" y="${P.t-9}" text-anchor="middle" style="fill:var(--accent)">平均 ${f1(m)}</text>`;
+  }
+  s += `<line class="axis" x1="${P.l}" y1="${H-P.b}" x2="${W-P.r}" y2="${H-P.b}"/>`;
+  const r = o.r || 4.2, gap = r*2+1;
+  (o.items || vals.map(v => ({ v }))).forEach(it => {
+    const b = Math.round(it.v / w) * w; stack[b] = (stack[b] || 0) + 1;
+    const cy = H-P.b - r - 1 - (stack[b]-1)*gap;
+    s += `<circle cx="${px(b)}" cy="${cy}" r="${r}" fill="${it.color || o.color || "var(--blue-l)"}" data-t="${esc((it.label ? it.label + "　" : "") + f1(it.v))}"/>`;
+  });
+  s += `<text class="an" x="${W/2}" y="${H-6}" text-anchor="middle">${esc(o.xl)}</text>`;
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  svg.innerHTML = s;
+}
+
+/* ================= 進み具合 ================= */
+const KEY = "komugido-data-lessons-v1";
+let STATE = { done: {}, solved: {}, ans: {} };
+try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s && s.done) STATE = s; } catch (e) {}
+STATE.ans = STATE.ans || {};
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(STATE)); } catch (e) {} }
+
+/* クイズ部品：opts は [文, 正誤]。fb は正解時の解説、ng は不正解時のひとこと */
+function quiz(id, num, q, opts, fb, ng){
+  const sel = STATE.ans[id];
+  const ok = sel !== undefined && opts[sel] && opts[sel][1];
+  return `<div class="quiz${ok ? " solved" : ""}" data-qid="${id}">
+    <div class="q"><span class="qn">Q${num}</span>${q}</div>
+    <div class="opts">${opts.map((o, i) => `<button class="opt${i === sel ? (o[1] ? " right" : " wrong") : ""}" data-i="${i}" data-ok="${o[1] ? 1 : 0}">${o[0]}</button>`).join("")}</div>
+    <div class="fb ok${ok ? " show" : ""}">⭕ 正解。${fb}</div>
+    <div class="fb ng${sel !== undefined && !ok ? " show" : ""}">${ng || "もう一度考えてみよう。"}</div>
+  </div>`;
+}
+/* 選択肢を押すたびに答えを変更できる（最後に選んだ答えで正誤を判定） */
+document.addEventListener("click", e => {
+  const b = e.target.closest(".quiz .opt"); if (!b) return;
+  const qz = b.closest(".quiz"), id = qz.dataset.qid, good = b.dataset.ok === "1";
+  qz.querySelectorAll(".opt").forEach(x => x.classList.remove("right", "wrong"));
+  b.classList.add(good ? "right" : "wrong");
+  qz.classList.toggle("solved", good);
+  qz.querySelector(".fb.ok").classList.toggle("show", good);
+  qz.querySelector(".fb.ng").classList.toggle("show", !good);
+  STATE.ans[id] = Number(b.dataset.i);
+  STATE.solved[id] = good; save(); checkDone();
+});
+
+/* ================= レッスン ================= */
+const LESSONS = [];
+let CUR = 0;
+function lesson(def){ LESSONS.push(def); }
+
+/* ---------- 0. はじめに ---------- */
+lesson({ id:"L0", title:"はじめに", kicker:"PROLOGUE", req:[], render(){
+  const rows = RAW.map(r => `<tr>${COLS.map(c => {
+    const v = r[c.k];
+    let cls = c.k === "date" || c.k === "wd" || c.k === "weather" ? "l" : "";
+    if (v === null) return `<td class="miss">空欄</td>`;
+    if (c.k === "temp" && r.tempTrue) cls += " err";
+    if (r.date === "7/18" && (c.k === "cust" || c.k === "iced")) cls += " fest";
+    return `<td class="${cls}">${v}</td>`;
+  }).join("")}</tr>`).join("");
+  return `
+  <div class="card">
+    <div class="talk"><div class="who t">${AV.t}</div><div class="say">こむぎ、ちょっと相談があるんだ。最近、パンやドリンクの<b>売れ残り</b>が多くてね…。毎日どれくらい用意すればいいのか、勘で決めているんだよ。</div></div>
+    <div class="talk"><div class="who h">${AV.h}</div><div class="say">お店のレジに記録が残ってるよね。データを調べれば、何かわかるかもしれないよ！</div></div>
+    <div class="talk"><div class="who t">${AV.t}</div><div class="say">6月1日から7月30日までの<b>60日分</b>があるよ。ただ、レジが故障した日があったり、手入力でミスした日もあったりするから、気をつけてね。</div></div>
+    <p class="lead" style="margin-top:14px">商店街のパン屋「こむぎ堂」の娘・こむぎと一緒に、データ分析の基本を練習しましょう。こむぎは高校1年生。店長をしているお父さんを手伝って、お店のカフェで働いています。レッスンは全部で6つ。<b>データを整える</b>（レッスン1〜3）→ <b>分析する</b>（レッスン4〜6）の順に進みます。</p>
+  </div>
+  <div class="card">
+    <h3>こむぎ堂の60日分のデータ</h3>
+    <div class="tbl-wrap"><table><thead><tr>${COLS.map(c => `<th class="${["date","wd","weather"].includes(c.k) ? "l" : ""}">${c.name}${c.unit ? `<br>(${c.unit})` : ""}</th>`).join("")}</tr></thead><tbody>${rows}</tbody></table></div>
+    <p class="legend"><i style="background:#FBEFD9"></i>空欄（レジ故障）<i style="background:#F8E1DE"></i>あやしい値<i style="background:#E6EEF4"></i>7/18 商店街の夏祭り</p>
+  </div>
+  <div class="card">
+    <h3>それぞれの列の意味</h3>
+    <div class="tbl-wrap" style="max-height:none"><table><thead><tr><th class="l">列</th><th class="l">単位</th><th class="l">意味</th></tr></thead><tbody>
+      ${COLS.map(c => `<tr><td class="l" style="font-family:var(--gothic);font-weight:700">${c.name}</td><td class="l">${c.unit || "—"}</td><td class="l" style="font-family:var(--gothic);white-space:normal">${c.desc}</td></tr>`).join("")}
+    </tbody></table></div>
+  </div>`;
+}, mount(){ STATE.done.L0 = true; save(); } });
+
+/* ---------- 1. 尺度の種類 ---------- */
+const SCALE_Q = [
+  { k:"wd",    ans:"名義", why:"曜日は区別するためのラベル。順番はあるように見えますが、「水曜は月曜より大きい」とは言えないので名義尺度として扱います。" },
+  { k:"weather", ans:"名義", why:"晴れ・くもり・雨は種類の区別だけ。大小も順番もありません。" },
+  { k:"crowd", ans:"順序", why:"5は4より混んでいる、という順番は意味があります。でも「1と2の差」と「4と5の差」が同じとは限らないので順序尺度です。" },
+  { k:"temp",  ans:"間隔", why:"差（何℃高い）は意味がありますが、0℃は「温度がない」ではないので、「30℃は15℃の2倍暑い」とは言えません。間隔尺度です。" },
+  { k:"rain",  ans:"比例", why:"0mm は「雨が降っていない」という本当のゼロ。20mm は 10mm の2倍、と言えるので比例尺度です。" },
+  { k:"cust",  ans:"比例", why:"0人は本当にゼロ。200人は100人の2倍、と言えるので比例尺度です。" },
+  { k:"iced",  ans:"比例", why:"杯数は0から数える量。比も意味があるので比例尺度です。" },
+];
+lesson({ id:"L1", title:"尺度の種類", kicker:"LESSON 1", req:["L1-cls","L1-q1","L1-q2","L1-q3"], render(){
+  return `
+  <div class="card">
+    <div class="talk"><div class="who h">${AV.h}</div><div class="say">まずは全部の列の平均を出してみたよ！ 天気の平均は… あれ、計算できない。混雑度の平均は 3.0 だけど、これって意味あるのかな？</div></div>
+    <div class="talk"><div class="who t">${AV.t}</div><div class="say">データには<b>種類</b>があって、種類によって「やっていい計算」が違うんだよ。</div></div>
+  </div>
+  <div class="term"><div class="th">データの4つの尺度</div><div class="tb">
+    <div class="grid4">
+      <div class="scale-card"><div class="tag qual">質的データ</div><h4>名義尺度</h4>区別するためのラベル。<ul><li>例：天気、血液型、出席番号</li><li>できること：数える、最頻値</li></ul></div>
+      <div class="scale-card"><div class="tag qual">質的データ</div><h4>順序尺度</h4>順番に意味がある。間の幅は等しくない。<ul><li>例：順位、5段階評価</li><li>＋ 大小の比較、中央値</li></ul></div>
+      <div class="scale-card"><div class="tag quan">量的データ</div><h4>間隔尺度</h4>差に意味がある。0は「ない」ではない。<ul><li>例：気温(℃)、西暦</li><li>＋ 足し算・引き算、平均値</li></ul></div>
+      <div class="scale-card"><div class="tag quan">量的データ</div><h4>比例尺度</h4>0が「ない」を表す。比にも意味がある。<ul><li>例：長さ、重さ、個数</li><li>＋ かけ算・割り算（○倍）</li></ul></div>
+    </div>
+    <div class="ex">左から右へ <b>名義 → 順序 → 間隔 → 比例</b> と進むほど、できる計算が増えます。右の尺度は、それより左の尺度でできることも、すべてできます。</div>
+  </div></div>
+  <div class="card">
+    <h3>やってみよう：こむぎ堂のデータを分類する</h3>
+    <div class="classify" id="cls">${SCALE_Q.map((q, i) => `
+      <div class="cl-row" data-i="${i}">
+        <div class="name">${(c => c.name + (c.unit ? `（${c.unit === "1〜5" ? "1〜5の5段階" : c.unit}）` : ""))(COLS.find(c => c.k === q.k))}
+          <small>${COLS.find(c => c.k === q.k).desc}</small>
+          <span class="ex">例：${RAW.slice(0,4).map(r => r[q.k]).join("、")} …</span></div>
+        <div class="seg">${["名義","順序","間隔","比例"].map(s => `<button data-s="${s}">${s}</button>`).join("")}</div>
+        <div class="mark"></div>
+        <div class="why"></div>
+      </div>`).join("")}
+    </div>
+    <div class="row" style="margin-top:12px"><button class="btn primary" id="clscheck">答え合わせ</button><span class="msg" id="clsmsg"></span></div>
+  </div>
+  <div class="card">
+    <h3>確認問題</h3>
+    ${quiz("L1-q1", 1, "混雑度の平均は 3.0 でした。この値の扱いとして、最も適切なものはどれ？", [
+      ["「ふつうの混み具合の日が多い」と、平均値をそのまま使ってよい", 0],
+      ["混雑度は順序尺度なので、平均値より中央値や最頻値で表すほうが適切", 1],
+      ["混雑度は数字なので、比例尺度として何でも計算してよい", 0]],
+      "順序尺度は「1と2の差」と「4と5の差」が同じとは限りません。平均値を計算することはできても、意味の解釈には注意が必要です。")}
+    ${quiz("L1-q2", 2, "「7/18は最高気温33.5℃、6/3は21.9℃。だから7/18は約1.5倍暑かった」この言い方は正しい？", [
+      ["正しい。33.5 ÷ 21.9 ≒ 1.5 だから", 0],
+      ["正しくない。気温(℃)は間隔尺度なので、比（○倍）には意味がない", 1],
+      ["正しくない。気温は名義尺度だから", 0]],
+      "℃の0は「温度がない」という意味ではないので、割り算で「○倍」とは言えません。「11.6℃高かった」のように差で表します。")}
+    ${quiz("L1-q3", 3, "サッカーの背番号は、どの尺度？", [
+      ["名義尺度", 1], ["順序尺度", 0], ["比例尺度", 0]],
+      "背番号は選手を区別するためのラベルです。10番は5番の2倍うまい、ということはありません。数字で書かれていても、名義尺度のことがあります。")}
+  </div>`;
+}, mount(){
+  const pick = {};
+  $("cls").addEventListener("click", e => {
+    const b = e.target.closest(".seg button"); if (!b) return;
+    const row = b.closest(".cl-row"); row.querySelectorAll(".seg button").forEach(x => x.classList.toggle("on", x === b));
+    row.classList.remove("ok", "ng", "checked"); row.querySelector(".mark").innerHTML = "";
+    pick[row.dataset.i] = b.dataset.s;
+  });
+  if (STATE.solved["L1-cls"]) SCALE_Q.forEach((q, i) => { pick[i] = q.ans; });
+  const show = () => {
+    let ok = 0;
+    document.querySelectorAll(".cl-row").forEach(row => {
+      const i = row.dataset.i, q = SCALE_Q[i], p = pick[i];
+      row.querySelectorAll(".seg button").forEach(x => x.classList.toggle("on", x.dataset.s === p));
+      row.classList.remove("ok", "ng");
+      if (!p) return;
+      const good = p === q.ans; if (good) ok++;
+      row.classList.add("checked", good ? "ok" : "ng");
+      row.querySelector(".mark").innerHTML = good ? `<span class="badge-ok">正解</span>` : `<span class="badge-ng">ちがう</span>`;
+      row.querySelector(".why").textContent = good ? q.why : "もう一度考えてみよう。0は「ない」を表す？ 差や比に意味はある？";
+    });
+    const all = ok === SCALE_Q.length;
+    $("clsmsg").textContent = all ? "全問正解！" : `${ok} / ${SCALE_Q.length} 正解`;
+    $("clsmsg").className = "msg " + (all ? "ok" : "ng");
+    STATE.solved["L1-cls"] = all; save(); checkDone();
+  };
+  $("clscheck").onclick = show;
+  if (STATE.solved["L1-cls"]) show();
+} });
+
+/* ---------- 2. 欠損値 ---------- */
+lesson({ id:"L2", title:"欠損値", kicker:"LESSON 2", req:["L2-q1","L2-q2","L2-q3"], render(){
+  const miss = RAW.filter(r => r.cust === null).map(r => r.date);
+  return `
+  <div class="card">
+    <div class="talk"><div class="who h">${AV.h}</div><div class="say">店長、来客数の列に空欄があるよ。${miss.join("、")} の3日。</div></div>
+    ${excerpt(miss.flatMap(d => around(d, 1)), ["date","wd","weather","cust","iced","melon"], (r, k) => k === "cust" && r.cust === null ? "focus" : "")}
+    <p class="legend" style="margin-top:6px">データの表から、空欄の日とその前後の日を抜き出しています。アイスコーヒーやメロンパンは記録されているのに、来客数だけが空欄です。</p>
+    <div class="talk"><div class="who t">${AV.t}</div><div class="say">その日はレジが故障して、来客数の記録が残らなかったんだ。お客さんが来なかったわけじゃないよ。</div></div>
+    ${term("欠損値", [["欠損値", "本来あるはずなのに、記録されていない値。表では空欄になっていることが多い。"],
+      ["注意", "空欄のまま計算すると、ソフトによってはエラーになったり、<b>0 として扱われたり</b>してしまう。空欄は「0」ではない。"],
+      ["対処", "基本は、その人（その日）の<b>行を丸ごと除く</b>。どの項目も同じ n で比べられるので、比べるときに条件がそろう。空欄が多く、除くとデータが足りなくなるときは、平均値や中央値などで補うこともある。"]])}
+  </div>
+  <div class="card">
+    <h3>やってみよう：空欄をどう処理する？</h3>
+    <div class="seg" id="mseg">
+      <button data-m="drop" class="on">その日を除く</button>
+      <button data-m="zero">0 を入れる</button>
+      <button data-m="mean">平均値を入れる</button>
+    </div>
+    <svg id="mdot" style="margin-top:10px"></svg>
+    <div class="legend"><i style="background:var(--blue-l);border-radius:50%"></i>記録された日<i style="background:var(--orange);border-radius:50%"></i>空欄に入れた値<i style="background:var(--band)"></i>平均値 ± 標準偏差</div>
+    <div class="stats" id="mstats"></div>
+    <p id="mnote" style="font-size:14px;margin-top:10px"></p>
+  </div>
+  <div class="card">
+    <h3>確認問題</h3>
+    ${quiz("L2-q1", 1, "今回の来客数のデータで、空欄の3日に 0 を入れて平均値を計算すると、空欄の日を除いて計算したときと比べてどうなる？", [
+      ["小さくなる", 1], ["大きくなる", 0], ["変わらない", 0]],
+      `今回の来客数は、記録された57日がすべて0より大きい（いちばん少ない日でも${Math.min(...S.nums(RAW.map(r => r.cust)))}人）ので、0 が3つ加わると平均値は下がります。空欄は 0 ではありません。<br><span style="font-size:13px">※ マイナスの値を含むデータ（例：気温の変化量）なら、0 を入れると平均値が上がることもあります。いつも「下がる」とは限りません。</span>`)}
+    ${quiz("L2-q2", 2, "今回の来客数のデータで、空欄の3日に平均値を入れると、空欄の日を除いて計算したときと比べて標準偏差（散らばり）はどうなる？", [
+      ["大きくなる", 0], ["小さくなる", 1], ["変わらない", 0]],
+      "平均値ちょうどの日が3日増えるので、データが真ん中に集まったように見え、散らばりが実際より小さくなります。やってみようの「平均値を入れる」で確かめよう。")}
+    ${quiz("L2-q3", 3, "今回のデータでは、データの空欄についてどの処理が最も適切？", [
+      ["0 を入れる。記録がないのだから、来客もなかったと考える", 0],
+      ["その日を除いて計算する。60日中3日なので、残りの57日で十分に傾向がわかる", 1],
+      ["平均値を入れる。データの個数が減らないので、いちばん正確になる", 0]],
+      `レジ故障で記録されなかっただけで、来客はありました。0 を入れるのは明らかに間違いです。<br>平均値を入れるのも、今回は適切ではありません。<br>① 空欄の3日はすべて平日（木・金）で、1日は雨でした。全体の平均値（約${f1(S.mean(S.nums(RAW.map(r => r.cust))))}人）には、来客の多い土日や夏祭りの日も含まれるので、ふだんの平日より多めの値を入れることになります。<br>② 平均値ちょうどの日が3日増えるので、散らばり（標準偏差）が実際より小さく見えます。<br>③ 「いちばん正確になる」わけではありません。入れた値は推測で、新しい情報は何も増えていません。<br>空欄は60日中3日と少ないので、除いて計算しても傾向は十分わかります。`)}
+  </div>`;
+}, mount(){
+  let mode = "drop";
+  const draw = () => {
+    const obs = RAW.filter(r => r.cust !== null);
+    const m0 = S.mean(obs.map(r => r.cust));
+    const items = RAW.map(r => r.cust !== null ? { v: r.cust, label: r.date } : mode === "drop" ? null : { v: mode === "zero" ? 0 : Math.round(m0), label: r.date + "（空欄）", color: "var(--orange)" }).filter(Boolean);
+    const vals = items.map(i => i.v);
+    dotplot($("mdot"), { vals, items, xr: [-10, 540], bin: 10, xl: "来客数（人）", band: true, h: 230, r: 4 });
+    const base = { n: obs.length, mean: m0, sd: S.sd(obs.map(r => r.cust)) };
+    const now = { n: vals.length, mean: S.mean(vals), sd: S.sd(vals) };
+    const cell = (name, v, b, d) => `<div class="stat${Math.abs(v-b) > 1e-9 ? " hl" : ""}"><span>${name}</span><b>${f1(v, d)}</b></div>`;
+    $("mstats").innerHTML = cell("データの個数", now.n, base.n, 0) + cell("平均値（人）", now.mean, base.mean, 1) + cell("標準偏差（人）", now.sd, base.sd, 1);
+    $("mnote").innerHTML = mode === "drop" ? "記録が残っている57日だけで計算しています。"
+      : mode === "zero" ? `<span class="warn">平均値が ${f1(base.mean)} → ${f1(now.mean)} に下がり、散らばりも大きくなりました。「来客0人の日」が3日あったことになってしまいます。</span>`
+      : `<span class="warn">平均値は変わりませんが、標準偏差が ${f1(base.sd)} → ${f1(now.sd)} に小さくなりました。平均ちょうどの日が増えたからです。</span>`;
+  };
+  $("mseg").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; mode = b.dataset.m; $("mseg").querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b)); draw(); });
+  draw();
+} });
+
+/* ---------- 3. 外れ値 ---------- */
+lesson({ id:"L3", title:"外れ値", kicker:"LESSON 3", req:["L3-fix","L3-q1","L3-q2","L3-q3"], render(){
+  const tq = S.quart(RAW.map(r => r.temp)), tiqr = tq.q3 - tq.q1;
+  return `
+  <div class="card">
+    <div class="talk"><div class="who h">${AV.h}</div><div class="say">最高気温の平均を出したら ${f1(S.mean(RAW.map(r => r.temp)))}℃ になったよ。夏とはいえ、さすがに暑すぎるような…。</div></div>
+    ${excerpt([...around("7/8", 1), ...around("7/18", 1), ...around("7/24", 1)], ["date","wd","weather","temp","cust","iced"], (r, k) => k === "temp" && r.tempTrue ? "err" : r.date === "7/18" && (k === "cust" || k === "iced") ? "fest" : "")}
+    <p class="legend" style="margin-top:6px">データの表から 7/8・7/18・7/24 の前後を抜き出しています。<i style="background:#F8E1DE"></i>7/8・7/24 の最高気温<i style="background:#E6EEF4"></i>7/18 の来客数・アイスコーヒー</p>
+    <div class="talk"><div class="who t">${AV.t}</div><div class="say">ほかの値から極端に離れた値がないか、<b>箱ひげ図</b>で確かめてみよう。</div></div>
+    ${term("外れ値と箱ひげ図", [
+      ["四分位数", "データを小さい順に並べて4等分する位置の値。小さい方から 第1四分位数・第2四分位数（＝中央値）・第3四分位数。"],
+      ["四分位範囲", "第3四分位数 − 第1四分位数。箱ひげ図の「箱」の長さで、真ん中の約半分のデータの散らばりを表す。"],
+      ["外れ値", "ほかの値から極端に離れた値。よく使う目安は<br><span class=\"formula\">第1四分位数 − 1.5 × 四分位範囲 以下</span>　または　<span class=\"formula\">第3四分位数 ＋ 1.5 × 四分位範囲 以上</span><br>この目安は「<b>注意して見るべき値</b>」を見つけるための道具。当てはまったら除く、という意味ではない。"],
+      ["異常値", "計測ミスや入力ミスによって生じた、正しくない値。ほかから外れているだけの「外れ値」とは区別する。"],
+      ["扱いの決め方", "外れ値をどう扱うかは、その値が生じた<b>原因</b>で決める。"],
+      ["対処①", "<b>計測・記録のミス</b>とわかる（桁の打ち間違い、センサーの故障など）→ 正しい値に<b>直す</b>。正しい値がわからなければ<b>除く</b>。"],
+      ["対処②", "本当に起きた値だが、<b>別の集団が混ざっている</b>（ふだんの日のデータに、お祭りの日が混ざっているなど）→ 分析の目的に応じて<b>分けて扱う</b>。"],
+      ["対処③", "<b>本当に起きた値</b>（とても所得の高い人、大地震の規模など）→ <b>残す</b>。その値がいちばん大切な情報のことも多い。中央値や四分位範囲など、外れ値の影響を受けにくい値を使う。"],
+      ["注意", "外れ値を除いた場合は、<b>何を、なぜ除いたか</b>を報告に必ず書く。"]],
+      `<p class="qf-cap">例：11個のデータ　2, 4, 5, 6, 7, 8, 9, 10, 12, 13, 24</p>${quartileFigure()}`)}
+  </div>
+  <div class="card">
+    <h3>やってみよう①：最高気温の箱ひげ図</h3>
+    <svg id="tbox"></svg>
+    <div class="stats">
+      <div class="stat"><span>第1四分位数</span><b>${f1(tq.q1, 2)}</b></div>
+      <div class="stat"><span>第3四分位数</span><b>${f1(tq.q3, 2)}</b></div>
+      <div class="stat"><span>四分位範囲</span><b>${f1(tiqr, 2)}</b></div>
+      <div class="stat"><span>上側の境目</span><b>${f1(tq.q3 + 1.5*tiqr, 2)}</b></div>
+    </div>
+    <p style="margin-top:12px">7/8 の <b>305℃</b> と 7/24 の <b>319℃</b> が外れ値になっています。この2つの値をどうしますか？</p>
+    <div class="seg" id="tfix"><button data-f="keep">そのまま残す</button><button data-f="drop">除く</button><button data-f="fix">小数点を入れて直す（30.5℃・31.9℃）</button></div>
+    <p class="msg" id="tfixmsg"></p>
+  </div>
+  <div class="card">
+    <h3>やってみよう②：来客数の箱ひげ図</h3>
+    <svg id="cbox"></svg>
+    <div class="row" style="margin-top:6px"><label style="font-size:14px"><input type="checkbox" id="cfest" checked> 7/18（夏祭り）を含める</label></div>
+    <div class="stats" id="cstats"></div>
+    <div class="talk" style="margin-top:12px"><div class="who t">${AV.t}</div><div class="say">7/18 は商店街の夏祭りでね、本当にお客さんが520人来たんだよ。</div></div>
+  </div>
+  <div class="card">
+    <h3>確認問題</h3>
+    ${quiz("L3-q1", 1, "今回見つかった外れ値（7/8・7/24 の最高気温 305℃・319℃、7/18 の来客数 520人）の扱いとして、最も適切なものは？", [
+      ["どれも分析のじゃまなので、すべて削除する", 0],
+      ["305℃・319℃は入力ミスなので正しい値に直し、520人は本当に起きた値なので残したうえで扱いを考える", 1],
+      ["どれも平均値にはほとんど影響しないので、そのままにしておく", 0]],
+      "305℃・319℃は入力ミス（小数点の打ち忘れ）による<b>異常値</b>なので、正しい値に直します（対処①）。一方、夏祭りの520人は本当に起きた値なので、目安に当てはまっても消しません。勝手に消すと「祭りの日に準備が足りない」という失敗につながります。")}
+    ${(() => { const all = S.nums(RAW.map(r => r.cust)), nf = S.nums(RAW.filter(r => r.date !== "7/18").map(r => r.cust));
+      return quiz("L3-q2", 2, "今回の来客数のデータで、夏祭りの日（7/18）を含めるかどうかで、値がほとんど変わらない代表値はどれ？（やってみよう②で確かめよう）", [
+      ["平均値", 0], ["中央値", 1], ["最大値", 0]],
+      `今回のデータでは、夏祭りの日を含めると平均値は ${f1(S.mean(nf))}人 → ${f1(S.mean(all))}人 と変わりますが、中央値は ${f1(S.med(nf))}人 → ${f1(S.med(all))}人 とほとんど変わりません。中央値は真ん中の順位の値なので、極端な値が1つあっても動きにくいのです。`); })()}
+    ${quiz("L3-q3", 3, "ふだんの日の来客数の目安を店長に伝えるとき、最も適切な伝え方は？", [
+      ["平均値（夏祭りを含む）で伝える", 0],
+      ["中央値で伝えるか、夏祭りの日を除いた平均値で伝え、祭りの日は別に考える", 1],
+      ["最大値の520人で伝える", 0]],
+      "夏祭りの日は、ふだんの日のデータに<b>別の集団</b>が混ざっていると考えられます（対処②）。「ふだんの日」を知りたいなら、夏祭りの日を分けて考えるか、外れ値の影響を受けにくい中央値を使います。夏祭りの日を除いたなら、そのことを店長に伝えましょう。")}
+  </div>`;
+}, mount(){
+  const tItems = RAW.map(r => ({ v: r.temp, label: r.date }));
+  boxplot($("tbox"), { vals: tItems.map(i => i.v), items: tItems.map(i => ({ v: i.v, label: i.v > 100 ? i.label : "" })), xl: "最高気温（℃）" });
+  const msgs = {
+    keep: ["ng", "残すと平均気温が大きくずれてしまいます。305℃や319℃は、現実にはありえない値です。"],
+    drop: ["ng", "除いてもよいのですが、正しい値がわかるならもっとよい方法があります。"],
+    fix:  ["ok", "正解！ 小数点の打ち忘れなので、正しい値 30.5℃・31.9℃ に直します。次のレッスンからは直したデータを使います。"]
+  };
+  const setFix = f => {
+    $("tfix").querySelectorAll("button").forEach(x => { x.classList.toggle("on", x.dataset.f === f); x.classList.remove("good", "bad"); if (x.dataset.f === f) x.classList.add(f === "fix" ? "good" : "bad"); });
+    const vals = RAW.map(r => r.tempTrue ? (f === "fix" ? r.tempTrue : f === "drop" ? null : r.temp) : r.temp).filter(v => v !== null);
+    const items = RAW.map(r => r.tempTrue ? (f === "fix" ? { v: r.tempTrue, label: "" } : f === "drop" ? null : { v: r.temp, label: r.date }) : { v: r.temp, label: "" }).filter(Boolean);
+    boxplot($("tbox"), { vals, items, xl: "最高気温（℃）" });
+    $("tfixmsg").textContent = msgs[f][1] + `（平均 ${f1(S.mean(vals))}℃）`;
+    $("tfixmsg").className = "msg " + msgs[f][0];
+    STATE.solved["L3-fix"] = f === "fix"; save(); checkDone();
+  };
+  $("tfix").addEventListener("click", e => { const b = e.target.closest("button"); if (b) setFix(b.dataset.f); });
+  if (STATE.solved["L3-fix"]) setFix("fix");
+  const drawC = () => {
+    const inc = $("cfest").checked;
+    const rs = RAW.filter(r => r.cust !== null && (inc || r.date !== "7/18"));
+    const vals = rs.map(r => r.cust);
+    boxplot($("cbox"), { vals, items: rs.map(r => ({ v: r.cust, label: r.date === "7/18" ? "7/18 夏祭り" : "" })), xl: "来客数（人）　※空欄の3日は除く", xr: [60, 540] });
+    const all = RAW.filter(r => r.cust !== null).map(r => r.cust);
+    const cell = (n, v, b) => `<div class="stat${Math.abs(v-b) > 1e-9 ? " hl" : ""}"><span>${n}</span><b>${f1(v)}</b></div>`;
+    $("cstats").innerHTML = cell("平均値（人）", S.mean(vals), S.mean(all)) + cell("中央値（人）", S.med(vals), S.med(all)) + cell("標準偏差（人）", S.sd(vals), S.sd(all));
+  };
+  $("cfest").onchange = drawC; drawC();
+} });
+
+/* ---------- 4. 標準偏差 ---------- */
+const MINI = [39, 43, 40, 37, 41];
+lesson({ id:"L4", title:"標準偏差", kicker:"LESSON 4", req:["L4-calc","L4-q1","L4-q2","L4-q3"], render(){
+  const mel = CLEAN.map(r => r.melon), cur = CLEAN.map(r => r.curry);
+  return `
+  <div class="card">
+    <div class="talk"><div class="who t">${AV.t}</div><div class="say">メロンパンとカレーパンは、どちらも1日平均40個売れているんだ。だから毎日40個ずつ焼いているんだけど、カレーパンだけ売れ残ったり、売り切れたりするんだよね。</div></div>
+    ${excerpt(RAW.slice(0, 7).map(r => r.date), ["date","wd","melon","curry"])}
+    <p class="legend" style="margin-top:6px">データの表から、最初の7日分のメロンパンとカレーパンを抜き出しています。カレーパンは日によって売れる数の差が大きそうです。</p>
+    <div class="talk"><div class="who h">${AV.h}</div><div class="say">平均が同じでも、<b>散らばり</b>が違うのかもしれないね。</div></div>
+    ${term("散らばりを表す値", [
+      ["偏差", "各値 − 平均値。平均値からどれだけ離れているか。偏差をそのまま合計すると必ず 0 になる。"],
+      ["分散", "偏差を2乗して、その平均をとったもの。<br><span class=\"formula\">分散 ＝（偏差の2乗の合計）÷ データの個数</span>"],
+      ["標準偏差", "分散の正の平方根。元のデータと同じ単位で、散らばりの大きさを表す。<br><span class=\"formula\">標準偏差 ＝ √分散</span>"],
+      ["標準化", "（値 − 平均値）÷ 標準偏差。「平均から標準偏差の何個分離れているか」を表す。偏差値 ＝ 50 ＋ 10 ×（標準化した値）。"]])}
+  </div>
+  <div class="card">
+    <h3>やってみよう①：5日分で手計算</h3>
+    <p>ある週のメロンパンの売上（個）です。偏差と偏差の2乗を埋めましょう。平均値は <b>40</b> です。</p>
+    <div class="tbl-wrap" style="max-height:none"><table class="calc"><thead><tr><th class="l">日</th>${MINI.map((_, i) => `<th>${i+1}日目</th>`).join("")}<th>合計</th></tr></thead><tbody>
+      <tr><td class="l">売上（個）</td>${MINI.map(v => `<td>${v}</td>`).join("")}<td>${MINI.reduce((a, b) => a + b)}</td></tr>
+      <tr><td class="l">偏差（売上 − 40）</td>${MINI.map((_, i) => `<td><input type="number" data-d="${i}"></td>`).join("")}<td>—</td></tr>
+      <tr><td class="l">偏差の2乗</td>${MINI.map((_, i) => `<td><input type="number" data-s="${i}"></td>`).join("")}<td><input type="number" id="ssum"></td></tr>
+    </tbody></table></div>
+    <div class="row" style="margin-top:12px">
+      <label>分散 <input type="number" id="cvar" step="any"></label>
+      <label>標準偏差 <input type="number" id="csd" step="any"></label>
+      <button class="btn primary" id="ccheck">答え合わせ</button>
+    </div>
+    <p class="msg" id="cmsg"></p>
+  </div>
+  <div class="card">
+    <h3>やってみよう②：メロンパンとカレーパンを比べる（60日分）</h3>
+    <svg id="dmel"></svg>
+    <svg id="dcur" style="margin-top:6px"></svg>
+    <div class="legend"><i style="background:var(--band)"></i>平均値 ± 標準偏差 の範囲</div>
+    <div class="tbl-wrap" style="max-height:none;margin-top:10px"><table class="stat"><thead><tr><th class="l"></th><th>平均値</th><th>標準偏差</th><th>最小値</th><th>最大値</th><th>平均±標準偏差に入る日</th></tr></thead><tbody>
+      ${[["メロンパン", mel], ["カレーパン", cur]].map(([n, a]) => { const m = S.mean(a), sd = S.sd(a), c = a.filter(v => v >= m-sd && v <= m+sd).length;
+        return `<tr><td class="l">${n}</td><td>${f1(m)}</td><td>${f1(sd, 2)}</td><td>${Math.min(...a)}</td><td>${Math.max(...a)}</td><td>${c}日（${f1(c/a.length*100)}%）</td></tr>`; }).join("")}
+    </tbody></table></div>
+  </div>
+  <div class="card">
+    <h3>確認問題</h3>
+    ${quiz("L4-q1", 1, "毎日40個焼いたとき、売れ残りや売り切れが起きやすいのはどちら？", [
+      ["メロンパン", 0], ["カレーパン", 1], ["平均が同じなので、どちらも同じ", 0]],
+      `カレーパンは標準偏差が約${f1(S.sd(cur))}個と大きく、日によって売れる数が大きく変わります。平均値だけでは、この違いはわかりません。`)}
+    ${(() => { const cnt = a => { const m = S.mean(a), sd = S.sd(a); return a.filter(v => v >= m-sd && v <= m+sd).length; };
+      const pct = a => f1(cnt(a) / a.length * 100);
+      return quiz("L4-q2", 2, `今回のデータで、「平均値 ± 標準偏差」の範囲に入る日は、メロンパンが ${cnt(mel)}日、カレーパンが ${cnt(cur)}日でした（どちらも60日中）。全体のおよそどのくらいが入っている？`, [
+      ["約3割", 0], ["約7割", 1], ["ほぼ全部", 0]],
+      `今回のデータでは、メロンパンが ${pct(mel)}%、カレーパンが ${pct(cur)}% でした。今回のように山型に分布するデータでは、平均値 ± 標準偏差の範囲におよそ7割（約68%）が入ることが知られています。山型でないデータでは、この割合は変わります。`); })()}
+    ${(() => {
+      const ic = S.nums(CLEAN.map(r => r.iced)), cu = S.nums(CLEAN.map(r => r.cust));
+      const zi = (148 - S.mean(ic)) / S.sd(ic), zc = (520 - S.mean(cu)) / S.sd(cu);
+      return quiz("L4-q3", 3, `7/18（夏祭り）は、アイスコーヒー148杯・来客数520人でした。単位が違う2つのうち、ふだんと比べて「より特別」だったのはどちら？<br><span style="font-weight:400;font-size:13px">アイスコーヒー：平均 ${f1(S.mean(ic))}杯、標準偏差 ${f1(S.sd(ic))}杯 ／ 来客数：平均 ${f1(S.mean(cu))}人、標準偏差 ${f1(S.sd(cu))}人</span>`, [
+        ["アイスコーヒー", zi > zc], ["来客数", zc > zi], ["単位が違うので比べられない", 0]],
+        `（値 − 平均値）÷ 標準偏差 で「標準偏差の何個分離れているか」を求めると、アイスコーヒーは約${f1(zi)}個分、来客数は約${f1(zc)}個分。これを<b>標準化</b>といい、単位の違うものどうしでも比べられます。偏差値も同じ考え方です。`);
+    })()}
+  </div>`;
+}, mount(){
+  const mel = CLEAN.map(r => ({ v: r.melon, label: r.date })), cur = CLEAN.map(r => ({ v: r.curry, label: r.date }));
+  dotplot($("dmel"), { vals: mel.map(i => i.v), items: mel, xr: [8, 72], xl: "メロンパン（個）", band: true, h: 190, r: 4 });
+  dotplot($("dcur"), { vals: cur.map(i => i.v), items: cur, xr: [8, 72], xl: "カレーパン（個）", band: true, h: 190, r: 4, color: "var(--orange)" });
+  const dev = MINI.map(v => v - 40), sq = dev.map(d => d*d), sum = sq.reduce((a, b) => a + b), vr = sum / MINI.length, sd = Math.sqrt(vr);
+  const mark = (inp, ok) => { inp.parentElement.classList.toggle("okc", ok); inp.parentElement.classList.toggle("ngc", !ok); };
+  $("ccheck").onclick = () => {
+    let all = true;
+    document.querySelectorAll("input[data-d]").forEach(inp => { const ok = Number(inp.value) === dev[inp.dataset.d] && inp.value !== ""; mark(inp, ok); all = all && ok; });
+    document.querySelectorAll("input[data-s]").forEach(inp => { const ok = Number(inp.value) === sq[inp.dataset.s] && inp.value !== ""; mark(inp, ok); all = all && ok; });
+    const okSum = Number($("ssum").value) === sum; mark($("ssum"), okSum);
+    const okVar = Math.abs(Number($("cvar").value) - vr) < 1e-6 && $("cvar").value !== "";
+    const okSd = Math.abs(Number($("csd").value) - sd) < 0.006 && $("csd").value !== "";
+    [["cvar", okVar], ["csd", okSd]].forEach(([id, ok]) => { const el = $(id); el.style.borderColor = ok ? "var(--ok)" : "var(--ng)"; el.style.borderWidth = "2.5px"; el.style.background = ok ? "#D4F5E3" : "#FFE0E1"; });
+    const done = all && okSum && okVar && okSd;
+    $("cmsg").className = "msg " + (done ? "ok" : "ng");
+    $("cmsg").innerHTML = done ? `正解！ 分散 ${vr}、標準偏差 √${vr} ＝ ${sd} 個。「平均から、だいたい${sd}個くらいずれる」という意味です。`
+      : !all ? "偏差は「売上 − 平均値」。マイナスになる日もあります。2乗するとすべて0以上になります。"
+      : !okSum ? "偏差の2乗を合計しよう。" : !okVar ? "分散 ＝ 偏差の2乗の合計 ÷ データの個数（5）" : "標準偏差 ＝ √分散。2乗するとその数になる正の数は？";
+    STATE.solved["L4-calc"] = done; save(); checkDone();
+  };
+  if (STATE.solved["L4-calc"]){
+    document.querySelectorAll("input[data-d]").forEach(i => i.value = dev[i.dataset.d]);
+    document.querySelectorAll("input[data-s]").forEach(i => i.value = sq[i.dataset.s]);
+    $("ssum").value = sum; $("cvar").value = vr; $("csd").value = sd; $("ccheck").click();
+  }
+} });
+
+/* ---------- 5. 相関 ---------- */
+const RLEVELS = [
+  { t:"強い負の相関",  range:"−1 〜 −0.7",   ex:-0.92, c:"#B23A2E", desc:"一方が増えると、他方がはっきり減る" },
+  { t:"弱い負の相関",  range:"−0.7 〜 −0.3", ex:-0.5,  c:"#C4705A", desc:"一方が増えると、他方は減る傾向がある" },
+  { t:"相関はほぼない", range:"−0.3 〜 +0.3", ex:0.02,  c:"#8C9A96", desc:"直線的な関係はほとんど見られない" },
+  { t:"弱い正の相関",  range:"+0.3 〜 +0.7", ex:0.5,   c:"#4F87A3", desc:"一方が増えると、他方も増える傾向がある" },
+  { t:"強い正の相関",  range:"+0.7 〜 +1",   ex:0.92,  c:"#1F5E80", desc:"一方が増えると、他方もはっきり増える" },
+];
+/* 見本の散布図（毎回同じ点になるよう、乱数の種を固定） */
+function miniScatter(r){
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const g = () => Math.sqrt(-2*Math.log(rnd() + 1e-9)) * Math.cos(2*Math.PI*rnd());
+  let s = `<rect x="0" y="0" width="120" height="90" fill="#fff"/><line x1="8" y1="82" x2="116" y2="82" stroke="#93A0A8"/><line x1="8" y1="4" x2="8" y2="82" stroke="#93A0A8"/>`;
+  for (let i = 0; i < 40; i++){ const x = g(), y = r*x + Math.sqrt(1-r*r)*g();
+    s += `<circle cx="${(62 + x*17).toFixed(1)}" cy="${(44 - y*14).toFixed(1)}" r="2.6" fill="var(--c)" fill-opacity=".8"/>`; }
+  return s;
+}
+const GUESS = [["temp","hot"],["temp","kaki"],["rain","cust"],["temp","melon"]];
+const NUMK = ["temp","rain","cust","iced","hot","kaki","melon","curry"];
+lesson({ id:"L5", title:"相関", kicker:"LESSON 5", req:["L5-guess","L5-q1","L5-q2"], render(){
+  return `
+  <div class="card">
+    <div class="talk"><div class="who h">${AV.h}</div><div class="say">暑い日はアイスコーヒーがよく出る気がする。本当に関係があるのか、確かめてみたい！</div></div>
+    ${term("相関", [
+      ["相関係数 r", "2つの量の<b>直線的な関係</b>の強さを −1 〜 +1 で表す値。散布図の点が右上がりの直線に近いほど +1 に、右下がりの直線に近いほど −1 に近づく。"],
+      ["疑似相関", "2つの量に直接の関係がないのに、両方に影響する<b>別の要因</b>があるために相関が出ること。見せかけの相関ともいう。例：アイスの売上と水難事故の件数（どちらも「気温」が高いと増える）。"],
+      ["注意", "<b>相関があっても、因果関係（原因と結果の関係）があるとは限らない。</b>また、相関係数は直線的な関係しか表さないので、必ず散布図も見る。"]],
+      `<div class="rgrid">${RLEVELS.map(L => `<div class="rcell" style="--c:${L.c}"><svg viewBox="0 0 120 90">${miniScatter(L.ex)}</svg><b>${L.t}</b><span>${L.range}</span><small>${L.desc}</small></div>`).join("")}</div>`)}
+    <p style="font-size:13px;color:var(--ink-soft)">このレッスンでは、レッスン2・3で整えたデータ（7/8・7/24 の気温は小数点を入れて修正、来客数の空欄は除く）を使います。</p>
+  </div>
+  <div class="card">
+    <h3>やってみよう①：相関係数を当てよう</h3>
+    <p>散布図を見て、相関係数を予想しよう。<span class="guess-score" id="gscore"></span></p>
+    <div class="row"><b id="gtitle"></b></div>
+    <svg id="gsvg"></svg>
+    <div class="row" style="margin-top:6px">
+      <span>予想</span><input type="range" id="grange" min="-1" max="1" step="0.05" value="0" style="flex:1;min-width:180px"><span class="rbig" id="gval">0.00</span>
+    </div>
+    <div class="row" style="margin-top:8px"><button class="btn" id="gprev" disabled>← 前の散布図</button><button class="btn primary" id="gcheck">答え合わせ</button><button class="btn" id="gnext" disabled>次の散布図 →</button><span class="msg" id="gmsg"></span></div>
+  </div>
+  <div class="card">
+    <h3>やってみよう②：自由に調べよう</h3>
+    <div class="row">横軸 <select id="ex">${NUMK.map(k => `<option value="${k}"${k === "temp" ? " selected" : ""}>${colName(k)}</option>`).join("")}</select>
+      縦軸 <select id="ey">${NUMK.map(k => `<option value="${k}"${k === "iced" ? " selected" : ""}>${colName(k)}</option>`).join("")}</select></div>
+    <svg id="esvg" style="margin-top:8px"></svg>
+    <div class="row"><span>相関係数</span><span class="rbig" id="er"></span><span id="elab"></span></div>
+  </div>
+  <div class="card">
+    <h3>確認問題</h3>
+    ${quiz("L5-q1", 1, `アイスコーヒーとかき氷の売上の相関係数は ${sgn(S.corr(...(() => { const p = pairsOf(CLEAN, "iced", "kaki"); return [p.map(q => q.x), p.map(q => q.y)]; })()))} でした。「アイスコーヒーを値下げしてたくさん売れば、かき氷も売れるようになる」と言える？`, [
+      ["言える。強い正の相関があるから", 0],
+      ["言えない。どちらも「気温」が高いと売れるので、一緒に増えているだけかもしれない", 1],
+      ["言えない。相関係数が1ではないから", 0]],
+      "2つの量の両方に影響する別の要因（ここでは気温）があると、直接の関係がなくても相関が出ます。これを<b>見せかけの相関（疑似相関）</b>といいます。<b>相関があっても、因果関係があるとは限りません。</b>")}
+    ${(() => { const p = pairsOf(CLEAN, "temp", "melon"), r = S.corr(p.map(q => q.x), p.map(q => q.y));
+      return quiz("L5-q2", 2, `今回のデータでは、最高気温とメロンパンの売上の相関係数は ${sgn(r)} でした。ここからわかることとして、最も適切なものは？`, [
+      ["気温とメロンパンの売上には、まったく関係がないと断定できる", 0],
+      ["直線的な関係はほぼない。ただし、曲線的な関係がないかは散布図で確かめる必要がある", 1],
+      ["相関係数が 0 に近いのは、データが間違っているからである", 0]],
+      "相関係数は直線的な関係しか表しません。山なりの関係などは 0 に近くなることがあります。やってみよう②で散布図を見て確かめましょう。"); })()}
+  </div>`;
+}, mount(){
+  /* 当てっこ */
+  let gi = 0;
+  const score = {}, checked = new Set();
+  const gdraw = () => {
+    const [xk, yk] = GUESS[gi], p = pairsOf(CLEAN, xk, yk);
+    $("gtitle").textContent = `${gi+1} / ${GUESS.length}：${colName(xk)} と ${colName(yk)}`;
+    scatter($("gsvg"), { pts: p.map(q => ({ x: q.x, y: q.y, r: q.r })), xl: colName(xk), yl: colName(yk), w: 500, h: 360 });
+    $("grange").value = 0; $("gval").textContent = "+0.00"; $("gmsg").textContent = "";
+    $("gprev").disabled = gi === 0; $("gnext").disabled = !(checked.has(gi) && gi < GUESS.length - 1);
+    const v = Object.values(score);
+    $("gscore").textContent = v.length ? `（これまでのずれの平均：${(v.reduce((a, b) => a + b)/v.length).toFixed(2)}）` : "";
+  };
+  $("grange").oninput = () => { $("gval").textContent = sgn(Number($("grange").value)); };
+  $("gcheck").onclick = () => {
+    const [xk, yk] = GUESS[gi], p = pairsOf(CLEAN, xk, yk), r = S.corr(p.map(q => q.x), p.map(q => q.y));
+    const g = Number($("grange").value), d = Math.abs(g - r); score[gi] = d; checked.add(gi);
+    $("gmsg").className = "msg " + (d <= 0.25 ? "ok" : "ng");
+    $("gmsg").innerHTML = `本当の値は <b>${sgn(r)}</b>（ずれ ${d.toFixed(2)}）　${d <= 0.15 ? "すばらしい！" : d <= 0.3 ? "おしい！" : "点の並び方をよく見よう。"}　スライダーを動かして、何度でも試せます。`;
+    if (gi < GUESS.length - 1) $("gnext").disabled = false;
+    if (checked.size === GUESS.length){ $("gmsg").innerHTML += "　全部の散布図を試しました！"; STATE.solved["L5-guess"] = true; save(); checkDone(); }
+  };
+  $("gprev").onclick = () => { gi--; gdraw(); };
+  $("gnext").onclick = () => { gi++; gdraw(); };
+  gdraw();
+  /* 自由に */
+  const edraw = () => {
+    const xk = $("ex").value, yk = $("ey").value, p = pairsOf(CLEAN, xk, yk);
+    scatter($("esvg"), { pts: p.map(q => ({ x: q.x, y: q.y, r: q.r })), xl: colName(xk), yl: colName(yk), w: 500, h: 360 });
+    if (xk === yk){ $("er").textContent = "+1.00"; $("elab").textContent = "（同じ列どうし）"; return; }
+    const r = S.corr(p.map(q => q.x), p.map(q => q.y));
+    $("er").textContent = sgn(r);
+    $("elab").textContent = Math.abs(r) >= 0.7 ? `強い${r > 0 ? "正" : "負"}の相関` : Math.abs(r) >= 0.3 ? `弱い${r > 0 ? "正" : "負"}の相関` : "相関はほぼない";
+  };
+  $("ex").onchange = edraw; $("ey").onchange = edraw; edraw();
+} });
+
+/* ---------- 6. 回帰 ---------- */
+lesson({ id:"L6", title:"回帰分析", kicker:"LESSON 6", req:["L6-fit","L6-q1","L6-q2","L6-q3"], render(){
+  return `
+  <div class="card">
+    <div class="talk"><div class="who t">${AV.t}</div><div class="say">明日の予報は最高気温 <b>33℃</b> だって。アイスコーヒーは何杯分を用意すればいいかな？</div></div>
+    <div class="talk"><div class="who h">${AV.h}</div><div class="say">気温とアイスコーヒーの散布図に<b>直線</b>を当てはめれば、予測できそうだよ！</div></div>
+    ${excerpt([...RAW.slice(0, 4).map(r => r.date), ...around("7/18", 1)], ["date","weather","temp","iced"], (r, k) => r.date === "7/18" && k === "iced" ? "fest" : "")}
+    <p class="legend" style="margin-top:6px">データの表から、最高気温とアイスコーヒーの列を一部抜き出しています（7/8・7/24 の気温は小数点を入れて直したものを使います）。</p>
+    ${term("回帰分析", [
+      ["回帰直線", "散布図の点の並びに最もよく当てはまる直線 y ＝ ax ＋ b。x から y を予測するのに使う。"],
+      ["傾き a", "x が 1 増えたときに、y がどれだけ増えるか（減るか）。"],
+      ["残差", "実際の値 − 直線から予測した値。点と直線の縦のずれ。"],
+      ["最小二乗法", "残差を2乗して合計した値が<b>最も小さくなる</b>ように直線を決める方法。"]])}
+  </div>
+  <div class="card">
+    <h3>やってみよう①：自分で直線を当てはめよう</h3>
+    <div class="row"><label style="font-size:14px"><input type="checkbox" id="rfest"> 7/18（夏祭り）を含める</label></div>
+    <svg id="rsvg" style="margin-top:6px"></svg>
+    <div class="legend"><i style="background:var(--blue)"></i>あなたの直線<i style="background:var(--orange)"></i>残差<i style="background:var(--accent)"></i>最小二乗法の直線</div>
+    <div class="grid2" style="margin-top:8px">
+      <div><span style="font-size:13px">傾き a：<b id="av" style="font-family:var(--mono)"></b>（◇ を中心に回転する）</span><input type="range" id="ra" min="-2" max="8" step="0.1" value="0"></div>
+      <div><span style="font-size:13px">切片 b：<b id="bv" style="font-family:var(--mono)"></b>（直線全体が上下に動く）</span><input type="range" id="rb" min="-240" max="220" step="0.5" value="30"></div>
+    </div>
+    <div class="stats">
+      <div class="stat"><span>あなたの直線</span><b id="myeq" style="font-size:16px"></b></div>
+      <div class="stat hl"><span>残差の2乗の合計</span><b id="myss"></b></div>
+      <div class="stat"><span>最小二乗法なら</span><b id="bestss"></b></div>
+    </div>
+    <div class="row" style="margin-top:10px"><button class="btn" id="showbest">最小二乗法の直線を表示</button><span class="msg" id="rmsg"></span></div>
+  </div>
+  <div class="card">
+    <h3>やってみよう②：予測しよう</h3>
+    <p>やってみよう①で作った<b>あなたの直線</b> <b id="peq" style="font-family:var(--mono)"></b> に代入して予測します。</p>
+    <div class="row">予報の最高気温 <input type="number" id="px" value="33" step="0.5"> ℃ のとき、アイスコーヒーは <span class="rbig" id="py">—</span> 杯</div>
+    <p id="pbest" style="font-size:14px;color:var(--ink-soft)"></p>
+    <p id="pwarn" class="warn hidden">※ 手もとのデータ（${f1(Math.min(...CLEAN.map(r => r.temp)))}〜${f1(Math.max(...CLEAN.map(r => r.temp)))}℃）の範囲の外です。この予測はあてになりません。</p>
+  </div>
+  <div class="card">
+    <h3>確認問題</h3>
+    ${(() => { const p = pairsOf(CLEAN.filter(r => r.date !== "7/18"), "temp", "iced"), L = S.lsq(p.map(q => q.x), p.map(q => q.y));
+      return quiz("L6-q1", 1, `夏祭りの日を除いた回帰直線は y ＝ ${f1(L.a, 2)}x ${L.b >= 0 ? "＋" : "−"} ${f1(Math.abs(L.b), 1)} です。傾き ${f1(L.a, 2)} の意味として正しいものは？`, [
+        [`気温が1℃上がると、アイスコーヒーが約${f1(L.a, 1)}杯多く売れる傾向がある`, 1],
+        [`気温が${f1(L.a, 1)}℃上がると、アイスコーヒーが1杯多く売れる`, 0],
+        [`気温が0℃のとき、アイスコーヒーが${f1(L.a, 1)}杯売れる`, 0]],
+        "傾きは「x が 1 増えたときの y の増え方」です。");
+    })()}
+    ${(() => { const pa = pairsOf(CLEAN, "temp", "iced"), pn = pairsOf(CLEAN.filter(r => r.date !== "7/18"), "temp", "iced");
+      const La = S.lsq(pa.map(q => q.x), pa.map(q => q.y)), Ln = S.lsq(pn.map(q => q.x), pn.map(q => q.y));
+      const ra = S.corr(pa.map(q => q.x), pa.map(q => q.y)), rn = S.corr(pn.map(q => q.x), pn.map(q => q.y));
+      return quiz("L6-q2", 2, "今回のデータで、夏祭りの日（7/18）を含めて回帰直線を求めると、どうなる？（やってみよう①のチェックで確かめよう）", [
+      ["1つの点だけなので、直線はほとんど変わらない", 0],
+      ["直線が夏祭りの点に引っぱられ、ふだんの日の予測がずれてしまう", 1],
+      ["相関係数が大きくなり、予測がより正確になる", 0]],
+      `今回のデータでは、夏祭りの日を含めると、33℃の日の予測が ${Math.round(Ln.a*33 + Ln.b)}杯 → ${Math.round(La.a*33 + La.b)}杯 に変わり、相関係数も ${sgn(rn)} → ${sgn(ra)} に下がります。最小二乗法はずれを2乗するので、大きく外れた1点に強く引っぱられます。ふだんの日を予測したいなら、特別な日を除いて直線を求めるのが適切です。`); })()}
+    ${quiz("L6-q3", 3, "この直線で「最高気温 45℃ の日のアイスコーヒーの杯数」を予測してよい？", [
+      ["よい。式に代入すれば計算できるから", 0],
+      [`注意が必要。データは${f1(Math.min(...CLEAN.map(r => r.temp)))}〜${f1(Math.max(...CLEAN.map(r => r.temp)))}℃の範囲しかなく、その外でも同じ関係が続くとは限らない`, 1]],
+      "データの範囲の外を予測すること（外挿）は危険です。45℃なら暑すぎて外出する人が減るかもしれません。")}
+  </div>`;
+}, mount(){
+  let best = false;
+  const PIV = 27.5;           /* 傾きを変えるときの回転の中心（℃） */
+  let A = 0, B = 30;          /* あなたの直線 y = Ax + B */
+  $("ra").addEventListener("input", () => {
+    const y0 = A*PIV + B; A = Number($("ra").value); B = y0 - A*PIV;
+    $("rb").value = B; draw();
+  });
+  $("rb").addEventListener("input", () => { B = Number($("rb").value); draw(); });
+  const data = () => pairsOf(CLEAN.filter(r => $("rfest").checked || r.date !== "7/18"), "temp", "iced");
+  const draw = () => {
+    const p = data(), xs = p.map(q => q.x), ys = p.map(q => q.y), L = S.lsq(xs, ys);
+    const a = A, b = B;
+    const ss = (A, B) => p.reduce((s, q) => s + Math.pow(q.y - (A*q.x + B), 2), 0);
+    const eq = `y = ${a.toFixed(1)}x ${b >= 0 ? "+" : "−"} ${Math.abs(b).toFixed(1)}`;
+    $("av").textContent = a.toFixed(1); $("bv").textContent = b.toFixed(1);
+    $("myeq").textContent = eq; $("peq").textContent = eq;
+    const my = ss(a, b), bs = ss(L.a, L.b);
+    $("myss").textContent = Math.round(my).toLocaleString();
+    $("bestss").textContent = Math.round(bs).toLocaleString();
+    const lines = [{ a, b, color: "var(--blue)" }];
+    if (best) lines.push({ a: L.a, b: L.b, color: "var(--accent)", dash: "6 4" });
+    const pts = p.map(q => ({ x: q.x, y: q.y, r: q.r, hl: q.r.date === "7/18", label: q.r.date === "7/18" ? "7/18 夏祭り" : "" }));
+    scatter($("rsvg"), { pts, xl: "最高気温（℃）", yl: "アイスコーヒー（杯）", lines, line: { a, b }, resid: true, xr: [20, 36], yr: [-10, 160], pivot: { x: PIV, y: a*PIV + b } });
+    const ratio = my / bs;
+    if (ratio < 1.15 && !STATE.solved["L6-fit"]){ STATE.solved["L6-fit"] = true; save(); checkDone(); }
+    $("rmsg").className = "msg " + (ratio < 1.15 ? "ok" : "");
+    $("rmsg").textContent = ratio < 1.15 ? "ほぼ最適な直線です！" : ratio < 1.6 ? "あと少し！ 残差の2乗の合計を小さくしよう。" : "スライダーを動かして、残差（オレンジの線）が短くなるようにしよう。";
+    if (best) $("rmsg").textContent += `　最小二乗法の直線：y = ${L.a.toFixed(2)}x ${L.b >= 0 ? "+" : "−"} ${Math.abs(L.b).toFixed(1)}（相関係数 ${sgn(S.corr(xs, ys))}）`;
+    /* 予測 */
+    const x = Number($("px").value);
+    if (Number.isFinite(x) && $("px").value !== ""){
+      $("py").textContent = Math.round(a*x + b);
+      $("pbest").textContent = best ? `（参考）最小二乗法の直線なら ${Math.round(L.a*x + L.b)} 杯` : "";
+      const mn = Math.min(...CLEAN.map(r => r.temp)), mx = Math.max(...CLEAN.map(r => r.temp));
+      $("pwarn").classList.toggle("hidden", x >= mn && x <= mx);
+    } else $("py").textContent = "—";
+  };
+  $("px").addEventListener("input", draw);
+  $("rfest").onchange = draw;
+  $("showbest").onclick = () => { best = !best; $("showbest").textContent = best ? "最小二乗法の直線を隠す" : "最小二乗法の直線を表示"; draw(); };
+  draw();
+} });
+
+/* ---------- 総合問題（早く終わった人用） ---------- */
+/* 新しい架空データ：ある高校のクラス12人の生活と小テスト。
+   仕込み：ID 5 の睡眠時間 65（6.5 の小数点のつけ忘れ）、ID 7 の通学時間 95分（本当の値）、ID 8 の小テストが空欄 */
+const SOGO = [
+  { id: 1,  club: "運動部", com: 25, sleep: 7.0, phone: 1.5, test: 76 },
+  { id: 2,  club: "文化部", com: 15, sleep: 6.5, phone: 3.0, test: 58 },
+  { id: 3,  club: "なし",   com: 40, sleep: 6.0, phone: 4.5, test: 60 },
+  { id: 4,  club: "運動部", com: 30, sleep: 7.5, phone: 1.0, test: 88 },
+  { id: 5,  club: "文化部", com: 20, sleep: 65,  phone: 2.5, test: 74 },
+  { id: 6,  club: "なし",   com: 10, sleep: 5.5, phone: 5.0, test: 45 },
+  { id: 7,  club: "運動部", com: 95, sleep: 6.0, phone: 2.0, test: 70 },
+  { id: 8,  club: "文化部", com: 35, sleep: 7.0, phone: 3.5, test: null },
+  { id: 9,  club: "なし",   com: 20, sleep: 6.5, phone: 4.0, test: 48 },
+  { id: 10, club: "運動部", com: 25, sleep: 8.0, phone: 0.5, test: 82 },
+  { id: 11, club: "文化部", com: 30, sleep: 6.0, phone: 3.0, test: 72 },
+  { id: 12, club: "なし",   com: 15, sleep: 5.0, phone: 5.5, test: 52 },
+];
+lesson({ id:"LX", title:"総合問題（チャレンジ）", kicker:"CHALLENGE", no:"★", req:["X-q1","X-q2","X-q3","X-q4","X-q5","X-q6","X-q7","X-q8","X-q9","X-q10"], render(){
+  const com = SOGO.map(r => r.com), cq = S.quart(com), ciqr = cq.q3 - cq.q1;
+  const ok = SOGO.filter(r => r.test !== null), xs = ok.map(r => r.phone), ys = ok.map(r => r.test);
+  const L = S.lsq(xs, ys), r = S.corr(xs, ys);
+  const sleepRaw = SOGO.map(r => r.sleep), sleepFix = SOGO.map(r => r.sleep === 65 ? 6.5 : r.sleep);
+  const A = [58, 60, 62, 60, 59, 61, 60, 60], B = [40, 80, 50, 70, 60, 60, 45, 75];
+  const mz = v => String(v).replace("-", "−");
+  const eq = `y ＝ ${mz(f1(L.a, 2))}x ＋ ${f1(L.b, 1)}`;
+  const pred = x => L.a * x + L.b;
+  return `
+  <div class="card">
+    <h3>早く終わった人へのチャレンジ</h3>
+    <p>レッスン1〜6の内容を使って解く総合問題です。下は、ある高校のクラス12人について、生活のようすと小テストの点数を調べたデータです。<b>欠損値や外れ値がまぎれているので、気をつけて解こう。</b></p>
+    <div class="tbl-wrap excerpt" style="max-height:none"><table><thead><tr><th>ID</th><th class="l">部活</th><th>通学時間<br>(分)</th><th>睡眠時間<br>(時間)</th><th>スマホ時間<br>(時間)</th><th>小テスト<br>(点)</th></tr></thead><tbody>
+      ${SOGO.map(r => `<tr><td>${r.id}</td><td class="l">${r.club}</td><td>${r.com}</td><td>${r.sleep.toFixed(r.sleep >= 10 ? 0 : 1)}</td><td>${r.phone.toFixed(1)}</td>${r.test === null ? `<td class="miss">空欄</td>` : `<td>${r.test}</td>`}</tr>`).join("")}
+    </tbody></table></div>
+  </div>
+  <div class="card">
+    <h3>総合問題A：データを整える</h3>
+    ${quiz("X-q1", 1, "この表の「ID」と同じ尺度の列はどれ？", [
+      ["部活", 1], ["睡眠時間", 0], ["小テスト", 0]],
+      "IDは生徒を区別するためのラベルなので名義尺度。部活も種類を区別するだけなので名義尺度です。睡眠時間と小テストは比例尺度です。")}
+    ${quiz("X-q2", 2, "ID 5 の生徒の睡眠時間「65」の扱いとして、最も適切なものは？", [
+      ["本当に起きた値かもしれないので、そのまま残す", 0],
+      ["6.5 の小数点のつけ忘れ（入力ミス）と考えられるので、6.5 に直す", 1],
+      ["外れ値の目安に当てはまるので、理由を考えずに除く", 0]],
+      `1日に65時間眠ることはありえないので、入力ミスによる<b>異常値</b>です。正しい値がわかるので直します。直す前の睡眠時間の平均は ${f1(S.mean(sleepRaw), 2)}時間、直した後は ${f1(S.mean(sleepFix), 2)}時間です。`)}
+    <p style="margin-top:14px"><b>通学時間の箱ひげ図</b>（12人）</p>
+    <svg id="xbox"></svg>
+    ${quiz("X-q3", 3, "通学時間の四分位範囲はいくつ？", [
+      [`${f1(ciqr)}分`, 1], [`${f1(cq.q2)}分`, 0], [`${f1(Math.max(...com) - Math.min(...com))}分`, 0], [`${f1(cq.q3)}分`, 0]],
+      `小さい順に並べると 10, 15, 15, 20, 20, 25, 25, 30, 30, 35, 40, 95。前半6個の中央値が第1四分位数 ${f1(cq.q1)}分、後半6個の中央値が第3四分位数 ${f1(cq.q3)}分なので、四分位範囲は ${f1(cq.q3)} − ${f1(cq.q1)} ＝ ${f1(ciqr)}分です。`)}
+    ${quiz("X-q4", 4, "ID 7 の生徒の通学時間95分は、遠くの町からバスで通っている本当の値でした。あなたが、このクラスの「ふつうの通学時間」を担任の先生に報告するとき、最も適切なものは？", [
+      [`平均値の ${f1(S.mean(com))}分を報告する`, 0],
+      [`中央値の ${f1(cq.q2)}分を報告する`, 1],
+      ["95分は外れ値なので、データから消して求めた平均値を報告する", 0]],
+      `95分は本当に起きた値なので消しません（対処③）。平均値は95分に引っぱられて ${f1(S.mean(com))}分になりますが、中央値は ${f1(cq.q2)}分で、外れ値の影響を受けにくい値です。`)}
+    ${quiz("X-q5", 5, "スマホ時間と小テストの関係を調べたい。ID 8 の生徒は小テストが空欄です。最も適切な処理は？", [
+      ["ID 8 の生徒の行を丸ごと除き、11人で調べる", 1],
+      ["空欄に 0 を入れて、12人で調べる", 0],
+      ["空欄に小テストの平均値を入れて、12人で調べる", 0]],
+      "欠損値は、その人の行を丸ごと除くのが基本です。0 を入れると「0点の人」がいることになり、関係がゆがみます。平均値を入れても、本当の点数がわかるわけではありません。")}
+  </div>
+  <div class="card">
+    <h3>総合問題B：分析する</h3>
+    ${quiz("X-q6", 6, `2つのグループの小テストの点数です。<br><span style="font-weight:400">グループA：${A.join(", ")}<br>グループB：${B.join(", ")}</span><br>どちらも平均値は60点です。標準偏差についての説明で正しいものは？`, [
+      [`Aは約${f1(S.sd(A), 0)}点、Bは約${f1(S.sd(B), 0)}点で、Bのほうが散らばりが大きい`, 1],
+      [`Aは約${f1(S.sd(B), 0)}点、Bは約${f1(S.sd(A), 0)}点で、Aのほうが散らばりが大きい`, 0],
+      ["平均値が同じなので、標準偏差も同じになる", 0]],
+      `Aの標準偏差は約${f1(S.sd(A), 2)}点、Bは約${f1(S.sd(B), 2)}点です。平均値が同じでも、散らばりは大きく違うことがあります。`)}
+    <p style="margin-top:14px"><b>スマホ時間と小テストの散布図</b>（ID 8 の生徒を除いた11人）</p>
+    <svg id="xsct"></svg>
+    ${quiz("X-q7", 7, "この散布図の相関係数に最も近いものは？", [
+      ["−0.9", 1], ["−0.4", 0], ["0.0", 0], ["＋0.9", 0]],
+      `右下がりの直線に近い並び方なので、強い負の相関です。実際に計算すると ${sgn(r)} です。`)}
+    ${quiz("X-q8", 8, "この結果から「スマホを取り上げれば、小テストの点数が上がる」と言える？", [
+      ["言える。強い負の相関があるから", 0],
+      ["言えない。たとえばスマホ時間が長い人は睡眠時間が短い傾向もあり、別の要因が関係しているかもしれない", 1],
+      ["言える。回帰直線の傾きがマイナスだから", 0]],
+      `相関があっても、因果関係があるとは限りません。このデータでも、スマホ時間と睡眠時間（直した値）の相関係数は ${sgn(S.corr(ok.map(r => r.phone), ok.map(r => r.sleep === 65 ? 6.5 : r.sleep)))} です。原因を確かめるには、別の調べ方が必要です。`)}
+    ${quiz("X-q9", 9, `回帰直線は ${eq} でした（x：スマホ時間、y：小テスト）。スマホ時間が3時間の人の小テストの予測値に最も近いものは？`, [
+      [`約${Math.round(pred(3))}点`, 1], [`約${Math.round(L.b - 3)}点`, 0], [`約${Math.round(-L.a * 3)}点`, 0]],
+      `x に 3 を代入すると、（${mz(f1(L.a, 2))}）× 3 ＋ ${f1(L.b, 1)} ＝ ${f1(pred(3), 1)} なので約${Math.round(pred(3))}点です。傾き ${mz(f1(L.a, 2))} は「スマホ時間が1時間増えると、点数が約${f1(-L.a, 1)}点下がる傾向」を表します。`)}
+    ${quiz("X-q10", 10, `同じ式でスマホ時間12時間の人を予測すると、${mz(f1(pred(12), 1))}点になります。この結果の考え方として正しいものは？`, [
+      ["本当にマイナスの点数になると考える", 0],
+      [`データは ${f1(Math.min(...xs))}〜${f1(Math.max(...xs))}時間の範囲しかないので、その外の予測はあてにならない`, 1],
+      ["回帰直線の計算が間違っている", 0]],
+      "データの範囲の外を予測すること（外挿）は危険です。範囲の外でも同じ直線の関係が続くとは限りません。")}
+  </div>`;
+}, mount(){
+  boxplot($("xbox"), { vals: SOGO.map(r => r.com), items: SOGO.map(r => ({ v: r.com, label: "" })), xl: "通学時間（分）" });
+  const ok = SOGO.filter(r => r.test !== null);
+  scatter($("xsct"), { pts: ok.map(r => ({ x: r.phone, y: r.test })), xl: "スマホ時間（時間）", yl: "小テスト（点）", w: 500, h: 340 });
+} });
+
+/* ---------- 7. まとめ ---------- */
+lesson({ id:"L7", title:"まとめ", kicker:"EPILOGUE", req:[], render(){
+  const done = LESSONS.slice(1, 7).filter(l => STATE.done[l.id]).length;
+  return `
+  <div class="card">
+    <div class="talk"><div class="who t">${AV.t}</div><div class="say">ありがとう、こむぎ！ 暑い日はアイスコーヒーを多めに、カレーパンは様子を見ながら追加で焼く。お祭りの日は特別に準備する。これで売れ残りが減りそうだよ。</div></div>
+    <div class="talk"><div class="who h">${AV.h}</div><div class="say">データを整えてから分析しないと、間違った結論になるところだったね！</div></div>
+  </div>
+  <div class="card">
+    <h3>ふりかえり（完了 ${done} / 6）</h3>
+    <ol class="summary">
+      <li><b>尺度の種類</b>：データの種類によって、できる計算が違う。数字でも名義尺度のことがある。</li>
+      <li><b>欠損値</b>：空欄は 0 ではない。除くのか補うのか、理由を考えて選ぶ。</li>
+      <li><b>外れ値</b>：入力ミスは直す。本当に起きた値は残し、平均値への影響に注意する（中央値は影響を受けにくい）。</li>
+      <li><b>標準偏差</b>：平均値が同じでも、散らばりは違う。標準化すれば単位の違うものも比べられる。</li>
+      <li><b>相関</b>：相関係数は直線的な関係の強さ。相関があっても因果関係があるとは限らない。</li>
+      <li><b>回帰分析</b>：最小二乗法で直線を求めて予測する。データの範囲の外の予測は危険。</li>
+    </ol>
+  </div>
+  <div class="card">
+    <h3><span style="text-decoration:line-through;text-decoration-thickness:2px">提出</span></h3>
+    <p><s>左の「保存用ファイル」で、クラス・出席番号・名前を選んで <b>達成状況を画像で保存</b> し、保存した画像を <b>ロイロノート</b> で提出しましょう。</s></p>
+  </div>`;
+}, mount(){
+  STATE.done.L7 = true; save();
+} });
+
+/* ================= 画面 ================= */
+function checkDone(){
+  const L = LESSONS[CUR];
+  if (L.req.length){
+    STATE.done[L.id] = L.req.every(id => STATE.solved[id]); save();
+    const b = $("donebadge"); if (b) b.classList.toggle("show", STATE.done[L.id]);
+  }
+  renderNav();
+}
+function renderNav(){
+  $("nav").innerHTML = LESSONS.map((L, i) => `<button class="${i === CUR ? "cur" : ""} ${STATE.done[L.id] ? "done" : ""}" data-i="${i}"><span class="no">${STATE.done[L.id] ? "✓" : (L.no || i)}</span>${L.title}</button>`).join("");
+  const n = LESSONS.slice(1, 7).filter(l => STATE.done[l.id]).length;
+  $("progtext").textContent = `${n} / 6`; $("progbar").style.width = (n/6*100) + "%";
+}
+$("nav").addEventListener("click", e => { const b = e.target.closest("button"); if (b) go(Number(b.dataset.i)); });
+const label = i => (i >= 1 && i <= 6 ? `レッスン${i}　` : "") + LESSONS[i].title;
+function go(i){
+  CUR = i; const L = LESSONS[i];
+  $("main").innerHTML = `
+    <div class="lesson-head"><div class="kicker">${L.kicker}</div><h2>${i >= 1 && i <= 6 ? `レッスン${i}　` : ""}${L.title}</h2></div>
+    ${L.render()}
+    ${L.req.length ? `<div class="done-badge${STATE.done[L.id] ? " show" : ""}" id="donebadge">✓ このレッスンは完了です。次のレッスンへ進みましょう。</div>` : ""}
+    <div class="pager">
+      ${i > 0 ? `<button class="btn" id="prev">← ${label(i-1)}</button>` : "<span></span>"}
+      ${i < LESSONS.length-1 ? `<button class="btn primary" id="next">${label(i+1)} →</button>` : "<span></span>"}
+    </div>`;
+  L.mount && L.mount();
+  if ($("prev")) $("prev").onclick = () => go(i-1);
+  if ($("next")) $("next").onclick = () => go(i+1);
+  renderNav(); window.scrollTo(0, 0);
+}
+
+/* ツールチップ */
+const tip = $("tip");
+document.addEventListener("mousemove", e => {
+  const t = e.target.closest && e.target.closest("svg [data-t]");
+  if (t){ tip.textContent = t.dataset.t; tip.style.left = (e.clientX + 14) + "px"; tip.style.top = (e.clientY - 10) + "px"; tip.style.opacity = 1; }
+  else tip.style.opacity = 0;
+});
+
+/* ================= 保存用ファイル =================
+   形式 "teishutsu/1"（先生用の一覧ツールで読み込める共通形式）
+   { format, appId, appTitle, student:{class, number, name}, savedAt,
+     items:[{id, title, done, score, max}], summary:{done, total, rate}, data:{アプリ固有の記録} } */
+const APP_ID = "komugido-data", APP_TITLE = "データ分析トレーニング（こむぎ堂の60日）";
+const CLASSES = 7, MEMBERS = 41;
+(() => {
+  const cs = $("sv-class"), ns = $("sv-num");
+  for (let c = 1; c <= CLASSES; c++) cs.appendChild(new Option(`${c}組`, `${c}組`));
+  for (let n = 1; n <= MEMBERS; n++) ns.appendChild(new Option(String(n), n));
+  const st = STATE.student || {};
+  cs.value = st.class || ""; ns.value = st.number || ""; $("sv-name").value = st.name || "";
+  const keep = () => { STATE.student = { class: cs.value, number: Number(ns.value) || "", name: $("sv-name").value.trim() }; save(); };
+  cs.onchange = keep; ns.onchange = keep; $("sv-name").oninput = keep;
+})();
+function svMsg(t, ok){ const m = $("sv-msg"); m.textContent = t; m.className = "msg " + (ok ? "ok" : "ng"); }
+$("sv-save").onclick = () => {
+  const st = { class: $("sv-class").value, number: Number($("sv-num").value), name: $("sv-name").value.trim() };
+  if (!st.class || !st.number || !st.name){ svMsg("クラス・出席番号・名前をすべて入力してください。", false); return; }
+  const toItem = L => ({ id: L.id, title: L.title, done: !!STATE.done[L.id], score: L.req.filter(id => STATE.solved[id]).length, max: L.req.length });
+  const main = LESSONS.slice(1, 7).map(toItem), extra = LESSONS.filter(L => L.id === "LX").map(toItem);
+  const items = main.concat(extra);
+  const done = main.filter(x => x.done).length;
+  const out = { format: "teishutsu/1", appId: APP_ID, appTitle: APP_TITLE, student: st, savedAt: new Date().toISOString(),
+    items, summary: { done, total: main.length, rate: Math.round(done / main.length * 1000) / 1000 }, data: { done: STATE.done, solved: STATE.solved, ans: STATE.ans } };
+  const blob = new Blob([JSON.stringify(out, null, 1)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `データ分析_${st.class}${String(st.number).padStart(2, "0")}番_${st.name.replace(/[\\/:*?"<>|\s]/g, "")}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  svMsg(`保存しました（完了 ${done} / ${main.length}${extra[0] && extra[0].done ? "・総合問題クリア" : ""}）。`, true);
+};
+
+/* ================= 達成状況を画像で保存 =================
+   キャンバスに達成状況（クラス・番号・名前、各レッスンの完了と正解数）を描いて PNG で保存する */
+function loadSvgImage(svgText){
+  return new Promise(res => {
+    const im = new Image();
+    im.onload = () => res(im); im.onerror = () => res(null);
+    im.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgText.replace("<svg ", '<svg xmlns="http://www.w3.org/2000/svg" '));
+  });
+}
+async function saveAchievementImage(){
+  try { await document.fonts.ready; } catch (e) {}
+  const W = 1200, H = 860, c = document.createElement("canvas");
+  c.width = W; c.height = H;
+  const g = c.getContext("2d");
+  const FONT = '"Zen Maru Gothic","Hiragino Maru Gothic ProN","Kosugi Maru","Yu Gothic","Noto Sans CJK JP",sans-serif';
+  const DARK = "#2B2B2B", INK = "#263046", SOFT = "#7A6F66";
+  const rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x+r, y); g.arcTo(x+w, y, x+w, y+h, r); g.arcTo(x+w, y+h, x, y+h, r); g.arcTo(x, y+h, x, y, r); g.arcTo(x, y, x+w, y, r); g.closePath(); };
+  const txt = (t, x, y, size, color, weight = 700, align = "left") => { g.font = `${weight} ${size}px ${FONT}`; g.fillStyle = color; g.textAlign = align; g.textBaseline = "middle"; g.fillText(t, x, y); };
+
+  /* 背景と、カフェの日よけ */
+  g.fillStyle = "#FFF7E8"; g.fillRect(0, 0, W, H);
+  for (let x = 0; x < W; x += 72){ g.fillStyle = "#E8574C"; g.fillRect(x, 0, 36, 26); g.fillStyle = "#FFF4E0"; g.fillRect(x+36, 0, 36, 26); }
+  g.fillStyle = "#5C3D2E"; g.fillRect(0, 26, W, 104);
+  txt("データ分析トレーニング　達成状況", 40, 66, 36, "#FFF4E0", 900);
+  txt("こむぎ堂の60日 ― データの活用", 42, 106, 18, "#F2D7B6", 700);
+  const av = await loadSvgImage(AV.h.split("<span")[0]);
+  if (av){ g.save(); g.beginPath(); g.arc(W - 86, 78, 44, 0, Math.PI*2); g.fillStyle = "#fff"; g.fill(); g.lineWidth = 4; g.strokeStyle = DARK; g.stroke(); g.clip(); g.drawImage(av, W - 130, 34, 88, 88); g.restore(); }
+
+  /* 本体のカード */
+  rr(40, 160, W - 80, H - 200, 22); g.fillStyle = "#fff"; g.fill(); g.lineWidth = 4; g.strokeStyle = DARK; g.stroke();
+  const st = STATE.student || {};
+  const who = `${st.class || "　組"}　${st.number ? st.number + "番" : "　番"}　${st.name || "（名前未入力）"}`;
+  txt(who, 80, 210, 28, INK, 900);
+  const d = new Date(), p2 = n => String(n).padStart(2, "0");
+  txt(`${d.getFullYear()}/${p2(d.getMonth()+1)}/${p2(d.getDate())} ${p2(d.getHours())}:${p2(d.getMinutes())} 時点`, W - 80, 210, 18, SOFT, 700, "right");
+
+  const main = LESSONS.slice(1, 7), extra = LESSONS.filter(L => L.id === "LX");
+  const done = main.filter(L => STATE.done[L.id]).length;
+  /* 完了数と進み具合のバー */
+  txt(`レッスン完了　${done} / ${main.length}`, 80, 270, 26, INK, 900);
+  rr(420, 256, W - 500, 28, 14); g.fillStyle = "#F3EADB"; g.fill(); g.lineWidth = 3; g.strokeStyle = DARK; g.stroke();
+  if (done){ rr(420, 256, (W - 500) * done / main.length, 28, 14); g.fillStyle = done === main.length ? "#22A866" : "#FFD23F"; g.fill(); rr(420, 256, W - 500, 28, 14); g.stroke(); }
+
+  /* レッスンごとの行 */
+  const rows = main.concat(extra);
+  rows.forEach((L, k) => {
+    const y = 316 + k * 66, ok = !!STATE.done[L.id];
+    const sc = L.req.filter(id => STATE.solved[id]).length;
+    rr(80, y, W - 160, 54, 14); g.fillStyle = ok ? "#E9F9F0" : "#FAF7F2"; g.fill(); g.lineWidth = 2.5; g.strokeStyle = ok ? "#22A866" : "#D8CFC2"; g.stroke();
+    g.beginPath(); g.arc(118, y + 27, 18, 0, Math.PI*2); g.fillStyle = ok ? "#22A866" : "#fff"; g.fill(); g.lineWidth = 2.5; g.strokeStyle = DARK; g.stroke();
+    txt(ok ? "✓" : (L.no || String(LESSONS.indexOf(L))), 118, y + 28, 18, ok ? "#fff" : DARK, 900, "center");
+    txt((L.id === "LX" ? "" : `レッスン${LESSONS.indexOf(L)}　`) + L.title, 152, y + 28, 22, INK, 700);
+    txt(`正解 ${sc} / ${L.req.length}`, W - 300, y + 28, 20, SOFT, 700, "right");
+    rr(W - 270, y + 11, 160, 32, 16); g.fillStyle = ok ? "#22A866" : "#fff"; g.fill(); g.lineWidth = 2.5; g.strokeStyle = ok ? DARK : "#BDB3A6"; g.stroke();
+    txt(ok ? "完了" : "未完了", W - 190, y + 28, 18, ok ? "#fff" : SOFT, 900, "center");
+  });
+  txt("※ 正解数は、やってみよう・確認問題で、いま正しく答えられている数です。", 80, H - 64, 16, SOFT, 500);
+
+  c.toBlob(blob => {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    const name = (st.name || "").replace(/[\\/:*?"<>|\s]/g, "");
+    a.download = `達成状況_${st.class || ""}${st.number ? String(st.number).padStart(2, "0") + "番" : ""}${name ? "_" + name : ""}.png`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    svMsg("達成状況を画像で保存しました。", true);
+  }, "image/png");
+}
+$("sv-img").onclick = saveAchievementImage;
+$("sv-load").onclick = () => $("sv-file").click();
+$("sv-file").onchange = e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  const fr = new FileReader();
+  fr.onload = () => {
+    try {
+      const j = JSON.parse(fr.result);
+      if (j.format !== "teishutsu/1" || j.appId !== APP_ID) throw new Error("この教材のファイルではありません。");
+      STATE = { done: j.data.done || {}, solved: j.data.solved || {}, ans: j.data.ans || {}, student: j.student };
+      save();
+      $("sv-class").value = j.student.class || ""; $("sv-num").value = j.student.number || ""; $("sv-name").value = j.student.name || "";
+      go(CUR); svMsg(`読み込みました（${j.student.class} ${j.student.number}番 ${j.student.name}）。`, true);
+    } catch (err){ svMsg(err.message.startsWith("この") ? err.message : "ファイルを読み込めませんでした。", false); }
+  };
+  fr.readAsText(f);
+};
+$("sv-reset").onclick = () => {
+  if (!confirm("すべての学習の記録を消しますか？（クラス・番号・名前は残ります）")) return;
+  STATE = { done: {}, solved: {}, ans: {}, student: STATE.student }; save(); go(0);
+};
+
+/* ================= 授業モード（全画面・スライド表示） =================
+   ・#main の中のかたまり（タイトル・カード）を1枚ずつのスライドとして表示する
+   ・スライドの中身（セリフ、表、用語の1項目など）は、→ キーを押すたびに1つずつ現れる
+   ・→ / PageDown / スペース：進む　← / PageUp：戻る　Esc：終了（プレゼン用リモコンも使える） */
+const PV = { on: false, slides: [], si: 0, units: [], step: 0, toEnd: false };
+let PZ = 1.35;
+try { const z = parseFloat(localStorage.getItem(KEY + "-pz")); if (z >= 0.8 && z <= 2.4) PZ = z; } catch (e) {}
+document.body.insertAdjacentHTML("beforeend", `<div class="pv-bar">
+  <button id="pvPrev">◀ 戻る</button><button id="pvNext">進む ▶</button><span class="sep"></span>
+  <select id="pvLesson" aria-label="レッスンを選ぶ"></select>
+  <span class="pv-info" id="pvInfo"></span>
+  <button id="pvAll">このスライドを全部表示</button><span class="sep"></span>
+  <button id="pvMinus" title="文字を小さく">文字 −</button><button id="pvPlus" title="文字を大きく">文字 ＋</button><span class="sep"></span>
+  <button id="pvExit">終了</button></div>`);
+/* グラフ（散布図・箱ひげ図・数値の欄など）は最初から表示する。セリフのイラストや用語の囲みは除く */
+const isGraph = el => !el.classList.contains("talk") && !el.classList.contains("term") &&
+  (el.tagName.toLowerCase() === "svg" || el.classList.contains("stats") || !!el.querySelector("svg"));
+function pvUnits(slide){
+  const units = [];
+  const termUnits = t => {
+    const tb = t.querySelector(".tb"); if (!tb) return;
+    [...tb.children].forEach(c => {
+      if (isGraph(c)) return;
+      if (c.tagName === "DL"){ const k = [...c.children]; for (let i = 0; i < k.length; i += 2) units.push([k[i], k[i+1]].filter(Boolean)); }
+      else units.push([c]);
+    });
+  };
+  if (slide.classList.contains("lesson-head")) return units;
+  if (slide.classList.contains("term")){ termUnits(slide); return units; }
+  const h3 = slide.querySelector(":scope > h3");
+  if (h3 && h3.textContent.trim().startsWith("やってみよう")) return units;   /* 操作する場面は最初から全部見せる */
+  [...slide.children].forEach(c => {
+    if (c.tagName === "H3") return;
+    if (isGraph(c)) return;   /* グラフは最初から表示 */
+    if (c.classList.contains("legend") && units.length){ units[units.length - 1].push(c); return; }   /* 凡例は表・グラフといっしょに */
+    units.push([c]);
+    if (c.classList.contains("term")) termUnits(c);
+  });
+  return units;
+}
+function pvClear(){
+  PV.slides.forEach(sl => { sl.classList.remove("pv-on", "pv-off"); sl.querySelectorAll(".pv-h,.pv-in").forEach(x => x.classList.remove("pv-h", "pv-in")); });
+}
+function pvBuild(){
+  PV.slides = [...$("main").children].filter(el => !el.classList.contains("pager") && !el.classList.contains("done-badge"));
+  $("pvLesson").innerHTML = LESSONS.map((L, i) => `<option value="${i}"${i === CUR ? " selected" : ""}>${label(i)}</option>`).join("");
+}
+function pvShow(si, revealAll){
+  pvClear();
+  PV.slides.forEach(sl => sl.classList.add("pv-off"));
+  PV.si = si;
+  const sl = PV.slides[si];
+  sl.classList.remove("pv-off"); void sl.offsetWidth; sl.classList.add("pv-on");
+  PV.units = pvUnits(sl);
+  PV.step = revealAll ? PV.units.length : Math.min(1, PV.units.length);   /* 1つ目は最初から表示 */
+  PV.units.forEach((u, k) => { if (k >= PV.step) u.forEach(x => x.classList.add("pv-h")); });
+  const m = $("main"); m.style.scrollBehavior = "auto"; m.scrollTop = revealAll ? m.scrollHeight : 0; m.style.scrollBehavior = "";
+  pvInfo();
+}
+function pvInfo(){
+  const n = PV.units.length;
+  $("pvInfo").textContent = `スライド ${PV.si + 1} / ${PV.slides.length}` + (n ? `　・　表示 ${PV.step} / ${n}` : "");
+  $("pvAll").disabled = PV.step >= n;
+}
+function pvNext(){
+  if (PV.step < PV.units.length){
+    const u = PV.units[PV.step++];
+    u.forEach(x => { x.classList.remove("pv-h"); void x.offsetWidth; x.classList.add("pv-in"); });
+    u[u.length - 1].scrollIntoView({ behavior: "smooth", block: "nearest" });
+    pvInfo(); return;
+  }
+  if (PV.si < PV.slides.length - 1) return pvShow(PV.si + 1);
+  if (CUR < LESSONS.length - 1) go(CUR + 1);
+}
+function pvPrev(){
+  if (PV.step > 1){
+    const u = PV.units[--PV.step];
+    u.forEach(x => { x.classList.remove("pv-in"); x.classList.add("pv-h"); });
+    pvInfo(); return;
+  }
+  if (PV.si > 0) return pvShow(PV.si - 1, true);
+  if (CUR > 0){ PV.toEnd = true; go(CUR - 1); }
+}
+function pvAll(){
+  while (PV.step < PV.units.length) PV.units[PV.step++].forEach(x => { x.classList.remove("pv-h"); x.classList.add("pv-in"); });
+  pvInfo();
+}
+function pvZoom(d){
+  PZ = Math.min(2.4, Math.max(0.8, Math.round((PZ + d) * 10) / 10));
+  document.documentElement.style.setProperty("--pz", PZ);
+  try { localStorage.setItem(KEY + "-pz", PZ); } catch (e) {}
+}
+function pvEnter(){
+  PV.on = true;
+  document.documentElement.style.setProperty("--pz", PZ);
+  document.body.classList.add("present");
+  pvBuild(); pvShow(0);
+  const el = document.documentElement;
+  if (el.requestFullscreen && !document.fullscreenElement) el.requestFullscreen().catch(() => {});
+}
+function pvExit(){
+  if (!PV.on) return;
+  PV.on = false;
+  pvClear();
+  document.body.classList.remove("present");
+  if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {});
+  window.scrollTo(0, 0);
+}
+/* レッスンを切りかえたら、スライドを作り直す */
+const goNormal = go;
+go = function(i){
+  goNormal(i);
+  if (PV.on){ pvBuild(); const end = PV.toEnd; PV.toEnd = false; pvShow(end ? PV.slides.length - 1 : 0, end); }
+};
+$("presBtn").onclick = pvEnter;
+$("pvNext").onclick = pvNext; $("pvPrev").onclick = pvPrev; $("pvAll").onclick = pvAll;
+$("pvMinus").onclick = () => pvZoom(-0.1); $("pvPlus").onclick = () => pvZoom(0.1);
+$("pvExit").onclick = pvExit;
+$("pvLesson").onchange = e => go(Number(e.target.value));
+document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement && PV.on) pvExit(); });
+document.addEventListener("keydown", e => {
+  if (!PV.on) return;
+  const t = e.target;
+  if (t && t.matches && t.matches("input, select, textarea")){ if (e.key === "Escape") t.blur(); return; }
+  if (t && t.tagName === "BUTTON") t.blur();
+  if (["ArrowRight", "PageDown", " ", "Spacebar"].includes(e.key)){ e.preventDefault(); pvNext(); }
+  else if (["ArrowLeft", "PageUp"].includes(e.key)){ e.preventDefault(); pvPrev(); }
+  else if (e.key === "Escape") pvExit();
+});
+
+go(0);
+</script>
+</body>
+</html>
