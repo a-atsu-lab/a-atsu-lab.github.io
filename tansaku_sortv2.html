@@ -1,0 +1,1770 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>さがす・ならべるができるまで ― こむぎ堂のケーキ予約</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#ECEEED; --panel:#FFFFFF; --ink:#16324F; --ink-soft:#6B7C87; --rule:#DCE0DE; --grid:#E7EAE9;
+  --accent:#C0392B; --blue:#1F5E80; --blue-l:#4F87A3; --band:#DCE8EF; --orange:#D08C2B; --green:#3E8E5A;
+  --ok:#2F7A4A; --ng:#B23A2E;
+  --mincho:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",serif;
+  --gothic:"Hiragino Kaku Gothic ProN","Yu Gothic","YuGothic","Noto Sans JP",sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Courier New",monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--gothic);font-size:15px;line-height:1.8}
+header{background:var(--ink);padding:18px 26px;display:flex;align-items:baseline;gap:18px;flex-wrap:wrap}
+h1{font-family:var(--mincho);font-size:26px;font-weight:600;margin:0;letter-spacing:.08em;color:#fff}
+header p{margin:0;color:#C3D2DC;font-size:13px;letter-spacing:.04em}
+.progress{margin-left:auto;display:flex;align-items:center;gap:10px;color:#C3D2DC;font-size:12px;font-family:var(--mono)}
+.progress .bar{width:140px;height:6px;background:#2E4A66}
+.progress .bar i{display:block;height:100%;background:#fff;transition:width .3s}
+
+.app{display:grid;grid-template-columns:250px 1fr;max-width:1240px;margin:0 auto;gap:22px;padding:22px 20px 80px;align-items:start}
+@media(max-width:860px){.app{grid-template-columns:1fr}.side{position:static!important}}
+.side{position:sticky;top:16px}
+.nav{background:var(--panel);border:1px solid var(--rule)}
+.savebox{background:var(--panel);border:1px solid var(--rule);border-top:3px solid var(--ink);padding:12px 14px;margin-top:12px}
+.savebox h4{margin:0 0 6px;font-size:13px;letter-spacing:.12em}
+.savebox label{display:block;font-size:12px;color:var(--ink-soft);margin-top:6px}
+.savebox select,.savebox input{width:100%;margin-top:2px}
+.savebox input[type=text]{padding:7px 10px;font-family:var(--gothic);font-size:14px;color:var(--ink);border:1px solid var(--rule)}
+.savebox .btn{width:100%;margin-top:8px}
+.savebox .msg{font-size:12px;margin:6px 0 0;min-height:0}
+.linkbtn{background:none;border:0;color:var(--ink-soft);font-size:11px;text-decoration:underline;cursor:pointer;padding:0;margin-top:6px;font-family:var(--gothic)}
+.nav button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;border-bottom:1px solid var(--rule);background:#fff;padding:11px 14px;font-family:var(--gothic);font-size:14px;color:var(--ink);cursor:pointer}
+.nav button:last-child{border-bottom:0}
+.nav button:hover{background:#F5F7F6}
+.nav button.cur{background:var(--ink);color:#fff}
+.nav .no{font-family:var(--mono);font-size:12px;width:22px;height:22px;border:1px solid currentColor;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.nav .done .no{background:var(--ok);border-color:var(--ok);color:#fff}
+.nav button.cur.done .no{background:#fff;color:var(--ok)}
+
+main{min-width:0}
+.lesson-head{margin-bottom:16px}
+.lesson-head .kicker{font-family:var(--mono);font-size:12px;color:var(--ink-soft);letter-spacing:.14em}
+.lesson-head h2{font-family:var(--mincho);font-size:28px;font-weight:600;margin:2px 0 0;letter-spacing:.04em}
+.card{background:var(--panel);border:1px solid var(--rule);padding:20px 22px;margin-bottom:14px}
+.card h3{font-size:18px;font-weight:700;letter-spacing:.06em;color:var(--ink);margin:-20px -22px 14px;padding:10px 22px;background:#EEF1F3;border-bottom:2px solid var(--ink);display:flex;align-items:center;gap:10px}
+.card h3::before{content:"";width:6px;height:20px;background:var(--accent);flex:none}
+.card p{margin:.4em 0}
+.card .lead{font-size:16px}
+
+/* 会話 */
+.talk{display:flex;gap:12px;margin:10px 0;align-items:flex-start}
+.talk .who{flex:none;width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff}
+.talk .who.t{background:var(--orange)}
+.talk .who.h{background:var(--blue)}
+.talk .say{flex:1;min-width:0;background:#F7F5F0;border:1px solid #E8E2D6;padding:10px 16px;position:relative}
+.talk .say::before{content:"";position:absolute;left:-7px;top:16px;width:12px;height:12px;background:inherit;border-left:1px solid #E8E2D6;border-bottom:1px solid #E8E2D6;transform:rotate(45deg)}
+.talk .who.h + .say::before{border-color:#D5E1EA}
+.talk .who.h + .say{background:#EEF3F7;border-color:#D5E1EA}
+
+/* 用語ボックス */
+.term{border:2px solid var(--blue);background:#F4F8FB;margin:16px 0 6px}
+.term .th{background:var(--blue);color:#fff;font-size:15px;font-weight:700;letter-spacing:.08em;padding:7px 14px;display:flex;align-items:center;gap:10px}
+.term .th::before{content:"用語・知識";background:#fff;color:var(--blue);font-size:11px;font-weight:700;padding:1px 8px;letter-spacing:.1em}
+.term .tb{padding:12px 16px}
+.term dl{margin:0;display:grid;grid-template-columns:max-content 1fr;gap:10px 16px;align-items:baseline}
+.term dt{font-weight:700;color:var(--blue);font-size:16px;border-bottom:2px solid #C9DBE7;padding-bottom:2px}
+.term dd{margin:0}
+@media(max-width:600px){.term dl{grid-template-columns:1fr;gap:2px}.term dd{margin-bottom:10px}}
+.term .ex{margin-top:10px;padding-top:10px;border-top:1px dashed #C9DBE7;font-size:14px}
+.term .formula{background:#fff}
+.formula{font-family:var(--mono);background:#FBFBFB;border:1px solid var(--rule);padding:8px 12px;display:inline-block;margin:4px 0}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:760px){.grid4{grid-template-columns:1fr 1fr}.grid2{grid-template-columns:1fr}}
+.scale-card{border:1px solid var(--rule);padding:12px;background:#FBFBFB}
+.scale-card .tag{font-size:11px;letter-spacing:.12em;color:var(--ink-soft)}
+.scale-card h4{margin:2px 0 6px;font-family:var(--mincho);font-size:19px}
+.scale-card ul{margin:6px 0 0;padding-left:1.1em;font-size:13px}
+.qual{color:var(--orange)} .quan{color:var(--blue)}
+
+/* ボタン類 */
+button.btn{font-family:var(--gothic);font-size:14px;padding:8px 14px;background:#fff;color:var(--ink);border:1px solid var(--ink);cursor:pointer;letter-spacing:.04em}
+button.btn:hover{background:var(--ink);color:#fff}
+button.btn.primary{background:var(--ink);color:#fff}
+button.btn.primary:hover{background:#0E2236}
+button.btn:disabled{opacity:.4;cursor:default;background:#fff;color:var(--ink)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+select,input[type=number]{padding:7px 10px;font-family:var(--gothic);font-size:14px;color:var(--ink);background:#fff;border:1px solid var(--rule)}
+input[type=number]{width:100px;font-family:var(--mono)}
+input[type=range]{width:100%}
+:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.seg{display:inline-flex;border:1px solid var(--ink)}
+.seg button{border:0;border-right:1px solid var(--ink);background:#fff;padding:6px 12px;font-family:var(--gothic);font-size:13px;cursor:pointer;color:var(--ink)}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--ink);color:#fff}
+
+/* 表 */
+.tbl-wrap{overflow:auto;max-height:420px;border:1px solid var(--rule);scrollbar-gutter:stable}
+.tbl-wrap table{width:max-content;min-width:100%}
+.tbl-wrap td:last-child,.tbl-wrap th:last-child{padding-right:14px}
+.excerpt{display:block;width:fit-content;max-width:100%;margin:12px auto 0}
+.excerpt + .legend{text-align:center}
+.excerpt table{min-width:0}
+.excerpt td.gap{text-align:center;color:var(--ink-soft);background:#FAFAFA;letter-spacing:.3em}
+.excerpt td.focus{outline:2px solid var(--orange);outline-offset:-2px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--rule);padding:5px 8px;text-align:right;white-space:nowrap}
+th{background:#F7F8F8;font-weight:400;color:var(--ink-soft);font-size:12px;position:sticky;top:0}
+td.l,th.l{text-align:left}
+td{font-family:var(--mono)}
+td.miss{background:#FBEFD9;color:var(--orange)}
+td.err{background:#F8E1DE;color:var(--ng);font-weight:700}
+td.fest{background:#E6EEF4;color:var(--blue);font-weight:700}
+table.stat td{font-size:14px}
+table.stat th{position:static}
+.chg{color:var(--accent)}
+
+/* 尺度分類 */
+.classify{display:grid;gap:8px}
+.cl-row{display:grid;grid-template-columns:minmax(220px,1.1fr) minmax(280px,1fr) 28px;gap:14px;align-items:center;border:1px solid var(--rule);padding:10px 14px;background:#FCFCFC}
+.cl-row .seg{display:grid;grid-template-columns:repeat(4,1fr);width:100%}
+.cl-row .seg button{padding:8px 4px;font-size:14px}
+.cl-row.checked{background:#fff}
+.cl-row .name{font-weight:700}
+.cl-row .name small{display:block;font-weight:400;color:var(--ink-soft);font-size:12px;line-height:1.5}
+.cl-row .name .ex{font-family:var(--mono);font-size:11px;color:var(--ink-soft)}
+.cl-row .mark{font-weight:700;font-size:18px}
+.cl-row .why{grid-column:1/-1;font-size:13px;color:var(--ink-soft);display:none;border-top:1px dotted var(--rule);padding-top:6px}
+.cl-row.checked .why{display:block}
+@media(max-width:600px){.cl-row{grid-template-columns:1fr 24px}.cl-row .seg{grid-column:1/-1;order:3}}
+
+/* クイズ */
+.quiz{border:1px solid var(--rule);padding:14px 16px;margin:12px 0;background:#FCFCFC}
+.quiz .q{font-weight:700;margin-bottom:8px}
+.quiz .q .qn{font-family:var(--mono);color:var(--accent);margin-right:6px}
+.quiz .opts{display:grid;gap:6px}
+.quiz .opt{text-align:left;border:1px solid var(--rule);background:#fff;padding:8px 12px;font-family:var(--gothic);font-size:14px;cursor:pointer;color:var(--ink)}
+.quiz .opt:hover{border-color:var(--ink)}
+.quiz .opt.right{border-color:var(--ok);background:#E7F3EB}
+.quiz .opt.wrong{border-color:var(--ng);background:#F8E5E2;text-decoration:line-through}
+.quiz .fb{margin-top:10px;padding:8px 12px;font-size:14px;display:none}
+.quiz .fb.show{display:block}
+.quiz .fb.ok{background:#E7F3EB;border-left:3px solid var(--ok)}
+.quiz .fb.ng{background:#F8E5E2;border-left:3px solid var(--ng)}
+.quiz.solved{border-color:var(--ok)}
+
+/* 数値パネル */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-top:10px}
+.stat{border:1px solid var(--rule);padding:8px 10px;background:#FBFBFB}
+.stat span{display:block;font-size:11px;color:var(--ink-soft);letter-spacing:.06em}
+.stat b{font-family:var(--mono);font-size:20px;font-weight:400}
+.stat.hl{border-color:var(--accent)}
+.stat.hl b{color:var(--accent)}
+
+svg{display:block;width:100%;height:auto}
+.axis{stroke:#93A0A8;stroke-width:1}
+.gl{stroke:var(--grid);stroke-width:1}
+.tk{font-family:var(--mono);font-size:11px;fill:var(--ink-soft)}
+.an{font-family:var(--gothic);font-size:13px;fill:var(--ink)}
+.lb{font-family:var(--gothic);font-size:12px;fill:var(--ink)}
+.legend{font-size:12px;color:var(--ink-soft);margin-top:4px}
+.legend i{display:inline-block;width:12px;height:10px;vertical-align:middle;margin:0 4px 0 10px}
+
+/* 相関の5段階 */
+.rgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+@media(max-width:760px){.rgrid{grid-template-columns:repeat(2,1fr)}}
+.rcell{border:1px solid var(--rule);border-top:4px solid var(--c);background:#fff;padding:8px;text-align:center}
+.rcell svg{border:1px solid var(--grid)}
+.rcell b{display:block;color:var(--c);font-size:14px;margin-top:4px}
+.rcell span{display:block;font-family:var(--mono);font-size:12px}
+.rcell small{display:block;font-size:12px;color:var(--ink-soft);line-height:1.5;margin-top:2px}
+
+/* 手計算 */
+.calc td input{width:72px;padding:4px 6px;font-size:13px}
+.calc td.okc input{border-color:var(--ok);background:#E7F3EB}
+.calc td.ngc input{border-color:var(--ng);background:#F8E5E2}
+.msg{font-size:14px;margin-top:8px;min-height:1.6em}
+.msg.ok{color:var(--ok)} .msg.ng{color:var(--ng)}
+
+/* 当てっこ */
+.guess-score{font-family:var(--mono);font-size:13px;color:var(--ink-soft)}
+.rbig{font-family:var(--mono);font-size:30px}
+
+.pager{display:flex;justify-content:space-between;margin-top:18px}
+.done-badge{display:none;background:#E7F3EB;border:1px solid var(--ok);color:var(--ok);padding:8px 14px;font-size:14px;margin-top:6px}
+.done-badge.show{display:block}
+.warn{color:var(--ng);font-size:13px}
+.hidden{display:none!important}
+.summary li{margin:6px 0}
+#gsvg,#esvg,#xsct{max-width:560px;margin-left:auto;margin-right:auto}
+#tip{position:fixed;pointer-events:none;background:var(--ink);color:#fff;font-family:var(--mono);font-size:12px;padding:5px 8px;opacity:0;transition:opacity .12s;z-index:9;white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ================= ポップ版 ================= */
+:root{
+  --paper:#FFF7E8; --panel:#FFFFFF; --ink:#263046; --ink-soft:#7A6F66; --rule:#EADFCF; --grid:#F3EADB;
+  --accent:#FF5A5F; --blue:#2E86DE; --blue-l:#4DA3F0; --band:#FFE9A8; --orange:#FF9F1C; --green:#2EC4B6;
+  --ok:#22A866; --ng:#F0474D; --dark:#2B2B2B; --yellow:#FFD23F; --mint:#2EC4B6;
+  --mincho:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Kosugi Maru","Yu Gothic",sans-serif;
+  --gothic:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Kosugi Maru","Yu Gothic",sans-serif;
+}
+body{background:#FFF7E8 radial-gradient(#F1DFBF 1.3px, transparent 1.5px) 0 0/20px 20px;font-weight:500}
+/* カフェの日よけ（ストライプ＋波形のふち）と、コーヒー色の看板 */
+header{position:relative;background:#5C3D2E;border-bottom:4px solid var(--dark);padding:52px 26px 18px}
+header::before{content:"";position:absolute;left:0;right:0;top:0;height:26px;
+  background:repeating-linear-gradient(90deg,#E8574C 0 36px,#FFF4E0 36px 72px);border-bottom:2.5px solid var(--dark)}
+header::after{content:"";position:absolute;left:0;right:0;top:28px;height:14px;
+  background:radial-gradient(circle at 18px 0,#E8574C 13px,transparent 13.5px) 0 0/72px 14px repeat-x,
+             radial-gradient(circle at 54px 0,#FFF4E0 13px,transparent 13.5px) 0 0/72px 14px repeat-x;
+  filter:drop-shadow(0 2px 0 rgba(0,0,0,.35))}
+h1{font-weight:900;font-size:28px;letter-spacing:.04em;color:#FFF4E0;text-shadow:3px 3px 0 #2B1A12}
+header p{color:#F2D7B6;font-weight:700}
+.logo{width:44px;height:44px;flex:none;align-self:center}
+.progress{color:#F2D7B6;font-weight:700}
+.progress .bar{width:160px;height:14px;background:rgba(255,255,255,.45);border:2.5px solid var(--dark);border-radius:99px;overflow:hidden}
+.progress .bar i{background:var(--yellow)}
+
+.lesson-head .kicker{display:inline-block;background:var(--dark);color:var(--yellow);border-radius:99px;padding:1px 12px;font-weight:700}
+.lesson-head h2{font-size:32px;font-weight:900;margin-top:6px}
+
+.card{border:3px solid var(--dark);border-radius:20px;box-shadow:5px 5px 0 var(--dark);overflow:hidden}
+.card h3{margin:-20px -22px 16px;background:var(--yellow);border-bottom:3px solid var(--dark);color:var(--dark);font-weight:900;font-size:19px}
+.card h3::before{width:16px;height:16px;border-radius:50%;background:var(--accent);border:2.5px solid var(--dark)}
+
+.nav{border:3px solid var(--dark);border-radius:18px;overflow:hidden;box-shadow:4px 4px 0 var(--dark)}
+.nav button{border-bottom:2px dashed var(--rule);font-weight:700}
+.nav button:hover{background:#FFF4D6}
+.nav button.cur{background:var(--blue);color:#fff}
+.nav .no{border-radius:50%;border:2.5px solid currentColor;width:26px;height:26px;font-weight:700}
+.nav .done .no{background:var(--ok);border-color:var(--dark)}
+
+.savebox{border:3px solid var(--dark);border-radius:18px;box-shadow:4px 4px 0 var(--dark);background:#fff}
+.savebox h4{font-size:15px;font-weight:900}
+.savebox select,.savebox input[type=text]{border:2px solid var(--dark);border-radius:10px}
+
+button.btn{border:2.5px solid var(--dark);border-radius:99px;box-shadow:3px 3px 0 var(--dark);font-weight:700;transition:transform .08s,box-shadow .08s}
+button.btn:hover{background:#FFF1C9;color:var(--dark)}
+button.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--dark)}
+button.btn.primary{background:var(--accent);color:#fff}
+button.btn.primary:hover{background:#FF7478;color:#fff}
+button.btn:disabled{box-shadow:none}
+select,input[type=number]{border:2px solid var(--dark);border-radius:10px}
+
+.seg{border:2.5px solid var(--dark);border-radius:99px;overflow:hidden}
+.seg button{border-right:2px solid var(--dark);font-weight:700}
+.seg button:hover{background:#FFF1C9}
+.seg button.on{background:var(--blue);color:#fff}
+
+/* キャラクター */
+.talk{gap:14px;align-items:flex-start}
+.talk .who{width:74px;height:auto;border-radius:0;background:none!important;display:flex;flex-direction:column;align-items:center;color:var(--dark)}
+.talk .who svg{width:70px;height:70px;border:3px solid var(--dark);border-radius:50%;background:#fff}
+.talk .who .nm{font-size:12px;font-weight:900;background:var(--dark);color:#fff;border-radius:99px;padding:0 10px;margin-top:-10px;position:relative}
+.talk .who.h .nm{background:var(--blue)}
+.talk .who.t .nm{background:var(--orange)}
+.talk .say{background:#FFF1DE;border:2.5px solid var(--dark);border-radius:18px;padding:12px 18px;margin-top:8px;font-size:15.5px}
+.talk .say::before{border-color:var(--dark)!important;border-width:0 0 2.5px 2.5px;border-style:solid;top:22px;left:-8px;width:13px;height:13px}
+.talk .who.h + .say{background:#E3F2FF;border-color:var(--dark)}
+
+/* 用語・知識 */
+.term{border:3px solid var(--dark);border-radius:18px;overflow:hidden;background:#EFFBF8;box-shadow:4px 4px 0 var(--dark)}
+.term .th{background:var(--mint);color:var(--dark);border-bottom:3px solid var(--dark);font-weight:900;font-size:17px}
+.term .th::before{content:"用語・知識";background:#fff;color:var(--dark);border:2px solid var(--dark);border-radius:99px;padding:0 10px}
+.term dt{color:#14857A;border-bottom:3px dotted var(--mint)}
+.term .ex{border-top:2px dashed #9ADDD5}
+.term .formula{border:2px solid var(--dark);border-radius:8px}
+.scale-card{border:2.5px solid var(--dark);border-radius:14px;background:#fff}
+.scale-card h4{font-weight:900}
+
+.cl-row{border:2.5px solid var(--dark);border-radius:16px;background:#fff}
+.cl-row .seg{border-radius:12px}
+
+.quiz{border:2.5px solid var(--dark);border-radius:18px;background:#FFFDF6}
+.quiz .q .qn{display:inline-block;background:var(--accent);color:#fff;border-radius:99px;padding:0 9px;margin-right:8px}
+.quiz .opt{border:2px solid var(--dark);border-radius:12px;font-weight:500}
+.quiz .opt:hover{background:#FFF1C9;border-color:var(--dark)}
+.quiz .opt.right{background:#D4F5E3;border-color:var(--ok)}
+.quiz .opt.wrong{background:#FFE0E1;border-color:var(--ng)}
+.quiz .fb{border-radius:12px}
+.quiz.solved{border-color:var(--ok);box-shadow:0 0 0 4px #C6F0D8}
+
+.stat{border:2px solid var(--dark);border-radius:14px;background:#fff}
+.stat.hl{background:#FFE0E1;border-color:var(--dark)}
+.tbl-wrap{border:2.5px solid var(--dark);border-radius:14px}
+th{background:var(--band);color:var(--dark);font-weight:700}
+.done-badge{border:2.5px solid var(--dark);border-radius:16px;background:#D4F5E3;color:#17804C;font-weight:900;box-shadow:3px 3px 0 var(--dark)}
+.rcell{border:2px solid var(--dark);border-top:7px solid var(--c);border-radius:14px}
+.rcell svg{border-radius:8px}
+.calc td input{border:2px solid var(--dark);border-radius:8px}
+#zval,#px{border-radius:10px}
+
+/* ================= 用語・注意・対処の区別 ================= */
+.term dt.t-warn,.term dt.t-how{justify-self:start;color:#fff;border:0;border-radius:4px;padding:2px 12px;font-size:14px;letter-spacing:.12em}
+.term dt.t-warn{background:#C0392B}
+.term dt.t-how{background:#2F7A4A}
+.term dt.t-warn::before{content:"！";margin-right:2px}
+.term dt.t-how::before{content:"→";margin-right:4px}
+.term dd.t-warn{background:#FCECEA;border-left:4px solid #C0392B;padding:6px 12px}
+.term dd.t-how{background:#E8F4EC;border-left:4px solid #2F7A4A;padding:6px 12px}
+.qhint{font-size:12px;color:var(--ink-soft);margin-top:8px}
+
+/* ================= 授業モード ================= */
+.pres-btn{margin-left:16px;font-family:var(--gothic);font-size:14px;font-weight:700;padding:7px 16px;border:2px solid #fff;background:transparent;color:#fff;cursor:pointer;border-radius:6px;letter-spacing:.06em}
+.pres-btn:hover{background:#fff;color:var(--ink)}
+body.present{overflow:hidden}
+body.present header,body.present .side,body.present .pager,body.present .done-badge{display:none!important}
+body.present .app{display:block;max-width:none;padding:0;margin:0}
+body.present #main{position:fixed;left:0;right:0;top:0;bottom:64px;overflow-y:auto;padding:4vh 4vw 8vh;background:var(--paper);scroll-behavior:smooth}
+body.present #main > *{zoom:var(--pz,1.35);max-width:1080px;margin-left:auto;margin-right:auto}
+body.present #main > .pv-off{display:none!important}
+body.present #main > .pv-on{animation:pvSlide .5s ease both}
+body.present .lesson-head.pv-on{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-height:calc(78vh / var(--pz,1.35))}
+body.present .lesson-head.pv-on .kicker{font-size:20px;letter-spacing:.2em}
+body.present .lesson-head.pv-on h2{font-size:64px;margin-top:10px}
+body.present .lesson-head.pv-on::after{content:"→ キーまたは「進む」で始めます";display:block;margin-top:28px;font-size:15px;color:var(--ink-soft)}
+.pv-h{visibility:hidden!important;opacity:0}
+.pv-in{animation:pvIn .5s ease both}
+@keyframes pvIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+@keyframes pvSlide{from{opacity:0;transform:translateX(48px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.pv-in,body.present #main > .pv-on{animation:none}}
+.pv-bar{display:none}
+body.present .pv-bar{display:flex;position:fixed;left:0;right:0;bottom:0;height:64px;align-items:center;gap:10px;padding:0 18px;background:var(--ink);color:#fff;z-index:50}
+.pv-bar button,.pv-bar select{font-family:var(--gothic);font-size:15px;font-weight:700;padding:6px 14px;background:transparent;color:#fff;border:2px solid rgba(255,255,255,.85);border-radius:6px;cursor:pointer}
+.pv-bar select option{color:#222}
+.pv-bar button:hover{background:#fff;color:var(--ink)}
+.pv-bar #pvNext{background:#fff;color:var(--ink)}
+.pv-bar .pv-info{flex:1;text-align:center;font-size:15px;font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pv-bar .sep{width:1px;height:30px;background:rgba(255,255,255,.35)}
+
+/* ポップ版の調整 */
+.term dt.t-warn,.term dt.t-how{border:2px solid var(--dark);border-radius:99px}
+.term dt.t-warn{background:var(--ng)}
+.term dt.t-how{background:var(--ok)}
+.term dd.t-warn{background:#FFE8E9;border-left-color:var(--ng);border-radius:0 10px 10px 0}
+.term dd.t-how{background:#DFF6EA;border-left-color:var(--ok);border-radius:0 10px 10px 0}
+.pres-btn{border-radius:99px;border:2.5px solid #FFF4E0;color:#FFF4E0;box-shadow:3px 3px 0 #2B1A12}
+.pres-btn:hover{background:#FFF4E0;color:#5C3D2E}
+body.present .pv-bar{background:#5C3D2E;border-top:4px solid var(--dark)}
+.pv-bar button,.pv-bar select{border-radius:99px}
+.pv-bar #pvNext{background:var(--yellow);color:var(--dark);border-color:var(--dark)}
+body.present #main{background:#FFF7E8 radial-gradient(#F1DFBF 1.3px, transparent 1.5px) 0 0/20px 20px}
+
+/* 図：四分位数 */
+.qfig{max-width:760px;margin:6px auto 4px;display:block;background:#fff;border:2px solid var(--dark);border-radius:14px}
+.qf-cap{text-align:center;font-weight:700;margin:4px 0}
+.qf-step{font-size:15px;font-weight:900;fill:#2B2B2B}
+.qf-num{font-size:11px;font-weight:900;fill:#fff;font-family:var(--mono)}
+.qf-lab{font-size:14px;font-weight:700}
+.qf-sm{font-size:12.5px;font-weight:700}
+.qf-val{font-size:15px;font-weight:900;font-family:var(--mono)}
+/* やってみよう：正解・不正解をはっきり */
+.card .msg.ok,.card .msg.ng{display:inline-block;padding:8px 16px;border-radius:12px;border:2.5px solid;font-weight:700;margin-top:10px}
+.card .msg.ok{background:#D4F5E3;border-color:var(--ok);color:#13643D}
+.card .msg.ng{background:#FFE0E1;border-color:var(--ng);color:#B0262C}
+.card .msg.ok::before{content:"⭕ "}
+.card .msg.ng::before{content:"✕ "}
+.badge-ok,.badge-ng{display:inline-block;font-size:12px;font-weight:900;color:#fff;border:2px solid var(--dark);border-radius:99px;padding:0 8px;white-space:nowrap}
+.badge-ok{background:var(--ok)}
+.badge-ng{background:var(--ng)}
+.cl-row{grid-template-columns:minmax(220px,1.1fr) minmax(280px,1fr) 64px}
+.cl-row.ok{background:#E9F9F0;border-color:var(--ok);box-shadow:0 0 0 3px #C6F0D8}
+.cl-row.ng{background:#FFF0F0;border-color:var(--ng);box-shadow:0 0 0 3px #FFD3D5}
+.cl-row.ok .seg button.on{background:var(--ok)}
+.cl-row.ng .seg button.on{background:var(--ng)}
+.cl-row.ng .why{color:#B0262C;font-weight:700}
+.seg button.on.good{background:var(--ok)}
+.seg button.on.bad{background:var(--ng)}
+.calc td.okc input{border:2.5px solid var(--ok);background:#D4F5E3;color:#13643D;font-weight:700}
+.calc td.ngc input{border:2.5px solid var(--ng);background:#FFE0E1;color:#B0262C;font-weight:700}
+
+/* ================= さがす・ならべる：アニメーション部品 ================= */
+:root{--sp:1}
+.b1,.b2{font-family:var(--gothic);font-size:14px;padding:6px 14px;border:2.5px solid var(--dark);border-radius:99px;box-shadow:3px 3px 0 var(--dark);font-weight:700;cursor:pointer;color:var(--dark);background:#fff;transition:transform .08s,box-shadow .08s}
+.b1{background:var(--accent);color:#fff}
+.b2:hover:not(:disabled){background:#FFF1C9}
+.b1:active,.b2:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--dark)}
+.b1:disabled,.b2:disabled{opacity:.35;cursor:default;box-shadow:none}
+.b2.on{background:var(--blue);color:#fff}
+.btns{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+.note{font-size:13px;color:var(--ink-soft)}
+.pl{background:#fff;border:2.5px solid var(--dark);border-radius:16px;padding:14px 16px 10px;margin:10px 0}
+.vwrap{position:relative}
+.viz{position:relative;margin:0 auto;cursor:pointer}
+.it{position:absolute;left:0;top:0;border:2.5px solid #C9BBA6;background:#fff;border-radius:10px;display:grid;place-items:center;font-weight:900;font-size:18px;font-family:var(--mono);transition:transform calc(var(--sp)*.45s) ease,background .2s,border-color .2s,opacity .25s,color .2s;z-index:2}
+.it.cmp{border-color:#E0A21B;background:#FFF1C9;box-shadow:0 0 0 3px rgba(224,162,27,.3);z-index:3}
+.it.found{background:#22A866;border-color:var(--dark);color:#fff}
+.it.seen{opacity:.45}.it.out{opacity:.2}
+.it.done{border-color:#14857A;background:#DDF4EF;color:#14857A}
+.it.min{border-color:#F0474D;box-shadow:0 0 0 3px rgba(240,71,77,.25)}
+.it.pivot{background:#8A5CC2;border-color:var(--dark);color:#fff}
+.it.grp{border-color:#A9A0C8}
+.it.gA{border-color:#2E86DE;background:#E1EEFB}.it.gB{border-color:#E07B1C;background:#FFE9D2}
+.it.gA.cmp,.it.gB.cmp{border-color:#E0A21B;background:#FFF1C9}
+.it.mg{border-color:#14857A;background:#DDF4EF}
+.it.r0{background:#E1EEFB;border-color:#2E86DE}.it.r1{background:#FFE9D2;border-color:#E07B1C}.it.r2{background:#E3F5DF;border-color:#4A9A3A}.it.r3{background:#F0E6FA;border-color:#8A5CC2}
+.it.elo{border-color:#2E86DE;border-width:3.5px}.it.ehi{border-color:#E07B1C;border-width:3.5px}
+.it.hold{border-color:#8A5CC2;background:#F0E6FA;box-shadow:0 4px 10px rgba(138,92,194,.3)}
+.dec{position:absolute;text-align:center;font-size:13px;font-weight:700;color:var(--ink-soft);border-top:3px solid #C9BBA6;z-index:1}
+.dec.bin{background:linear-gradient(#FFF7E8,rgba(255,247,232,0));border-radius:0 0 10px 10px}
+.dec.bin.hot{border-top-color:#E0A21B;background:linear-gradient(#FFF1C9,rgba(255,241,201,0));color:#9A6A0C}
+.bdl{position:absolute;inset:0;z-index:1;pointer-events:none}
+.bd{position:absolute;border-radius:12px;border:2px dashed #B3A995;background:rgba(120,100,70,.04);transition:left calc(var(--sp)*.4s),top calc(var(--sp)*.4s),width calc(var(--sp)*.4s);color:#8A8070}
+.bd i{position:absolute;left:4px;bottom:100%;font-style:normal;font-size:12.5px;font-weight:900;white-space:nowrap;line-height:1.5}
+.bd i.bot{top:100%;bottom:auto}
+.bd.A{border:2.5px solid #2E86DE;background:rgba(46,134,222,.08);color:#2E86DE}
+.bd.B{border:2.5px solid #E07B1C;background:rgba(224,123,28,.08);color:#E07B1C}
+.bd.ok{border:2.5px solid #14857A;background:rgba(20,133,122,.1);color:#14857A}
+.bd.rng{border:2.5px solid #E0A21B;background:rgba(224,162,27,.1);color:#9A6A0C}
+.bd.seg{border:2px dashed #8A5CC2;background:rgba(138,92,194,.05);color:#8A5CC2}
+.bd.pair{border:2.5px solid #E0A21B;background:rgba(224,162,27,.15);color:#9A6A0C}
+.bd.r0{border:2.5px solid #2E86DE;color:#2E86DE}.bd.r1{border:2.5px solid #E07B1C;color:#E07B1C}.bd.r2{border:2.5px solid #4A9A3A;color:#4A9A3A}.bd.r3{border:2.5px solid #8A5CC2;color:#8A5CC2}
+.mkl{position:absolute;inset:0;pointer-events:none;z-index:4}
+.mk{position:absolute;transform:translateX(-50%);font-size:12px;font-weight:900;color:var(--ink-soft);white-space:nowrap;background:#FFF7E8;border-radius:6px;padding:0 6px;line-height:1.6;transition:left calc(var(--sp)*.3s)}
+.mk.hot{color:var(--dark);background:#FFD23F}
+.mk.mn{color:#fff;background:#F0474D}
+.mk.rn{color:var(--ink);background:none}
+.mk.lo{background:#2E86DE;color:#fff;font-size:14px;padding:1px 9px}
+.mk.hi{background:#E07B1C;color:#fff;font-size:14px;padding:1px 9px}
+.mk.chg{animation:pop calc(var(--sp)*.9s)}
+@keyframes pop{0%{transform:translateX(-50%) scale(1)}30%{transform:translateX(-50%) scale(1.35);box-shadow:0 0 0 6px rgba(255,210,63,.6)}100%{transform:translateX(-50%) scale(1)}}
+.rgx{display:inline-block;background:#fff;border:2px solid var(--dark);border-radius:10px;padding:0 10px;margin-bottom:2px;font-size:15px}
+.rgx b.lo{color:#2E86DE;font-size:18px}.rgx b.hi{color:#E07B1C;font-size:18px}
+.rgx.chg{animation:flash calc(var(--sp)*1s)}
+@keyframes flash{0%,60%{background:#FFF1C9}100%{background:#fff}}
+.pmsg{min-height:56px;margin-top:6px;background:#FFF7E8;border-radius:12px;padding:7px 12px;font-size:15.5px}
+.pctl{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.pctl .tip{font-size:12px;color:var(--ink-soft)}
+.pctl .cnt{margin-left:auto;font-size:14px;color:var(--ink-soft)}
+.pctl .cnt b{font-size:22px;color:var(--accent);font-family:var(--mono)}
+.pz{position:absolute;right:0;top:-14px;background:rgba(43,43,43,.88);color:#fff;border-radius:99px;padding:4px 14px;font-size:14px;font-weight:700;pointer-events:none;opacity:0;transition:opacity .2s;z-index:6;white-space:nowrap}
+.pz.on{opacity:1}
+.lg{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-soft);margin-top:4px}
+.lg span{display:flex;align-items:center;gap:5px}
+.lg i{width:16px;height:16px;border-radius:5px;border:2px solid #C9BBA6;background:#fff;display:inline-block}
+.okc{color:var(--ok)}.ngc{color:var(--ng)}
+/* 予約票 */
+.target{display:inline-block;background:#FFD23F;color:var(--accent);border:3px solid var(--dark);border-radius:12px;box-shadow:3px 3px 0 var(--dark);padding:0 14px;font-weight:900;font-family:var(--mono);font-size:28px;line-height:1.3;margin:0 4px}
+.flip{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;margin:12px 0}
+@media(max-width:760px){.flip{grid-template-columns:repeat(4,1fr)}}
+.flip button{aspect-ratio:3/4;border:2.5px solid var(--dark);border-radius:12px;background:repeating-linear-gradient(45deg,#F7C873 0 6px,#FBE3B0 6px 12px);font-size:20px;font-weight:900;cursor:pointer;color:transparent;font-family:var(--mono);transition:transform .15s}
+.flip button:hover{transform:translateY(-3px)}
+.flip button.op{background:#fff;color:var(--ink)}
+.flip button.hit{background:var(--ok);color:#fff}
+.flip button small{display:block;font-size:11px;font-family:var(--gothic)}
+/* 数当て */
+.guess{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.guess input{width:110px;font-family:var(--mono);font-size:20px;padding:4px 10px;border:2.5px solid var(--dark);border-radius:10px;text-align:center}
+.guess .big{font-size:22px;color:var(--accent);font-family:var(--mono)}
+.hlog{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;max-height:96px;overflow:auto}
+.hlog span{background:#FFF7E8;border:1.5px solid var(--rule);border-radius:8px;padding:1px 10px;font-size:14px;font-family:var(--mono)}
+.hlog span.ok{background:var(--ok);color:#fff}
+.range{height:28px;background:#FFF7E8;border:2px solid var(--dark);border-radius:10px;position:relative;margin-top:10px;overflow:hidden}
+.range i{position:absolute;top:0;bottom:0;background:#DDF4EF;border-left:3px solid #14857A;border-right:3px solid #14857A;transition:left .3s,width .3s}
+.range b{position:absolute;inset:0;display:grid;place-items:center;font-size:13px;color:#14857A}
+/* マージ */
+.mpile{display:flex;gap:6px;align-items:center;min-height:54px}
+.mpile .lb{width:90px;font-size:14px;font-weight:700;color:var(--ink-soft);flex:none}
+.mpile .c{width:50px;height:46px;border:2.5px solid var(--dark);border-radius:10px;display:grid;place-items:center;font-weight:900;font-size:18px;background:#fff;font-family:var(--mono)}
+.mpile .c.head{cursor:pointer;box-shadow:0 0 0 4px #FFD23F}
+.mpile .c.head:hover{background:#FFF1C9}
+.mpile .c.o{background:#DDF4EF;border-color:#14857A}
+.mpile.A .c:not(.o){background:#E1EEFB}.mpile.B .c:not(.o){background:#FFE9D2}
+.shake{animation:sh .35s}
+@keyframes sh{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+/* くらべる */
+.race{display:grid;gap:8px;margin-top:10px}
+.race .r{display:grid;grid-template-columns:220px 1fr;gap:10px;align-items:center;font-size:14.5px;font-weight:700}
+.race .bar{height:30px;background:#FFF7E8;border:2px solid var(--dark);border-radius:10px;position:relative;overflow:hidden}
+.race .bar i{position:absolute;left:0;top:0;bottom:0;transition:width .6s}
+.race .bar b{position:absolute;left:8px;top:0;line-height:27px;font-size:14px;font-family:var(--mono)}
+@media(max-width:760px){.race .r{grid-template-columns:1fr}}
+/* コップ */
+.cups{display:flex;gap:36px;justify-content:center;margin:14px 0 8px}
+.cup{display:flex;flex-direction:column;align-items:center;gap:4px}
+.glass{width:92px;height:118px;border:3px solid var(--dark);border-top:0;border-radius:0 0 18px 18px;position:relative;background:#fff;overflow:hidden}
+.glass .liq{position:absolute;left:0;right:0;bottom:0;transition:height .5s,background .3s}
+.glass span{position:absolute;inset:0;display:grid;place-items:center;font-weight:900;font-size:16px;text-shadow:0 0 4px #fff}
+/* プログラム */
+.code,.code2{font-family:var(--mono);font-variant-ligatures:none;font-feature-settings:"liga" 0,"calt" 0}
+.code{background:#2B2B2B;color:#FFF4E0;border-radius:12px;padding:10px 0;font-size:19px;margin:8px 0;line-height:1.8}
+.code div{padding:1px 16px;border-left:5px solid transparent}
+.code .did{color:#BFE3E1}
+.code .cur{background:rgba(255,210,63,.2);border-left-color:#FFD23F;color:#fff}
+.code2{background:#2B2B2B;color:#FFF4E0;border-radius:12px;padding:10px 16px;font-size:16px;margin:4px 0;line-height:1.7;white-space:pre}
+.cap{font-size:12px;color:var(--ink-soft);font-weight:700}
+.vars{display:flex;gap:14px;margin:6px 0 10px}
+.var{display:flex;flex-direction:column;align-items:center;gap:2px}
+.var span{font-family:var(--mono);font-weight:700;color:var(--ink-soft)}
+.var b{width:72px;height:60px;border:2.5px solid var(--dark);border-radius:12px;background:#fff;display:grid;place-items:center;font-size:28px;font-family:var(--mono)}
+.var.chg b{background:#FFF1C9;animation:pop2 .6s}
+@keyframes pop2{40%{transform:scale(1.15)}}
+.cells{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px}
+.cells span{min-width:40px;height:38px;border:2.5px solid var(--dark);border-radius:8px;display:grid;place-items:center;font-weight:900;font-family:var(--mono);background:#fff}
+/* プリントの空欄 */
+.pr{background:linear-gradient(transparent 52%,#FFF0A0 52%);border-bottom:2px dashed #E07B1C;padding:0 2px}
+.pr::after{content:"✎";font-size:.62em;color:#E07B1C;vertical-align:super;margin-left:2px;font-weight:900}
+.spdseg{margin-left:4px}
+.spdseg button{padding:3px 10px;font-size:12px}
+.tgtbox{display:flex;align-items:center;gap:10px;margin:0 auto 12px;width:fit-content;background:#FFD23F;border:3px solid var(--dark);border-radius:16px;box-shadow:4px 4px 0 var(--dark);padding:4px 18px 4px 14px}
+.tgtbox[hidden]{display:none}
+.tgtbox .tl{font-weight:900;font-size:16px;color:var(--dark)}
+.tgtbox b{font-family:var(--mono);font-size:34px;font-weight:900;color:var(--accent);background:#fff;border:2.5px solid var(--dark);border-radius:10px;padding:0 14px;line-height:1.3}
+.code2.qcode{display:block;width:fit-content;min-width:180px;margin:8px 0 2px;font-weight:500}
+.mono{font-family:var(--mono)}
+.pcard[hidden]{display:none}
+.pcard .grid2{grid-template-columns:1fr 1fr;gap:10px}
+.pcard .grid2>div{min-width:0}
+.pcard .code2{overflow-x:auto;font-size:14px;max-width:100%}
+@media(max-width:1100px){.pcard .grid2{grid-template-columns:1fr}}
+#ptab{flex-wrap:wrap}
+</style>
+</head>
+<body>
+<header>
+  <svg class="logo" viewBox="0 0 48 48" aria-hidden="true"><defs><clipPath id="lg"><ellipse cx="24" cy="26" rx="20" ry="16"/></clipPath></defs>
+  <ellipse cx="24" cy="26" rx="20" ry="16" fill="#F7C873"/><g clip-path="url(#lg)" stroke="#D9963A" stroke-width="2.2"><path d="M0 10 L40 50 M10 0 L50 40 M-10 20 L30 60 M20 -6 L56 30 M48 6 L8 46 M38 -4 L-2 36 M58 16 L18 56"/></g>
+  <ellipse cx="24" cy="26" rx="20" ry="16" fill="none" stroke="#2B2B2B" stroke-width="2.8"/></svg>
+  <h1>さがす・ならべるができるまで</h1>
+  <p>こむぎ堂のケーキ予約 ― レジの行列をなくすために、探し方と並べ方を考えよう</p>
+  <div class="progress"><span id="progtext">0 / 5</span><div class="bar"><i id="progbar" style="width:0"></i></div></div>
+  <button class="pres-btn" id="presBtn" title="先生が説明するための全画面表示">授業モード（全画面）</button>
+</header>
+<div class="app">
+  <div class="side">
+    <nav class="nav" id="nav"></nav>
+    <div class="savebox">
+      <h4>保存用ファイル</h4>
+      <label>クラス<select id="sv-class"><option value="">選んでください</option></select></label>
+      <label>出席番号<select id="sv-num"><option value="">選んでください</option></select></label>
+      <label>名前<input type="text" id="sv-name" placeholder="例：情報 太郎" autocomplete="off"></label>
+      <button class="btn primary" id="sv-save">保存する</button>
+      <button class="btn" id="sv-load">保存したファイルを読み込む</button>
+      <button class="btn" id="sv-img">達成状況を画像で保存</button>
+      <input type="file" id="sv-file" accept=".json,application/json" hidden>
+      <p class="msg" id="sv-msg"></p>
+      <button class="linkbtn" id="sv-reset">学習の記録をリセット</button>
+    </div>
+  </div>
+  <main id="main"></main>
+</div>
+<div id="tip"></div>
+
+<script>
+"use strict";
+/* ================= キャラクターのイラスト ================= */
+const AV = {
+  /* 店長（こむぎの父）：コック帽・口ひげ・赤いスカーフ */
+  t: `<svg viewBox="0 0 100 100" aria-hidden="true">
+    <circle cx="50" cy="50" r="50" fill="#FFE3B8"/>
+    <path d="M14 104 Q16 76 50 74 Q84 76 86 104Z" fill="#fff" stroke="#2B2B2B" stroke-width="2.5"/>
+    <circle cx="44" cy="90" r="2" fill="#2B2B2B"/><circle cx="56" cy="90" r="2" fill="#2B2B2B"/>
+    <path d="M38 73 L50 84 L62 73Z" fill="#FF5A5F" stroke="#2B2B2B" stroke-width="2.2" stroke-linejoin="round"/>
+    <ellipse cx="29" cy="55" rx="4" ry="5.5" fill="#F8D3B0" stroke="#2B2B2B" stroke-width="2.2"/>
+    <ellipse cx="71" cy="55" rx="4" ry="5.5" fill="#F8D3B0" stroke="#2B2B2B" stroke-width="2.2"/>
+    <ellipse cx="50" cy="54" rx="21" ry="21" fill="#F8D3B0" stroke="#2B2B2B" stroke-width="2.5"/>
+    <path d="M29 38 Q20 24 33 19 Q37 6 50 10 Q63 6 67 19 Q80 24 71 38 Z" fill="#fff" stroke="#2B2B2B" stroke-width="2.5" stroke-linejoin="round"/>
+    <rect x="29" y="34" width="42" height="9" rx="3" fill="#fff" stroke="#2B2B2B" stroke-width="2.5"/>
+    <path d="M38 49 q3 -2.5 6 0 M56 49 q3 -2.5 6 0" stroke="#6B4226" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+    <path d="M39 55 q2.5 -3.5 5 0 M56 55 q2.5 -3.5 5 0" stroke="#2B2B2B" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <circle cx="37" cy="61" r="3.6" fill="#FF8A93" opacity=".55"/><circle cx="63" cy="61" r="3.6" fill="#FF8A93" opacity=".55"/>
+    <path d="M50 61 q-6 -4 -13 1 q6 6 13 1 q7 5 13 -1 q-7 -5 -13 -1z" fill="#6B4226" stroke="#2B2B2B" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M45 66.5 q5 4 10 0" stroke="#2B2B2B" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+  </svg><span class="nm">店長</span>`,
+  /* こむぎ（娘）：ボブヘア・星のヘアピン・緑のエプロン */
+  h: `<svg viewBox="0 0 100 100" aria-hidden="true">
+    <circle cx="50" cy="50" r="50" fill="#CFE8FF"/>
+    <path d="M24 60 Q20 24 50 22 Q80 24 76 60 L77 72 Q71 76 67 70 L33 70 Q29 76 23 72Z" fill="#5A3B2A" stroke="#2B2B2B" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M14 104 Q16 78 50 76 Q84 78 86 104Z" fill="#fff" stroke="#2B2B2B" stroke-width="2.5"/>
+    <path d="M32 104 L35 84 Q50 80 65 84 L68 104Z" fill="#3DBE8B" stroke="#2B2B2B" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M43 76 L50 82 L57 76" fill="none" stroke="#2B2B2B" stroke-width="2.2" stroke-linejoin="round"/>
+    <ellipse cx="50" cy="53" rx="19" ry="20" fill="#FBDCC0" stroke="#2B2B2B" stroke-width="2.5"/>
+    <path d="M30 50 Q29 30 50 29 Q71 30 70 50 Q64 41 57 44 Q53 35 46 41 Q38 37 30 50Z" fill="#5A3B2A" stroke="#2B2B2B" stroke-width="2.3" stroke-linejoin="round"/>
+    <ellipse cx="42.5" cy="55" rx="3" ry="4" fill="#2B2B2B"/><circle cx="43.6" cy="53.6" r="1.2" fill="#fff"/>
+    <ellipse cx="57.5" cy="55" rx="3" ry="4" fill="#2B2B2B"/><circle cx="58.6" cy="53.6" r="1.2" fill="#fff"/>
+    <circle cx="36" cy="62" r="3.5" fill="#FF8A93" opacity=".6"/><circle cx="64" cy="62" r="3.5" fill="#FF8A93" opacity=".6"/>
+    <path d="M45 62.5 q5 6 10 0 z" fill="#F0474D" stroke="#2B2B2B" stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="M67 33 l1.6 3.4 3.7 .5 -2.7 2.6 .7 3.7 -3.3 -1.8 -3.3 1.8 .7 -3.7 -2.7 -2.6 3.7 -.5z" fill="#FFD23F" stroke="#2B2B2B" stroke-width="1.6" stroke-linejoin="round"/>
+  </svg><span class="nm">こむぎ</span>`,
+};
+/* ロゴ：メロンパン */
+const LOGO = `<svg class="logo" viewBox="0 0 48 48" aria-hidden="true"><ellipse cx="24" cy="27" rx="20" ry="15" fill="#F7C873" stroke="#2B2B2B" stroke-width="2.5"/>
+  <path d="M10 21 L34 39 M18 14 L40 31 M38 18 L14 37 M30 13 L8 30" stroke="#E3A54A" stroke-width="2"/>
+  <ellipse cx="24" cy="27" rx="20" ry="15" fill="none" stroke="#2B2B2B" stroke-width="2.5"/></svg>`;
+const f1 = (v, d = 1) => Number.isFinite(v) ? Number(v.toFixed(d)).toString() : "—";
+const sgn = v => (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(2);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
+const $ = id => document.getElementById(id);
+
+/* 用語・知識の囲み：items は [[用語, 説明], ...]、extra は下に添える文 */
+function term(title, items, extra){
+  return `<div class="term"><div class="th">${title}</div><div class="tb">
+    <dl>${items.map(([w, d]) => { const k = w === "注意" ? "t-warn" : w.startsWith("対処") ? "t-how" : "t-word";
+      return `<dt class="${k}">${w}</dt><dd class="${k}">${d}</dd>`; }).join("")}</dl>
+    ${extra ? `<div class="ex">${extra}</div>` : ""}</div></div>`;
+}
+/* ================= 進み具合 ================= */
+const KEY = "sagasu-narabe-lessons-v1";
+let STATE = { done: {}, solved: {}, ans: {} };
+try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s && s.done) STATE = s; } catch (e) {}
+STATE.ans = STATE.ans || {};
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(STATE)); } catch (e) {} }
+
+/* クイズ部品：opts は [文, 正誤]。fb は正解時の解説、ng は不正解時のひとこと */
+function quiz(id, num, q, opts, fb, ng){
+  const sel = STATE.ans[id];
+  const ok = sel !== undefined && opts[sel] && opts[sel][1];
+  return `<div class="quiz${ok ? " solved" : ""}" data-qid="${id}">
+    <div class="q"><span class="qn">Q${num}</span>${q}</div>
+    <div class="opts">${opts.map((o, i) => `<button class="opt${i === sel ? (o[1] ? " right" : " wrong") : ""}" data-i="${i}" data-ok="${o[1] ? 1 : 0}">${o[0]}</button>`).join("")}</div>
+    <div class="fb ok${ok ? " show" : ""}">⭕ 正解。${fb}</div>
+    <div class="fb ng${sel !== undefined && !ok ? " show" : ""}">${ng || "もう一度考えてみよう。"}</div>
+  </div>`;
+}
+/* 選択肢を押すたびに答えを変更できる（最後に選んだ答えで正誤を判定） */
+document.addEventListener("click", e => {
+  const b = e.target.closest(".quiz .opt"); if (!b) return;
+  const qz = b.closest(".quiz"), id = qz.dataset.qid, good = b.dataset.ok === "1";
+  qz.querySelectorAll(".opt").forEach(x => x.classList.remove("right", "wrong"));
+  b.classList.add(good ? "right" : "wrong");
+  qz.classList.toggle("solved", good);
+  qz.querySelector(".fb.ok").classList.toggle("show", good);
+  qz.querySelector(".fb.ng").classList.toggle("show", !good);
+  STATE.ans[id] = Number(b.dataset.i);
+  STATE.solved[id] = good; save(); checkDone();
+});
+/* ================= 小さな道具 ================= */
+const Q=(r,s)=>r.querySelector(s), QA=(r,s)=>[...r.querySelectorAll(s)];
+let SPEED=1;
+const rnd=n=>Math.floor(Math.random()*n);
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]];}return a;};
+const pick=(lo,hi,n)=>{const s=new Set();while(s.size<n)s.add(lo+rnd(hi-lo+1));return [...s];};
+const mkItems=vals=>vals.map((v,i)=>({id:'i'+i,v}));
+const fmt=x=>Math.round(x).toLocaleString('ja-JP');
+const PR=t=>`<span class="pr">${t}</span>`;   /* 授業プリントの空欄 */
+const lg=a=>`<div class="lg">${a.map(([c,t])=>`<span><i style="${c}"></i>${t}</span>`).join('')}</div>`;
+const LG={cmp:'background:#FFF1C9;border-color:#E0A21B',found:'background:#22A866;border-color:#2B2B2B',out:'opacity:.25',done:'background:#DDF4EF;border-color:#14857A',min:'border-color:#F0474D',pivot:'background:#8A5CC2;border-color:#2B2B2B',gA:'background:#E1EEFB;border-color:#2E86DE',gB:'background:#FFE9D2;border-color:#E07B1C',hold:'background:#F0E6FA;border-color:#8A5CC2',okband:'border:2.5px solid #14857A;background:rgba(20,133,122,.1)',grpband:'border:2px dashed #B3A995',pair:'border:2.5px solid #E0A21B;background:rgba(224,162,27,.15)'};
+const solve=id=>{if(!STATE.solved[id]){STATE.solved[id]=true;save();checkDone();}};
+const talk=(w,t)=>`<div class="talk"><div class="who ${w}">${AV[w]}</div><div class="say">${t}</div></div>`;
+const spd=()=>`<div class="seg spdseg">${[['ゆっくり',1.7],['ふつう',1],['はやい',.5]].map(([t,v])=>`<button data-sp="${v}" class="${v===SPEED?'on':''}">${t}</button>`).join('')}</div>`;
+document.addEventListener('click',e=>{const b=e.target.closest('.spdseg button');if(!b)return;SPEED=+b.dataset.sp;document.documentElement.style.setProperty('--sp',SPEED);QA(document,'.spdseg button').forEach(x=>x.classList.toggle('on',+x.dataset.sp===SPEED));});
+
+let PLAYERS=[];
+function rec(){
+  const st={pos:{},cls:{},mk:[],bd:[],n:{},hot:-1},fr=[];
+  return {st,fr,snap(m){fr.push({pos:JSON.parse(JSON.stringify(st.pos)),cls:{...st.cls},mk:st.mk.map(x=>({...x})),bd:st.bd.map(x=>({...x})),n:{...st.n},hot:st.hot,m});}};
+}
+function player(host,o){
+  host.classList.add('pl');
+  host.innerHTML=`<div class="tgtbox" hidden></div><div class="vwrap"><div class="viz" title="クリックで自動再生／一時停止"></div><div class="pz">⏸ 一時停止中　図をクリックすると再開</div></div><div class="pmsg"></div>
+  <div class="pctl"><button class="b2" data-a="r">⏮ 最初から</button><button class="b2" data-a="b">◀ 戻る</button><button class="b1" data-a="s">1手すすむ ▶</button><button class="b2" data-a="a">▶▶ 自動で再生</button>${o.extra||''}<span class="tip">図をクリック（タップ）でも再生／一時停止</span>${spd()}<span class="cnt"></span></div>`;
+  const viz=Q(host,'.viz'),msg=Q(host,'.pmsg'),cnt=Q(host,'.cnt'),bA=Q(host,'[data-a=a]'),pz=Q(host,'.pz');
+  const RH=o.rh||58,CHH=o.chh||46,TOP=o.top||0;
+  let items=[],frames=[],k=0,timer=null,els={},W=60,mkEls={},paused=false;
+  function layout(){
+    const w=host.clientWidth-32;
+    W=Math.max(22,Math.min(o.maxW||66,Math.floor(w/o.cols)));
+    viz.style.width=(o.cols*W)+'px';viz.style.height=(TOP+o.rows*RH)+'px';draw();
+  }
+  function build(){
+    stop();paused=false;viz.innerHTML='<div class="bdl"></div>';els={};mkEls={};
+    (o.decor||[]).forEach(d=>{const e=document.createElement('div');e.className='dec '+(d.k||'');e.innerHTML=d.t;if(d.h)e.style.height=d.h+'px';Object.assign(e.dataset,{c:d.c,r:d.r,w:d.w||1});viz.appendChild(e);});
+    items.forEach(it=>{const e=document.createElement('div');e.className='it';e.innerHTML=`<span>${it.lab??it.v}</span>`;viz.appendChild(e);els[it.id]=e;});
+    const m=document.createElement('div');m.className='mkl';viz.appendChild(m);
+    k=0;layout();
+  }
+  function draw(){
+    const f=frames[k];if(!f)return;const cw=W-6;
+    QA(viz,'.dec').forEach(d=>{d.style.left=(+d.dataset.c*W)+'px';d.style.top=(TOP+ +d.dataset.r*RH)+'px';d.style.width=(W*d.dataset.w-6)+'px';d.classList.toggle('hot',d.classList.contains('bin')&&+d.dataset.c===f.hot);});
+    for(const id in els){const e=els[id],p=f.pos[id];
+      if(!p){e.style.display='none';continue;}e.style.display='';
+      e.style.width=cw+'px';e.style.height=CHH+'px';e.style.fontSize=(W<30?12:W<44?14:(o.fs||18))+'px';
+      e.style.transform=`translate(${p.c*W}px,${TOP+p.r*RH}px)`;e.className='it '+(f.cls[id]||'');}
+    // まとまり（帯）
+    const bl=Q(viz,'.bdl'),bds=f.bd||[];
+    while(bl.children.length<bds.length)bl.appendChild(document.createElement('div'));
+    [...bl.children].forEach((e,i)=>{const b=bds[i];if(!b){e.style.display='none';return;}e.style.display='';
+      e.className='bd '+(b.k||'');e.style.left=(b.c1*W-4)+'px';e.style.top=(TOP+b.r*RH-5)+'px';e.style.width=((b.c2-b.c1+1)*W+2)+'px';e.style.height=(CHH+10)+'px';
+      const lab=b.t?`<i class="${b.tp||''}">${b.t}</i>`:'';if(e.innerHTML!==lab)e.innerHTML=lab;});
+    // ラベル
+    const ml=Q(viz,'.mkl'),seen={};
+    (f.mk||[]).forEach((m,i)=>{const key=m.key||('k'+i);seen[key]=1;let e=mkEls[key];
+      if(!e){e=document.createElement('b');ml.appendChild(e);mkEls[key]=e;}
+      const cls='mk '+(m.k||'');if(e.className!==cls){e.className=cls;}
+      if(e.innerHTML!==m.t)e.innerHTML=m.t;e.style.left=(m.c*W+cw/2+(m.dx||0)*W)+'px';e.style.top=(TOP+m.r*RH+(m.dy||0))+'px';});
+    for(const key in mkEls)if(!seen[key]){mkEls[key].remove();delete mkEls[key];}
+    msg.innerHTML=f.m||'';
+    cnt.innerHTML=Object.entries(f.n||{}).map(([a,b])=>`${a} <b>${b}</b> 回`).join('　');
+    Q(host,'[data-a=b]').disabled=k===0;Q(host,'[data-a=r]').disabled=k===0;Q(host,'[data-a=s]').disabled=k>=frames.length-1;
+    if(k>=frames.length-1&&timer){stop();}
+    pz.classList.toggle('on',paused&&!timer);
+  }
+  function stop(){clearTimeout(timer);timer=null;bA.textContent='▶▶ 自動で再生';}
+  function tick(){if(k<frames.length-1){k++;draw();timer=setTimeout(tick,(o.dt||900)*SPEED);}else{stop();paused=false;pz.classList.remove('on');}}
+  function play(){paused=false;if(k>=frames.length-1){k=0;draw();}bA.textContent='⏸ 一時停止';pz.classList.remove('on');timer=setTimeout(tick,300*SPEED);}
+  function toggle(){if(timer){stop();paused=true;pz.classList.add('on');}else play();}
+  viz.addEventListener('click',toggle);
+  host.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b||!host.contains(b))return;const a=b.dataset.a;
+    if(a==='a'){toggle();return;}
+    stop();paused=false;
+    if(a==='r'){k=0;}
+    if(a==='b'&&k>0)k--;
+    if(a==='s'&&k<frames.length-1)k++;
+    draw();
+  });
+  const ro=new ResizeObserver(()=>layout());ro.observe(host);
+  const P={load(it,fr,tg){items=it;frames=fr;const tb=Q(host,'.tgtbox');if(tg!=null){tb.hidden=false;tb.innerHTML=`<span class="tl">🔍 探す値</span><b>${tg}</b>`;}else tb.hidden=true;build();},stop,layout,frames:()=>frames};
+  PLAYERS.push(P);return P;
+}
+
+/* ===== アルゴリズム（動き） ===== */
+function fLinear(items,t){
+  const R=rec(),s=R.st;items.forEach((it,i)=>s.pos[it.id]={c:i,r:0});s.n={比較:0};
+  R.snap(`探す値は <b>${t}</b>。先頭から順に、1つずつ比べていきます。`);
+  for(let i=0;i<items.length;i++){const it=items[i];s.cls[it.id]='cmp';s.n.比較++;s.mk=[{key:'p',c:i,r:1,t:'▲ '+(i+1)+'番目',k:'hot',dy:-4}];
+    if(it.v===t){s.cls[it.id]='found';R.snap(`${i+1}番目の <b>${it.v}</b> と比べる → <b class="okc">見つかった！</b>`);return R.fr;}
+    R.snap(`${i+1}番目の <b>${it.v}</b> と比べる → ${t} ではない`);s.cls[it.id]='seen';}
+  s.mk=[];R.snap(`最後まで比べましたが、<b>${t}</b> はありませんでした。「無い」とわかるまでに、<b>全部（${items.length}回）</b>比べています。`);return R.fr;
+}
+function fBinary(items,t){
+  const R=rec(),s=R.st,n=items.length,Y=.45;items.forEach((it,i)=>s.pos[it.id]={c:i,r:Y});s.n={比較:0};
+  const V=i=>items[i].v;let lo=0,hi=n-1,mid=null;
+  const paint=()=>{items.forEach((it,i)=>{let c=s.cls[it.id]||'';c=c.replace(/\s?e(lo|hi)/g,'');if(c==='out'||c==='found'){s.cls[it.id]=c;return;}
+      if(lo<=hi&&i===lo)c+=' elo';if(lo<=hi&&i===hi)c+=' ehi';s.cls[it.id]=c.trim();});};
+  const set=chg=>{s.mk=[];if(mid!=null)s.mk.push({key:'mid',c:mid,r:0,t:'真ん中',k:'hot',dy:2});
+    if(lo<=hi){if(lo===hi)s.mk.push({key:'lo',c:lo,r:Y,dy:50,t:`左端＝右端 ${V(lo)}`,k:'lo'+(chg?' chg':'')});
+      else{s.mk.push({key:'lo',c:lo,r:Y,dy:50,t:`左端 ${V(lo)}`,k:'lo'+(chg==='lo'?' chg':'')});s.mk.push({key:'hi',c:hi,r:Y,dy:50,t:`右端 ${V(hi)}`,k:'hi'+(chg==='hi'?' chg':'')});}
+      s.bd=[{c1:lo,c2:hi,r:Y,k:'rng'}];}else s.bd=[];paint();};
+  const rg=chg=>lo<=hi?`<span class="rgx${chg?' chg':''}">探す範囲：左端 <b class="lo">${V(lo)}</b> 〜 右端 <b class="hi">${V(hi)}</b>（残り${hi-lo+1}個）</span><br>`:'';
+  set();R.snap(rg()+`データは<b>小さい順に整列済み</b>です。探す値は <b>${t}</b>。左端（いちばん小さい）から右端（いちばん大きい）までが探す範囲です。`);
+  while(lo<=hi){mid=Math.floor((lo+hi)/2);const it=items[mid];s.cls[it.id]='cmp';set();s.n.比較++;
+    if(it.v===t){s.cls[it.id]='found';set();R.snap(rg()+`真ん中（${mid+1}番目）の <b>${it.v}</b> と比べる → <b class="okc">見つかった！</b>`);return R.fr;}
+    if(it.v<t){R.snap(rg()+`真ん中の <b>${it.v}</b> は ${t} より<b>小さい</b> → ${t} があるなら<b>右側</b>`);
+      for(let j=lo;j<=mid;j++)s.cls[items[j].id]='out';lo=mid+1;mid=null;set('lo');
+      R.snap(rg(true)+(lo<=hi?`<b>左端</b>が ${V(lo)} に変わりました。${it.v}以下はもう見なくてよい。`:`探す範囲がなくなりました。`));}
+    else{R.snap(rg()+`真ん中の <b>${it.v}</b> は ${t} より<b>大きい</b> → ${t} があるなら<b>左側</b>`);
+      for(let j=mid;j<=hi;j++)s.cls[items[j].id]='out';hi=mid-1;mid=null;set('hi');
+      R.snap(rg(true)+(lo<=hi?`<b>右端</b>が ${V(hi)} に変わりました。${it.v}以上はもう見なくてよい。`:`探す範囲がなくなりました。`));}}
+  R.snap(`<b>${t}</b> はありません。それでも比較は <b>${s.n.比較}回</b>で済みました。`);return R.fr;
+}
+function fRadix(items){
+  const R=rec(),s=R.st;let order=items.slice();order.forEach((it,i)=>s.pos[it.id]={c:i,r:0});s.n={箱に入れた:0};
+  R.snap('カードの束です。まず<b>一の位</b>を見て、0〜9の10個の箱に仕分けます。');
+  [0,1].forEach(d=>{
+    const nm=d?'十の位':'一の位',hd='hd'+d,bins=[...Array(10)].map(()=>[]);let prev=null;order.forEach(it=>s.cls[it.id]=hd);
+    order.forEach(it=>{const dg=d?Math.floor(it.v/10):it.v%10;if(prev)s.cls[prev.id]=hd;
+      s.cls[it.id]=hd+' cmp';s.hot=dg;s.pos[it.id]={c:dg,r:2+bins[dg].length*.85};bins[dg].push(it);s.n.箱に入れた++;prev=it;
+      R.snap(`<b>${it.v}</b> の${nm}は <b>${dg}</b> → 「${dg}」の箱へ`);});
+    if(prev)s.cls[prev.id]=hd;s.hot=-1;
+    order=bins.flat();order.forEach((it,i)=>s.pos[it.id]={c:i,r:0});
+    R.snap(`${d+1}周目の仕分けが終わりました（${items.length}枚を1枚ずつ箱へ）。「0」の箱から順に、上から取り出して並べると… <b>${order.map(x=>x.v).join('、')}</b>`+(d?'':'<br>一の位の順にそろいました。次は<b>十の位</b>で仕分けます（この順番のまま）。'));
+  });
+  order.forEach(it=>s.cls[it.id]='done');
+  R.snap(`<b class="okc">小さい順に並びました！</b> 大小は一度も比べていません。けたの数だけ（2周）仕分けをくり返し、カードを箱に入れたのは ${items.length}枚×2周＝<b>${items.length*2}回</b>です。`);return R.fr;
+}
+function fBubble(items,maxPass){
+  const R=rec(),s=R.st,a=items.slice(),n=a.length;a.forEach((it,i)=>s.pos[it.id]={c:i,r:0});s.n={比較:0,交換:0};
+  R.snap('<b>となりどうし</b>を比べて、左のほうが大きければ入れかえる。これを左から右端までくり返します。');
+  let base=[];
+  for(let end=n-1;end>0;end--){let sw=false;
+    for(let j=0;j<end;j++){const x=a[j],y=a[j+1];s.cls[x.id]='cmp';s.cls[y.id]='cmp';s.n.比較++;s.bd=[...base,{c1:j,c2:j+1,r:0,k:'pair',t:'となりどうし'}];
+      if(x.v>y.v){a[j]=y;a[j+1]=x;s.pos[y.id]={c:j,r:0};s.pos[x.id]={c:j+1,r:0};s.n.交換++;sw=true;R.snap(`${x.v} &gt; ${y.v} → <b>入れかえる</b>`);}
+      else R.snap(`${x.v} ≦ ${y.v} → そのまま`);
+      s.cls[x.id]='';s.cls[y.id]='';}
+    s.cls[a[end].id]='done';base=[{c1:end,c2:n-1,r:0,k:'ok',t:'並んだ部分'}];s.bd=base;
+    if(!sw){a.forEach(x=>s.cls[x.id]='done');s.bd=[{c1:0,c2:n-1,r:0,k:'ok',t:'並んだ部分'}];R.snap(`1回も入れかえがなかったので、もう全部整列済みです。<b class="okc">完成！</b>（比較 ${s.n.比較}回）`);return R.fr;}
+    R.snap(`大きい <b>${a[end].v}</b> が泡のように右へ浮かんで、右から${n-end}番目が決まりました`);
+    if(maxPass&&n-end>=maxPass){R.snap(`<b>${maxPass}周目が終わりました。</b>このときの並びは <b>[ ${a.map(x=>x.v).join(', ')} ]</b>（比較 ${s.n.比較}回・交換 ${s.n.交換}回）`);return R.fr;}}
+  s.cls[a[0].id]='done';s.bd=[{c1:0,c2:n-1,r:0,k:'ok',t:'並んだ部分'}];R.snap(`<b class="okc">全部並びました！</b>（比較 ${s.n.比較}回）`);return R.fr;
+}
+function fSelect(items,tally){
+  const R=rec(),s=R.st,a=items.slice(),n=a.length;a.forEach((it,i)=>s.pos[it.id]={c:i,r:0});s.n={比較:0,交換:0};
+  R.snap('<b>まだ整列していない部分から一番小さいものを探して、先頭と入れかえる</b>。これをくり返します。');
+  const mkk=(i,min)=>[{key:'i',c:i,r:0,t:'i',dy:52},{key:'min',c:min,r:0,t:'min',k:'mn',dy:72}];
+  for(let i=0;i<n-1;i++){let min=i;s.cls[a[min].id]='min';s.mk=mkk(i,min);
+    R.snap(`${i+1}番目から後ろで、一番小さいものを探します。まず ${a[i].v} を仮の最小（min）にします。`);
+    for(let j=i+1;j<n;j++){s.cls[a[j].id]='cmp';s.n.比較++;
+      if(a[j].v<a[min].v){const old=a[min].v;s.cls[a[min].id]='';min=j;s.cls[a[j].id]='min';s.mk=mkk(i,min);R.snap(`${a[j].v} &lt; ${old} → min を ${a[j].v} に更新`);}
+      else{R.snap(`${a[j].v} と min の ${a[min].v} を比べる → そのまま`);s.cls[a[j].id]='';}}
+    if(min!==i){[a[i],a[min]]=[a[min],a[i]];s.pos[a[i].id]={c:i,r:0};s.pos[a[min].id]={c:min,r:0};s.n.交換++;s.cls[a[min].id]='';}
+    s.cls[a[i].id]='done';s.mk=[];s.bd=[{c1:0,c2:i,r:0,k:'ok',t:'並んだ部分'}];
+    const tl=tally?`<br>${i+1}番目を決めるのに比べたのは <b>${n-1-i}回</b>。ここまで：${[...Array(i+1)].map((_,q)=>n-1-q).join('＋')} ＝ <b>${s.n.比較}回</b>`:'';
+    R.snap((min!==i?`一番小さい <b>${a[i].v}</b> を${i+1}番目と入れかえ → ${i+1}番目が決まった`:`一番小さいのは ${a[i].v} で、もう${i+1}番目にある → ${i+1}番目が決まった`)+tl);}
+  s.cls[a[n-1].id]='done';s.bd=[{c1:0,c2:n-1,r:0,k:'ok',t:'並んだ部分'}];R.snap(`<b class="okc">全部並びました！</b>（比較 ${s.n.比較}回）`);return R.fr;
+}
+function fInsert(items){
+  const R=rec(),s=R.st,a=items.slice(),n=a.length,Y=1.05;a.forEach((it,i)=>s.pos[it.id]={c:i,r:Y});s.n={比較:0};
+  const band=i=>{s.bd=[{c1:0,c2:i,r:Y,k:'ok',t:'並んだ部分',tp:'bot'}];};
+  band(0);R.snap('左端の1枚だけなら「並んだ部分」。右のカードを1枚ずつ取り出して、並んだ部分の<b>正しい位置に差し込みます</b>（トランプの手札と同じ）。');
+  for(let i=1;i<n;i++){const key=a[i];s.pos[key.id]={c:i,r:0};s.cls[key.id]='hold';
+    R.snap(`<b>${key.v}</b> を取り出します`);let j=i-1;
+    while(j>=0){const x=a[j];s.cls[x.id]='cmp';s.n.比較++;
+      if(x.v>key.v){a[j+1]=x;s.pos[x.id]={c:j+1,r:Y};s.pos[key.id]={c:j,r:0};R.snap(`${x.v} &gt; ${key.v} → ${x.v} を<b>右へずらす</b>`);s.cls[x.id]='';j--;}
+      else{R.snap(`${x.v} ≦ ${key.v} → ここで止まる`);s.cls[x.id]='';break;}}
+    a[j+1]=key;s.pos[key.id]={c:j+1,r:Y};s.cls[key.id]='';band(i);
+    R.snap(`<b>${key.v}</b> を${j+2}番目に差し込みました。並んだ部分が${i+1}枚になりました`);}
+  a.forEach(x=>s.cls[x.id]='done');R.snap(`<b class="okc">全部並びました！</b>（比較 ${s.n.比較}回）`);return R.fr;
+}
+/* マージ：G は並んだまとまりの一覧 {lo,hi,k,t} */
+function mergeVis(R,a,G,gi,newK){
+  const s=R.st,g1=G[gi],g2=G[gi+1],lo=g1.lo,mid=g2.lo,hi=g2.hi,A=a.slice(lo,mid),B=a.slice(mid,hi);
+  const others=()=>G.filter((g,j)=>j!==gi&&j!==gi+1).map(g=>({c1:g.lo,c2:g.hi-1,r:0,k:g.k,t:g.t}));
+  let i=0,j=0;const out=[];
+  const bands=()=>{const b=others();if(i<A.length)b.push({c1:lo+i,c2:mid-1,r:0,k:'A'});if(j<B.length)b.push({c1:mid+j,c2:hi-1,r:0,k:'B'});if(out.length)b.push({c1:lo,c2:lo+out.length-1,r:1,k:'ok'});s.bd=b;};
+  A.forEach(x=>s.cls[x.id]='gA');B.forEach(x=>s.cls[x.id]='gB');bands();
+  R.snap(`並んだまとまり <b>[${A.map(x=>x.v).join(' ')}]</b> と <b>[${B.map(x=>x.v).join(' ')}]</b> を<b>マージ</b>します`);
+  while(i<A.length&&j<B.length){const x=A[i],y=B[j];s.cls[x.id]='gA cmp';s.cls[y.id]='gB cmp';s.n.比較++;
+    const take=x.v<=y.v?x:y;if(take===x)i++;else j++;
+    s.pos[take.id]={c:lo+out.length,r:1};out.push(take);s.cls[take.id]='mg';bands();
+    R.snap(`先頭どうし ${x.v} と ${y.v} を比べ、小さい <b>${take.v}</b> を下の列へ出す`);
+    if(s.cls[x.id]!=='mg')s.cls[x.id]='gA';if(s.cls[y.id]!=='mg')s.cls[y.id]='gB';}
+  const rest=i<A.length?A.slice(i):B.slice(j);
+  if(rest.length){rest.forEach(x=>{s.pos[x.id]={c:lo+out.length,r:1};out.push(x);s.cls[x.id]='mg';});i=A.length;j=B.length;bands();R.snap(`片方が空になったので、残りの [${rest.map(x=>x.v).join(' ')}] は<b>比べずに</b>そのまま後ろへ`);}
+  out.forEach((x,q)=>{s.pos[x.id]={c:lo+q,r:0};});a.splice(lo,out.length,...out);
+  G.splice(gi,2,{lo,hi,k:'ok'});s.bd=G.map(g=>({c1:g.lo,c2:g.hi-1,r:0,k:g.k,t:g.t}));
+  R.snap(`${out.length}枚の<b>並んだまとまり</b>ができました`);
+  out.forEach(x=>s.cls[x.id]='');G[gi].k=newK||'grp';
+}
+function fMerge(items){
+  const R=rec(),s=R.st,a=items.slice(),n=a.length;a.forEach((it,i)=>s.pos[it.id]={c:i,r:0});s.n={比較:0};
+  const G=a.map((_,i)=>({lo:i,hi:i+1,k:'grp'}));s.bd=G.map(g=>({c1:g.lo,c2:g.hi-1,r:0,k:'grp'}));
+  R.snap('ばらばらのカードです。<b>1枚だけなら「整列済み」</b>と考えられます（点線の枠が、並んだまとまり）。となりのまとまりどうしを合わせていきます。');
+  while(G.length>1){for(let gi=0;gi+1<G.length;gi++)mergeVis(R,a,G,gi);}
+  a.forEach(x=>s.cls[x.id]='done');s.bd=[{c1:0,c2:n-1,r:0,k:'ok'}];R.snap(`<b class="okc">全部並びました！</b>（比較 ${s.n.比較}回）`);return R.fr;
+}
+function fQuick(items){
+  const R=rec(),s=R.st,a=items.slice(),n=a.length;a.forEach((it,i)=>s.pos[it.id]={c:i,r:0});s.n={比較:0};
+  R.snap('ばらばらのカードです。<b>基準（ピボット）</b>を決めて、小さい組と大きい組に分けていきます。');
+  const st=[[0,n-1]];
+  while(st.length){const [lo,hi]=st.pop();if(lo>hi)continue;
+    if(lo===hi){s.cls[a[lo].id]='done';s.bd=[];R.snap(`[${a[lo].v}] は1枚だけなので、これで位置が決まりました`);continue;}
+    const p=a[lo];s.cls[p.id]='pivot';for(let q=lo+1;q<=hi;q++)s.cls[a[q].id]='grp';
+    let L=lo,Rr=hi;const left=[],right=[];
+    const bands=()=>{s.bd=[{c1:lo,c2:hi,r:0,k:'seg',t:'今回分ける組'}];if(left.length)s.bd.push({c1:lo,c2:L-1,r:1,k:'A'});if(right.length)s.bd.push({c1:Rr+1,c2:hi,r:1,k:'B'});};
+    bands();R.snap(`[${a.slice(lo,hi+1).map(x=>x.v).join(' ')}] の先頭 <b>${p.v}</b> を基準にします`);
+    for(let q=lo+1;q<=hi;q++){const x=a[q];s.cls[x.id]='cmp';s.n.比較++;
+      if(x.v<p.v){s.pos[x.id]={c:L++,r:1};left.push(x);bands();R.snap(`${x.v} は基準 ${p.v} より小さい → <b>小さい組（左）</b>へ`);s.cls[x.id]='gA';}
+      else{s.pos[x.id]={c:Rr--,r:1};right.unshift(x);bands();R.snap(`${x.v} は基準 ${p.v} 以上 → <b>大きい組（右）</b>へ`);s.cls[x.id]='gB';}}
+    s.pos[p.id]={c:L,r:1};R.snap(`基準 <b>${p.v}</b> を、小さい組と大きい組のあいだに置きます`);
+    const seg=[...left,p,...right];seg.forEach((x,q)=>s.pos[x.id]={c:lo+q,r:0});a.splice(lo,seg.length,...seg);s.cls[p.id]='done';
+    s.bd=[];if(left.length)s.bd.push({c1:lo,c2:L-1,r:0,k:'A'});if(right.length)s.bd.push({c1:L+1,c2:hi,r:0,k:'B'});
+    R.snap(`基準 ${p.v} の位置が決まりました。${left.length&&right.length?'左右の組それぞれで':left.length?'左の組で':right.length?'右の組で':''}${left.length||right.length?'同じことをくり返します。':''}`);
+    left.concat(right).forEach(x=>s.cls[x.id]='');
+    st.push([L+1,hi]);st.push([lo,L-1]);}
+  s.bd=[{c1:0,c2:n-1,r:0,k:'ok'}];R.snap(`<b class="okc">全部並びました！</b>（比較 ${s.n.比較}回）`);return R.fr;
+}
+const HASHV=[203,517,308,422,111,125,534,349,133,427];
+function fHash(items,t){
+  const R=rec(),s=R.st;items.forEach((it,i)=>s.pos[it.id]={c:i,r:0});s.n={比較:0};
+  R.snap('10枚の予約票の予約番号です。番号を<b>10で割った余り</b>を計算して、その番号の箱にしまいます（並べ替えはしません）。');
+  const bins=[...Array(10)].map(()=>[]);let prev=null;
+  items.forEach(it=>{const b=it.v%10;if(prev)s.cls[prev.id]='';s.cls[it.id]='cmp';s.hot=b;s.pos[it.id]={c:b,r:2+bins[b].length*.85};bins[b].push(it);prev=it;
+    R.snap(`${it.v} ÷ 10 の余りは <b>${b}</b> → 「${b}」の箱へ${bins[b].length>1?'　<b class="ngc">（先客がいる！＝衝突。下に並べてしまう）</b>':''}`);});
+  if(prev)s.cls[prev.id]='';s.hot=-1;R.snap('しまい終わりました。ここからが本番です。');
+  const b=t%10;s.hot=b;items.forEach(it=>{if(it.v%10!==b)s.cls[it.id]='out';});
+  R.snap(`<b>${t}</b> を探します。${t} ÷ 10 の余りは <b>${b}</b> → 「${b}」の箱<b>だけ</b>見ればよい`);
+  for(const it of bins[b]){s.cls[it.id]='cmp';s.n.比較++;
+    if(it.v===t){s.cls[it.id]='found';R.snap(`箱の中の ${it.v} と比べる → <b class="okc">見つかった！</b>（比較 ${s.n.比較}回）`);return R.fr;}
+    R.snap(`箱の中の ${it.v} と比べる → ちがう。次へ`);s.cls[it.id]='seen';}
+  R.snap(`「${b}」の箱を見終わりました。<b>${t}</b> はありません（比較 ${s.n.比較}回）。ほかの箱は見なくてよいのです。`);return R.fr;
+}
+function fTim(items){
+  const R=rec(),s=R.st,a=items.slice(),n=a.length;a.forEach((it,i)=>s.pos[it.id]={c:i,r:0});s.n={比較:0};
+  R.snap('まず左から、となりどうしを比べて<b>「すでに整列済みの部分（ラン）」</b>を探します。');
+  const G=[];let st=0;
+  for(let i=1;i<=n;i++){let br=i===n;if(!br){s.n.比較++;br=a[i-1].v>a[i].v;}
+    if(br){const k=G.length;G.push({lo:st,hi:i,k:'r'+(k%4),t:'ラン'+(k+1)});s.bd=G.map(g=>({c1:g.lo,c2:g.hi-1,r:0,k:g.k,t:g.t}));
+      R.snap(`ラン${k+1}：[${a.slice(st,i).map(x=>x.v).join(' ')}]（${i-st}枚）${i<n?` … ${a[i-1].v} の次が ${a[i].v} で小さくなるので、ここで区切る`:''}`);st=i;}}
+  R.snap(`ランが <b>${G.length}本</b> 見つかりました。ここからは、<b>短いランどうし</b>から順に、となりのランとマージします。`);
+  while(G.length>1){let b=0;for(let j=1;j<G.length-1;j++)if(G[j+1].hi-G[j].lo<G[b+1].hi-G[b].lo)b=j;
+    const k=G[b].k;G[b].t='';G[b+1].t='';mergeVis(R,a,G,b,k);}
+  a.forEach(x=>s.cls[x.id]='done');s.bd=[{c1:0,c2:n-1,r:0,k:'ok'}];R.snap(`<b class="okc">全部並びました！</b>（比較 ${s.n.比較}回）`);return R.fr;
+}
+
+/* ===== 比較回数を数える（グラフ用） ===== */
+const CNT={
+ bub(a){a=a.slice();let c=0;for(let end=a.length-1;end>0;end--){let sw=false;for(let j=0;j<end;j++){c++;if(a[j]>a[j+1]){const tmp=a[j];a[j]=a[j+1];a[j+1]=tmp;sw=true;}}if(!sw)break;}return c;},
+ sel(a){a=a.slice();let c=0;for(let i=0;i<a.length-1;i++){let min=i;for(let j=i+1;j<a.length;j++){c++;if(a[j]<a[min])min=j;}const tmp=a[i];a[i]=a[min];a[min]=tmp;}return c;},
+ ins(a){a=a.slice();let c=0;for(let i=1;i<a.length;i++){const x=a[i];let j=i-1;while(j>=0){c++;if(a[j]>x){a[j+1]=a[j];j--;}else break;}a[j+1]=x;}return c;},
+ mer(a){let c=0;const ms=x=>{if(x.length<2)return x;const m=x.length>>1,L=ms(x.slice(0,m)),Rr=ms(x.slice(m)),o=[];let i=0,j=0;while(i<L.length&&j<Rr.length){c++;o.push(L[i]<=Rr[j]?L[i++]:Rr[j++]);}return o.concat(L.slice(i),Rr.slice(j));};ms(a.slice());return c;},
+ qui(a){a=a.slice();let c=0;const st=[[0,a.length-1]];while(st.length){const [lo,hi]=st.pop();if(lo>=hi)continue;const p=a[lo],L=[],G=[];for(let k=lo+1;k<=hi;k++){c++;(a[k]<p?L:G).push(a[k]);}const seg=[...L,p,...G];for(let k=0;k<seg.length;k++)a[lo+k]=seg[k];const m=lo+L.length;st.push([lo,m-1],[m+1,hi]);}return c;},
+ tim(a){a=a.slice();let c=0;const n=a.length;let runs=[],st=0;for(let i=1;i<=n;i++){let br=i===n;if(!br){c++;br=a[i-1]>a[i];}if(br){runs.push(a.slice(st,i));st=i;}}
+   while(runs.length>1){let b=0;for(let j=1;j<runs.length-1;j++)if(runs[j].length+runs[j+1].length<runs[b].length+runs[b+1].length)b=j;
+     const L=runs[b],Rr=runs[b+1],o=[];let i=0,k=0;while(i<L.length&&k<Rr.length){c++;o.push(L[i]<=Rr[k]?L[i++]:Rr[k++]);}runs.splice(b,2,o.concat(L.slice(i),Rr.slice(k)));}return c;}
+};
+const ALG={bub:['バブルソート','#9a6a0c'],sel:['選択ソート','#c0603c'],ins:['挿入ソート','#d6981c'],mer:['マージソート','#2f7fb5'],qui:['クイックソート（先頭が基準）','#7b4fa0'],tim:['ラン＋マージ（Timsortの考え方）','#1d8584']};
+function makeData(n,kind){
+  const a=[...Array(n)].map((_,i)=>i+1);
+  if(kind==='rand')return shuffle(a);
+  if(kind==='rev')return a.reverse();
+  if(kind==='sorted')return a;
+  const m=Math.max(1,Math.round(n*0.03)),moved=new Set(shuffle(a).slice(0,m));return a.filter(x=>!moved.has(x)).concat(shuffle([...moved]));
+}
+function race(host,algs,opt){
+  opt=opt||{};
+  host.innerHTML=`<div class="btns"><span class="note">データの件数</span>${[10,100,1000,5000].map(n=>`<button class="b2 n${n===1000?' on':''}" data-n="${n}">${n.toLocaleString()}件</button>`).join('')}</div>
+  <div class="btns"><span class="note">データの状態</span><button class="b2 k on" data-k="rand">ばらばら</button><button class="b2 k" data-k="near" title="整列済みのデータの最後に、3%ほどのデータが追加されたもの">ほぼ整列済み</button>${opt.rev?'<button class="b2 k" data-k="rev">逆順</button>':''}<button class="b2 k" data-k="sorted">すでに整列済み</button><button class="b1 go">もう一度</button></div>
+  <div class="race"></div><p class="note rnote"></p>`;
+  let N=1000,K='rand';
+  const run=()=>{const d=makeData(N,K);
+    const res=algs.map(k=>[k,CNT[k](d)]);const mx=Math.max(...res.map(r=>r[1]),1);
+    Q(host,'.race').innerHTML=res.map(([k,c])=>`<div class="r"><div>${ALG[k][0]}</div><div class="bar"><i style="width:0;background:${ALG[k][1]}33"></i><b>${fmt(c)} 回</b></div></div>`).join('');
+    requestAnimationFrame(()=>QA(host,'.race i').forEach((e,i)=>e.style.width=Math.max(.5,res[i][1]/mx*100)+'%'));
+    Q(host,'.rnote').innerHTML=`${N.toLocaleString()}件を並べるときの比較回数（実際に並べて数えています）。`+(opt.note?opt.note(K,res):'');};
+  host.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+    if(b.dataset.n){N=+b.dataset.n;QA(host,'.n').forEach(x=>x.classList.toggle('on',x===b));}
+    if(b.dataset.k){K=b.dataset.k;QA(host,'.k').forEach(x=>x.classList.toggle('on',x===b));}
+    run();});
+  run();
+}
+/* 数当てゲーム */
+function guessGame(el,max,opt){
+  opt=opt||{};const F=x=>x.toLocaleString('ja-JP');
+  el.innerHTML=`<div class="guess"><input type="number" min="1" max="${max}" aria-label="予想" style="width:${max>1000?150:110}px"><button class="b1 g">予想する</button><button class="b2 r">新しい数で</button>${opt.auto?'<button class="b1 au" style="background:var(--plum)">二分探索の作戦で当てる（自動）</button>':''}${opt.give?'<button class="b2 gv">答えを見る</button>':''}<span class="note" style="margin-left:auto">予想した回数 <b class="big gc">0</b> 回</span></div>
+  <div class="range"><i style="left:0;width:100%"></i><b></b></div><div class="hlog"></div><div class="pmsg" style="margin-top:10px"></div>`;
+  let ans,lo,hi,c,done,auto=null;const inp=Q(el,'input'),M=Q(el,'.pmsg');
+  const show=()=>{const bar=Q(el,'.range i');bar.style.left=((lo-1)/max*100)+'%';bar.style.width=Math.max(.4,(hi-lo+1)/max*100)+'%';
+    Q(el,'.range b').textContent=lo===hi?`${F(lo)} しかない！`:`${F(lo)}〜${F(hi)} のどこか（残り${F(hi-lo+1)}個）`;Q(el,'.gc').textContent=c;};
+  const reset=()=>{clearTimeout(auto);ans=1+rnd(max);lo=1;hi=max;c=0;done=false;Q(el,'.hlog').innerHTML='';M.innerHTML=opt.start||'数を入れて「予想する」を押そう。';show();};
+  const guess=g=>{if(done||!(g>=1&&g<=max))return;c++;const s=document.createElement('span');s.textContent=F(g);
+    if(g===ans){done=true;s.className='ok';lo=hi=g;M.innerHTML=`<b class="okc">正解！</b> ${c}回で当たりました。`+(opt.win?opt.win(c):'');}
+    else if(g<ans){s.textContent+=' ↑';lo=Math.max(lo,g+1);M.innerHTML=`${F(g)} より<b>大きい</b>です。`;}
+    else{s.textContent+=' ↓';hi=Math.min(hi,g-1);M.innerHTML=`${F(g)} より<b>小さい</b>です。`;}
+    if(!done&&opt.hintAt&&c===opt.hintAt)M.innerHTML+=opt.hint;
+    const lg=Q(el,'.hlog');lg.appendChild(s);lg.scrollTop=lg.scrollHeight;show();};
+  Q(el,'.g').onclick=()=>{guess(+inp.value);inp.select();};
+  inp.onkeydown=e=>{if(e.key==='Enter'){guess(+inp.value);inp.select();}};
+  Q(el,'.r').onclick=reset;
+  if(opt.give)Q(el,'.gv').onclick=()=>{if(!done)M.innerHTML=`答えは <b>${F(ans)}</b> でした。`;};
+  if(opt.auto)Q(el,'.au').onclick=()=>{reset();const step=()=>{if(done)return;const g=Math.floor((lo+hi)/2);inp.value=g;guess(g);
+      if(!done){M.innerHTML+=` → 残り ${F(lo)}〜${F(hi)} の真ん中 <b>${F(Math.floor((lo+hi)/2))}</b> を予想します。`;auto=setTimeout(step,1300*SPEED);}};auto=setTimeout(step,500*SPEED);};
+  reset();return()=>clearTimeout(auto);
+}
+function sortPlayer(el,sel,fn,opt){
+  opt=opt||{};
+  const P=player(Q(el,sel),Object.assign({cols:8,rows:1.5,top:22,maxW:76,extra:'<button class="b2" data-x="sh">カードを変える</button>'},opt));
+  const load=v=>{const it=mkItems(v||pick(1,40,opt.cols||8));P.load(it,fn(it));};
+  Q(el,sel).addEventListener('click',e=>{if(e.target.closest('[data-x=sh]'))load();});load(opt.first);return P;
+}
+
+function codeStep(host,o){
+  host.innerHTML=`<div class="code"></div><div class="vars"></div><div class="btns"><button class="b1 st">1行実行 ▶</button><button class="b2 rs">⏮ 最初から</button></div><div class="pmsg"></div>`;
+  let k,v,chg;
+  const draw=()=>{
+    Q(host,'.code').innerHTML=o.lines.map((l,i)=>`<div class="ln ${i===k-1?'cur':''} ${i<k?'did':''}">${l[0]}</div>`).join('');
+    Q(host,'.vars').innerHTML=o.vars.map(n=>`<div class="var ${chg===n?'chg':''}"><span>${n}</span><b>${v[n]??'<small style="font-size:13px;color:var(--sub)">空</small>'}</b></div>`).join('');
+    Q(host,'.st').disabled=k>=o.lines.length;};
+  const reset=()=>{k=0;v={};chg=null;Q(host,'.pmsg').innerHTML='「1行実行」で、変数の中身がどう変わるか確かめよう。';draw();};
+  Q(host,'.st').onclick=()=>{const [t,to,fr]=o.lines[k];v[to]=typeof fr==='number'?fr:v[fr];chg=to;k++;
+    Q(host,'.pmsg').innerHTML=`<span class="mono">${t}</span> → <b>${to}</b> に ${typeof fr==='number'?fr:fr+' の値 '+v[to]} を入れる`+(k===o.lines.length?`<br>${o.end(v)}`:'');draw();};
+  Q(host,'.rs').onclick=reset;reset();
+}
+
+/* ================= レッスン ================= */
+const LESSONS = [];
+let CUR = 0;
+function lesson(def){ LESSONS.push(def); }
+const MAINN = 5;
+
+/* ---------- 0. はじめに ---------- */
+lesson({ id:"L0", title:"はじめに", kicker:"PROLOGUE", req:[], render(){ return `
+  <div class="card">
+    ${talk('t','こむぎ、困ったことになったよ。今年はクリスマスケーキの予約が<b>600件</b>を超えてね。予約票は予約番号の順に箱に入れていたんだけど、さっき箱を落として、<b>予約票がバラバラ</b>になってしまったんだ。受け取りに来たお客さんが「予約番号○番です」と言うたびに1枚ずつ探していたら、<b>レジに行列</b>ができてしまって…。')}
+    ${talk('h','予約票の探し方を工夫すれば、もっと速くなるかも！ 情報の授業で習った<b>アルゴリズム</b>で考えてみようよ。')}
+    ${talk('t','頼もしいね。今は600枚の予約票が、番号の順番なんて関係なく箱に入っているんだ。')}
+    <p class="lead" style="margin-top:14px">パン屋「こむぎ堂」の娘・こむぎと一緒に、データを<b>さがす</b>方法と<b>ならべる</b>方法を考えましょう。レッスンは全部で5つ。「困った！」が起きるたびに、新しい方法が出てきます。</p>
+  </div>
+  <div class="card">
+    <h3>このアプリの進め方</h3>
+    <ol class="summary">
+      <li><b>レッスン1〜2：さがす</b>（線形探索 → 二分探索）</li>
+      <li><b>レッスン3：入れかえ</b>（並べ替えの準備）</li>
+      <li><b>レッスン4〜5：ならべる</b>（基本の並べ方 → 応用の並べ方）</li>
+      <li>早く終わった人は、<b>発展</b>（ハッシュ探索）、<b>チャレンジ問題</b>、<b>プログラムで書くと</b>にも挑戦しよう。</li>
+    </ol>
+    <p>アニメーションは「1手すすむ」で1つずつ、「自動で再生」で続けて動きます。<b>図をクリックすると一時停止</b>できます。</p>
+    <p>${PR('✎ この印')}の語句は、<b>授業プリントの空欄</b>です。プリントに書き込みながら進めましょう。</p>
+  </div>`;
+}, mount(){ STATE.done.L0 = true; save(); } });
+
+/* ---------- 1. 線形探索 ---------- */
+lesson({ id:"L1", title:"線形探索", kicker:"LESSON 1", req:["L1-find","L1-q1","L1-q2"], render(){ return `
+  <div class="card">
+    ${talk('t','今は、箱の前から順に1枚ずつ予約票を見ていって探しているんだ。')}
+    ${talk('h','それがいちばん素直な探し方だよね。まずは同じようにやってみる！')}
+  </div>
+  <div class="card">
+    <h3>やってみよう①：予約票を探そう</h3>
+    <p>お客さんの予約番号は <span class="target" id="tg"></span> 番。予約票は裏返しで、箱の中はバラバラです。クリックしてめくりましょう。</p>
+    <div class="row"><button class="btn" id="rs">予約票を入れなおす</button><span class="guess-score">めくった枚数 <b id="ct" class="rbig">0</b> 枚</span></div>
+    <div class="flip" id="fl"></div>
+    <p class="msg" id="fm"></p>
+  </div>
+  ${term("線形探索", [
+    ["線形探索", `データの${PR('先頭')}から順に、探す値と<b>1つずつ比べる</b>探し方。逐次探索ともいう。`],
+    ["よいところ", "データが<b>整列済みでなくても</b>使える。"],
+    ["注意", `データが2倍になると、比べる回数も${PR('2')}倍になる。探す値が無いときは、${PR('全部')}と比べてはじめて「無い」とわかる。`]])}
+  <div class="card">
+    <h3>やってみよう②：線形探索のアニメーション</h3>
+    <div id="p1"></div>
+    ${lg([[LG.cmp,'いま比べている'],['opacity:.45','比べ終わった'],[LG.found,'見つかった']])}
+    <div class="tbl-wrap" style="max-height:none;margin-top:12px"><table class="tt"><thead><tr><th>予約票の数</th><th>最大の比較回数</th><th>1回1秒なら</th></tr></thead><tbody id="gt"></tbody></table></div>
+  </div>
+  <div class="card">
+    ${talk('t','600件でこれでは、もっと大きなお店で予約が1万件、10万件になったら…。もっと速い探し方はないかな。')}
+  </div>
+  <div class="card">
+    <h3>確認問題</h3>
+    ${quiz("L1-q1", 1, "1000件のデータから線形探索で探したところ、探す値はデータの中に<b>無かった</b>。比べた回数は？", [["1回",0],["10回",0],["500回",0],["1000回",1]],
+      "「無い」と確かめるには、<b>全部と比べる</b>必要があります。")}
+    ${quiz("L1-q2", 2, "線形探索で、データの件数が2倍になると、最大の比較回数はどうなる？", [["変わらない",0],["2倍になる",1],["4倍になる",0]],
+      "線形探索は1つずつ比べるので、データが2倍なら手間も2倍です。")}
+  </div>`;
+}, mount(){
+  const deal=()=>{const nums=pick(1,600,16),t=nums[rnd(16)];let c=0,done=false;
+    $("tg").textContent=t;$("ct").textContent=0;$("fm").className="msg";$("fm").textContent="";
+    $("fl").innerHTML=nums.map(v=>`<button data-v="${v}"><small>予約番号</small>${v}</button>`).join('');
+    QA($("fl"),'button').forEach(b=>b.onclick=()=>{if(done||b.classList.contains('op'))return;c++;$("ct").textContent=c;b.classList.add('op');
+      if(+b.dataset.v===t){b.classList.add('hit');done=true;$("fm").className="msg ok";$("fm").innerHTML=`見つかった！ ${c}枚めくりました。運が悪ければ16枚全部めくることもあります。手がかりがないときは、1枚ずつ見るしかありません。`;solve("L1-find");}});};
+  $("rs").onclick=deal;deal();
+  const P=player($("p1"),{cols:12,rows:1.6,extra:'<button class="b2" data-x="y">ある番号を探す</button><button class="b2" data-x="n">無い番号を探す</button>'});
+  const load=has=>{const vals=pick(10,99,12);let t;if(has)t=vals[3+rnd(9)];else{do t=10+rnd(90);while(vals.includes(t));}P.load(mkItems(vals),fLinear(mkItems(vals),t),t);};
+  $("p1").addEventListener('click',e=>{const b=e.target.closest('[data-x]');if(b)load(b.dataset.x==='y');});load(true);
+  const tm=s=>s<60?s+'秒':s<3600?'約'+Math.round(s/60)+'分':s<86400?'約'+(s/3600).toFixed(1)+'時間':'約'+(s/86400).toFixed(1)+'日';
+  $("gt").innerHTML=[600,10000,100000,1000000].map(n=>`<tr><td>${n.toLocaleString()}件</td><td>${n.toLocaleString()}回</td><td>${tm(n)}</td></tr>`).join('');
+} });
+
+/* ---------- 2. 二分探索 ---------- */
+lesson({ id:"L2", title:"二分探索", kicker:"LESSON 2", req:["L2-game","L2-q1","L2-q2","L2-q3"], render(){ return `
+  <div class="card">
+    ${talk('h','予約票を探すのって、<b>数当てゲーム</b>に似てる！ 「もっと大きい」「もっと小さい」がわかれば、速く当てられそう。')}
+  </div>
+  <div class="card">
+    <h3>やってみよう①：コンピュータと数当てゲーム</h3>
+    <p>コンピュータが <b>1〜100</b> の数を1つ思いうかべています。予想を入れると「もっと大きい／もっと小さい」を教えてくれます。<b>なるべく少ない回数</b>で当てよう。何回か遊んで、速く当てる作戦を考えよう。</p>
+    <div id="g2"></div>
+  </div>
+  ${term("二分探索", [
+    ["二分探索", `${PR('整列済み')}のデータの${PR('真ん中')}と比べ、探す値が無い側の${PR('半分')}を捨てる。これをくり返す探し方。`],
+    ["探す範囲", "<b>左端</b>（範囲の中でいちばん小さい）から<b>右端</b>（いちばん大きい）まで。比べるたびに左端か右端が動き、範囲がせまくなる。"],
+    ["よいところ", `データが2倍になっても、比べる回数は${PR('1')}回ふえるだけ。`],
+    ["注意", "データが<b>整列済み</b>でないと使えない。ばらばらのデータでは、半分を捨てられない。"]],
+    `数当てで「残りの範囲の真ん中」を言い続けるのと同じ作戦です。1〜100なら、どんな数でも7回以内で当たります。`)}
+  <div class="card">
+    <h3>やってみよう②：二分探索のアニメーション</h3>
+    <p>左端（青い枠）と右端（オレンジの枠）が、どう動くかに注目しよう。</p>
+    <div id="p2"></div>
+    ${lg([['border:3px solid #2E86DE','左端'],['border:3px solid #E07B1C','右端'],[LG.cmp,'真ん中（いま比べている）'],[LG.out,'もう見なくてよい'],[LG.found,'見つかった']])}
+    <div class="tbl-wrap" style="max-height:none;margin-top:12px"><table class="tt"><thead><tr><th>データの件数</th><th>線形探索（最大）</th><th>二分探索（最大）</th></tr></thead><tbody id="bt"></tbody></table></div>
+  </div>
+  <div class="card">
+    ${talk('t','すごい！ 10万件でも17回で見つかるのか。')}
+    ${talk('h','でも、二分探索を使うには、予約票が<b>予約番号の順に整列済み</b>じゃないとダメなんだ。今はバラバラだから、まず<b>並べ替え（ソート）</b>しないと。')}
+  </div>
+  <div class="card">
+    <h3>確認問題</h3>
+    ${quiz("L2-q1", 1, "二分探索が使えるのは、どんなデータ？", [["どんなデータでも使える",0],["整列済み（小さい順や大きい順に並んでいる）のデータ",1],["件数が偶数のデータ",0]],
+      "真ん中と比べて「こちら側には無い」と言えるのは、データが整列済みだからです。")}
+    ${quiz("L2-q2", 2, "1000件の整列済みのデータを二分探索で探すとき、比べる回数は最大で何回？", [["10回",1],["100回",0],["500回",0],["1000回",0]],
+      "1回比べるごとに残りが半分になります。1000 → 500 → 250 → … と半分にしていくと、10回目で1個になります。")}
+    ${quiz("L2-q3", 3, "二分探索で、真ん中の値が<b>探す値より小さかった</b>。次にどうする？", [["右端を、真ん中の1つ左に動かす",0],["左端を、真ん中の1つ右に動かす",1],["左端と右端は動かさず、もう一度真ん中と比べる",0]],
+      "探す値は真ん中より右側にあるので、左側（真ん中を含む）は捨てます。つまり、左端が真ん中の1つ右に動きます。")}
+  </div>`;
+}, mount(){
+  guessGame($("g2"),100,{give:true,hintAt:8,hint:'<br>なかなか当たらない…。「残りの範囲」に注目して、どんな数を言えばよいか考えてみよう。',win:c=>{solve("L2-game");return c<=7?' すばらしい！ 作戦がうまくいったね。':' 1〜100なら、うまい作戦で<b>7回以内</b>に必ず当たります。もう一度やってみよう。';}});
+  const P=player($("p2"),{cols:15,rows:1.75,maxW:58,dt:1300,extra:'<button class="b2" data-x="y">ある値を探す</button><button class="b2" data-x="n">無い値を探す</button>'});
+  const load=has=>{const vals=pick(10,99,15).sort((a,b)=>a-b);let t;if(has)t=vals[rnd(15)];else{do t=10+rnd(90);while(vals.includes(t));}P.load(mkItems(vals),fBinary(mkItems(vals),t),t);};
+  $("p2").addEventListener('click',e=>{const b=e.target.closest('[data-x]');if(b)load(b.dataset.x==='y');});load(true);
+  const nm=n=>n>=1e8?(n/1e8)+'億':n>=1e4?(n/1e4)+'万':n.toLocaleString();
+  $("bt").innerHTML=[100,1000,1e5,1e6].map(n=>`<tr><td>${nm(n)}件</td><td>${nm(n)}回</td><td>${(n===1000||n===1e6)?PR(Math.floor(Math.log2(n))+1):Math.floor(Math.log2(n))+1}回</td></tr>`).join('');
+} });
+
+/* ---------- 3. 入れかえ ---------- */
+lesson({ id:"L3", title:"データの入れかえ", kicker:"LESSON 3", req:["L3-cups","L3-code","L3-q1","L3-q2"], render(){ return `
+  <div class="card">
+    ${talk('h','並べ替えでは、2枚の予約票の場所を<b>入れかえる</b>作業が何度も出てくるんだ。まずは入れかえ方をしっかり考えよう。')}
+    ${talk('t','入れかえなんて簡単だよ。…あれ、手で持ち替えるのと、コンピュータでやるのとは違うのかな？')}
+  </div>
+  <div class="card">
+    <h3>やってみよう①：コップの中身を入れかえよう</h3>
+    <p><b>コップAのジュース</b>と<b>コップBのお茶</b>を入れかえたい。空の<b>コップC</b>を使ってよい。ボタンで1回ずつ注ぎかえよう（中身が入っているコップには注げません）。</p>
+    <div class="cups" id="cups"></div>
+    <div class="row" id="pours" style="justify-content:center"></div>
+    <p class="msg" id="cm"></p>
+    <div class="row"><button class="btn" id="crs">はじめから</button><span class="guess-score" id="clog"></span></div>
+  </div>
+  ${term("プログラムでの入れかえ", [
+    ["tmp", "入れかえるときに、値を一時的にあずけておく変数（temporary の略）。コップCの役目。"],
+    ["入れかえの3行", `<span class="formula">tmp = a</span>　<span class="formula">a = b</span>　<span class="formula">b = tmp</span>`],
+    ["注意", `代入は<b>コピー</b>。<span class="formula">a = b</span> とすると、a の前の値は${PR('上書き')}されて消える。だから先に tmp にあずけておく。`]])}
+  <div class="card">
+    <h3>やってみよう②：1行ずつ実行してみよう</h3>
+    <div class="grid2">
+      <div><p><b>(1) tmp を使う</b></p><div id="c1"></div></div>
+      <div><p><b>(2) tmp を使わないと？</b></p><div id="c2"></div></div>
+    </div>
+    <p style="margin-top:12px"><b>配列の要素の入れかえ</b>　並べ替えでは、配列 Data の j 番目と j + 1 番目の要素を、同じ3行で入れかえます。</p>
+    <div class="grid2">
+      <div><div class="cap">共通テスト用プログラム表記</div><pre class="code2">tmp = Data[j]
+Data[j] = Data[j + 1]
+Data[j + 1] = tmp</pre></div>
+      <div><div class="cap">Python</div><pre class="code2">tmp = data[j]
+data[j] = data[j + 1]
+data[j + 1] = tmp</pre></div>
+    </div>
+  </div>
+  <div class="card">
+    <h3>確認問題</h3>
+    ${quiz("L3-q1", 1, `次のプログラムを実行したあとの a と b の値は？<pre class="code2 qcode">a = 3
+b = 7
+tmp = a
+a = b
+b = tmp</pre>`, [["a = 3、b = 7",0],["a = 7、b = 3",1],["a = 7、b = 7",0],["a = 3、b = 3",0]],
+      "tmp に 3 をあずけ、a に 7 を入れ、b に tmp の 3 を入れるので、入れかわります。")}
+    ${quiz("L3-q2", 2, "入れかえに tmp が必要なのはなぜ？", [["プログラムを短くするため",0],["a = b とすると、a の元の値が上書きされて消えてしまうから",1],["Python では変数を2つまでしか使えないから",0]],
+      "代入するとその変数の前の値は消えます。消える前に tmp にあずけておくのがポイントです。")}
+  </div>`;
+}, mount(){
+  const NM={A:'コップA',B:'コップB',C:'コップC'},DR={j:['ジュース','#F6B25A'],t:['お茶','#9CCF86']};let st,log;
+  const draw=()=>{$("cups").innerHTML=['A','B','C'].map(k=>{const d=st[k];return `<div class="cup"><div class="glass"><div class="liq" style="height:${d?72:0}%;background:${d?DR[d][1]:'transparent'}"></div><span>${d?DR[d][0]:'空'}</span></div><b>${NM[k]}</b></div>`;}).join('');
+    $("clog").textContent=log.length?'手順：'+log.join(' → '):'';};
+  const reset=()=>{st={A:'j',B:'t',C:null};log=[];$("cm").className='msg';$("cm").textContent='どの順番で注げば入れかえられるかな？';draw();};
+  $("pours").innerHTML=[['A','B'],['A','C'],['B','A'],['B','C'],['C','A'],['C','B']].map(([x,y])=>`<button class="btn" data-x="${x}" data-y="${y}">${x} → ${y}</button>`).join('');
+  QA($("pours"),'button').forEach(b=>b.onclick=()=>{const x=b.dataset.x,y=b.dataset.y;
+    if(!st[x]){$("cm").className='msg ng';$("cm").textContent=`${NM[x]}は空っぽです。`;return;}
+    if(st[y]){$("cm").className='msg ng';$("cm").textContent=`${NM[y]}には${DR[st[y]][0]}が入っています。注ぐと混ざってしまう！`;return;}
+    st[y]=st[x];st[x]=null;log.push(`${x}→${y}`);draw();
+    if(st.A==='t'&&st.B==='j'){$("cm").className='msg ok';$("cm").innerHTML=`入れかえ成功！ ${log.length}回注ぎました。${log.length===3?`${PR('空のコップ')}に一度よけておくのがポイントです。`:'もっと少ない回数（3回）でできないかな？'}`;solve("L3-cups");}
+    else{$("cm").className='msg';$("cm").textContent=`${NM[x]}の${DR[st[y]][0]}を${NM[y]}へ注ぎました。`;}});
+  $("crs").onclick=reset;reset();
+  codeStep($("c1"),{vars:['a','b','tmp'],lines:[['a = 5','a',5],['b = 8','b',8],['tmp = a','tmp','a'],['a = b','a','b'],['b = tmp','b','tmp']],end:v=>{solve("L3-code");return `<b class="okc">a は ${v.a}、b は ${v.b}。入れかわりました！</b>`;}});
+  codeStep($("c2"),{vars:['a','b'],lines:[['a = 5','a',5],['b = 8','b',8],['a = b','a','b'],['b = a','b','a']],end:v=>`<b class="ngc">a も b も ${v.a}。最初の a = b で、もとの a の値 5 が上書きされて消えてしまいました。</b>`});
+} });
+
+/* ---------- 4. 基本の並べ方 ---------- */
+lesson({ id:"L4", title:"基本の並べ方", kicker:"LESSON 4", req:["L4-q1","L4-q2","L4-q3"], render(){ return `
+  <div class="card">
+    ${talk('t','よし、予約票を予約番号の順に並べ替えよう！ …でも、コンピュータにはどんな手順で並べさせればいいんだろう？')}
+    ${talk('h','背の順に並ぶときや、トランプの手札をそろえるときを思い出すと、だれでも思いつく方法が3つあるよ。')}
+  </div>
+  ${term("基本の3つの並べ方", [
+    ["バブルソート", `${PR('となり')}どうしを比べ、逆なら入れかえる。これを左から右へくり返すと、大きいものが泡のように右へ浮かんでいく。`],
+    ["選択ソート", `まだ整列していない部分から${PR('一番小さい')}ものを選び、その先頭と入れかえる。`],
+    ["挿入ソート", `1枚ずつ取り出し、並んだ部分の${PR('正しい位置')}に差し込む。トランプの手札をそろえるのと同じ。`]])}
+  <div class="card"><h3>やってみよう①：バブルソート</h3><div id="p4a"></div>
+    ${lg([[LG.pair,'比べているとなりどうし'],[LG.done,'位置が決まった'],[LG.okband,'並んだ部分']])}</div>
+  <div class="card"><h3>やってみよう②：選択ソート</h3><div id="p4b"></div>
+    ${lg([[LG.min,'min（いま一番小さい）'],[LG.cmp,'比べている'],[LG.done,'位置が決まった'],[LG.okband,'並んだ部分']])}</div>
+  <div class="card"><h3>やってみよう③：挿入ソート</h3><div id="p4c"></div>
+    ${lg([[LG.hold,'取り出したカード'],[LG.cmp,'比べている'],[LG.okband,'並んだ部分']])}</div>
+  <div class="card">
+    <h3>確認問題</h3>
+    ${quiz("L4-q1", 1, "トランプの手札をそろえるように、1枚ずつ取り出して<b>並んだ部分の正しい位置に差し込む</b>並べ方は？", [["バブルソート",0],["選択ソート",0],["挿入ソート",1]],
+      "挿入ソートです。バブルソートは「となりどうしを比べて入れかえる」、選択ソートは「一番小さいものを選んで先頭と入れかえる」でした。")}
+    ${quiz("L4-q2", 2, "[ 5, 3, 8, 1, 6 ] をバブルソートで、左端から右端まで<b>1周</b>比べたあとの並びは？", [["[ 3, 5, 1, 6, 8 ]",1],["[ 1, 3, 5, 6, 8 ]",0],["[ 3, 5, 8, 1, 6 ]",0],["[ 3, 1, 5, 6, 8 ]",0]],
+      "5と3を入れかえ → 5と8はそのまま → 8と1を入れかえ → 8と6を入れかえ。1周で一番大きい8が右端に決まります。やってみよう①の「カードを変える」で確かめてもよいでしょう。")}
+    ${quiz("L4-q3", 3, "5件のデータを選択ソートで並べるとき、比べる回数は全部で何回？", [["5回",0],["10回",1],["20回",0],["25回",0]],
+      "1番目を決めるのに4回、2番目に3回、3番目に2回、4番目に1回。4＋3＋2＋1＝10回です。n件なら n×(n−1)÷2 回になります。")}
+  </div>`;
+}, mount(){
+  sortPlayer(document,'#p4a',fBubble,{dt:650});
+  sortPlayer(document,'#p4b',fSelect,{rows:1.75,dt:650});
+  sortPlayer(document,'#p4c',fInsert,{top:0,rows:2.4,dt:750});
+} });
+
+/* ---------- 5. 応用の並べ方 ---------- */
+lesson({ id:"L5", title:"応用の並べ方", kicker:"LESSON 5", req:["L5-merge","L5-q1","L5-q2","L5-q3"], render(){ return `
+  <div class="card">
+    ${talk('t','予約票が予約番号の順にもどって、探すのがすごく速くなったよ！ でも、もしネット予約も始めて、予約が<b>1万件</b>になったら、並べ替えにどれくらいかかるかな？')}
+    ${talk('h','基本の並べ方は、データが10倍になると、比べる回数がおよそ<b>100倍</b>になるんだ。表で確かめてみよう。')}
+    <div class="tbl-wrap" style="max-height:none;margin-top:10px"><table class="tt"><thead><tr><th>予約票の数</th><th>選択ソートの比較回数</th><th>1秒に1万回比べるとして</th></tr></thead><tbody id="st"></tbody></table></div>
+    <p style="margin-top:8px">基本の並べ方では、件数が10倍になると比較回数がおよそ${PR('100')}倍になります。大量のデータには、もっと速い方法が必要です。</p>
+  </div>
+  ${term("応用の並べ方", [
+    ["マージ", `整列済みの2つの列の${PR('先頭')}どうしを比べ、小さい方から取り出して1本にまとめること（併合）。`],
+    ["マージソート", "1枚ずつに分け、2枚・4枚・8枚…と<b>並んだまとまり</b>をマージしていく並べ方。"],
+    ["クイックソート", `${PR('基準')}（ピボット）を1つ決め、それより小さい組と大きい組に分ける。それぞれの組で同じことをくり返す並べ方。`],
+    ["注意", "クイックソートは、すでに整列済みのデータで先頭を基準にすると、片方の組が空になり続けて遅くなる。基準を真ん中やランダムから選ぶなどの工夫をする。"]])}
+  <div class="card">
+    <h3>やってみよう①：マージを手でやってみよう</h3>
+    <p>どちらの列も小さい順に整列済みです。<b>2つの列の先頭のうち、小さい方</b>をクリックして、下の列に出していこう。</p>
+    <div class="mpile A" id="ma"></div><div class="mpile B" id="mb"></div>
+    <div class="mpile" id="mo" style="margin-top:10px;border-top:2px dashed var(--rule);padding-top:10px"></div>
+    <div class="row"><button class="btn" id="mr">ほかの数で</button><span class="guess-score">比べた回数 <b id="mc" class="rbig">0</b> 回</span></div>
+    <p class="msg" id="mm"></p>
+  </div>
+  <div class="card"><h3>やってみよう②：マージソート</h3><div id="p5a"></div>
+    ${lg([[LG.grpband,'並んだまとまり'],['border:2.5px solid #2E86DE;background:#E1EEFB','マージする左のまとまり'],['border:2.5px solid #E07B1C;background:#FFE9D2','マージする右のまとまり'],[LG.cmp,'いま比べている先頭'],[LG.okband,'合わせてできた列']])}</div>
+  <div class="card"><h3>やってみよう③：クイックソート</h3><div id="p5b"></div>
+    ${lg([['border:2px dashed #8A5CC2','今回分ける組'],[LG.pivot,'基準（ピボット）'],[LG.gA,'小さい組'],[LG.gB,'大きい組'],[LG.done,'位置が決まった']])}</div>
+  <div class="card"><h3>やってみよう④：基本と応用、くらべてみよう</h3>
+    <p>同じデータを並べたときの比較回数です。件数やデータの状態を変えてみよう。</p>
+    <div id="r5"></div></div>
+  <div class="card">
+    ${talk('t','1万件でも、応用の並べ方ならあっという間だ！ これで行列ともお別れだね。')}
+  </div>
+  <div class="card">
+    <h3>確認問題</h3>
+    ${quiz("L5-q1", 1, "選択ソートで、データの件数が10倍になると、比較回数はおよそ何倍になる？", [["10倍",0],["20倍",0],["100倍",1]],
+      "比較回数は n×(n−1)÷2 回。n が10倍になると n×n はおよそ100倍になります。")}
+    ${quiz("L5-q2", 2, "マージ（併合）の手順として正しいものは？", [["整列済みの2つの列の先頭どうしを比べ、小さい方から取り出す",1],["2つの列をつなげてから、選択ソートで並べる",0],["それぞれの列の一番大きいものから順に取り出す",0]],
+      "整列済みの列なら、先頭どうしを比べるだけで、小さい順に1本にまとめられます。片方が空になったら、残りは比べずにそのまま後ろにつなげます。")}
+    ${quiz("L5-q3", 3, "クイックソートで、基準より小さい組と大きい組に分けたあと、<b>基準のカード</b>はどうなる？", [["もう一度、最初から比べ直す",0],["その位置で決まり。もう動かさなくてよい",1],["一番左に移す",0]],
+      "左には基準より小さいものだけ、右には大きいものだけがあるので、基準の位置はもう決まりです。")}
+  </div>`;
+}, mount(){
+  const tm=s=>s<60?s.toFixed(s<1?3:0)+'秒':s<3600?'約'+Math.round(s/60)+'分':s<86400?'約'+(s/3600).toFixed(1)+'時間':'約'+Math.round(s/86400).toLocaleString()+'日';
+  $("st").innerHTML=[100,1000,10000,1000000].map(n=>{const c=n*(n-1)/2;return `<tr><td>${n.toLocaleString()}件</td><td>${fmt(c)}回</td><td>${tm(c/1e4)}</td></tr>`;}).join('');
+  let A,B,O,c;
+  const draw=()=>{const h=(arr,both)=>arr.map((v,i)=>`<div class="c${i===0&&both?' head':''}">${v}</div>`).join('');const both=A.length&&B.length;
+    $("ma").innerHTML='<span class="lb">列A</span>'+h(A,both);$("mb").innerHTML='<span class="lb">列B</span>'+h(B,both);
+    $("mo").innerHTML='<span class="lb">合わせた列</span>'+O.map(v=>`<div class="c o">${v}</div>`).join('');$("mc").textContent=c;
+    if(!both){const rest=A.length?A:B;if(rest.length){O.push(...rest);A=[];B=[];$("mm").className='msg ok';$("mm").innerHTML=`片方が空になったので、残りは<b>比べずにそのまま</b>後ろへ。完成！ ${c}回比べて8枚が1列に並びました。`;solve("L5-merge");draw();}}
+    QA(document,'#ma .c.head,#mb .c.head').forEach(e=>e.onclick=()=>{const isA=e.parentNode.id==='ma',x=A[0],y=B[0],ok=isA?x<=y:y<=x;
+      if(!ok){e.classList.remove('shake');void e.offsetWidth;e.classList.add('shake');$("mm").className='msg ng';$("mm").textContent=`${isA?x:y} と ${isA?y:x}、小さいのはどっち？`;return;}
+      c++;O.push(isA?A.shift():B.shift());$("mm").className='msg';$("mm").innerHTML=`${x} と ${y} を比べて、小さい <b>${Math.min(x,y)}</b> を出しました。`;draw();});};
+  const reset=()=>{const v=pick(1,40,8);A=v.slice(0,4).sort((a,b)=>a-b);B=v.slice(4).sort((a,b)=>a-b);O=[];c=0;$("mm").className='msg';$("mm").textContent='列Aと列Bの先頭（光っているカード）を見比べよう。';draw();};
+  $("mr").onclick=reset;A=[3,8,12,20];B=[5,6,15,25];O=[];c=0;$("mm").textContent='列Aと列Bの先頭（光っているカード）を見比べよう。';draw();
+  sortPlayer(document,'#p5a',fMerge,{top:0,rows:2.05});
+  sortPlayer(document,'#p5b',fQuick,{cols:10,maxW:72,rows:2.05,first:[22,9,31,4,17,38,12,26,2,35]});
+  race($("r5"),['bub','sel','ins','mer','qui'],{note:k=>({rand:' ばらばらのデータなら、件数が多いほど<b>応用</b>との差が大きくなります。',near:' ほぼ整列済みなら、挿入ソートも速い。先頭を基準にしたクイックソートは苦手です。',sorted:' すでに整列済みだと、バブルソートと挿入ソートは一瞬。先頭を基準にしたクイックソートは最も苦手です。'}[k]||'')});
+} });
+
+/* ---------- 6. 発展：ハッシュ探索 ---------- */
+lesson({ id:"L6", title:"発展：ハッシュ探索", kicker:"ADVANCED", no:"発", req:["L6-q1","L6-q2"], render(){ return `
+  <div class="card">
+    ${talk('t','でも、また箱を落としたら、そのたびに並べ直すのは大変だなあ。予約も毎日どんどん入ってくるし…。')}
+    ${talk('h','それなら、並べずに探す方法もあるよ。予約番号の<b>下1けた</b>で、予約票を0〜9の10個の箱に分けておくんだ。箱の中が順番どおりでなくても、すぐ見つかるよ。')}
+  </div>
+  ${term("ハッシュ探索", [
+    ["ハッシュ探索", "データから<b>計算で置き場所（箱の番号）</b>を決めてしまっておく探し方。例：番号を10で割った余り（下1けた）。"],
+    ["探すとき", "しまったときと<b>同じ計算</b>で箱の番号を求め、<b>その箱だけ</b>を見る。並べ替えはいらない。"],
+    ["衝突", "違うデータが同じ箱に入ること。そのときは、箱の中を順に見る。"]])}
+  <div class="card">
+    <h3>やってみよう：しまって、探してみよう</h3>
+    <div id="p6"></div>
+    <div class="row"><span>探す番号</span><div class="seg" id="tgs">${[308,427,133,599].map((t,i)=>`<button class="${i===0?'on':''}" data-t="${t}">${t}${t===599?'（いない）':''}</button>`).join('')}</div></div>
+    ${lg([[LG.cmp,'計算中／比べている'],['border-top:3px solid #E0A21B;background:#FFF1C9','見る箱'],[LG.found,'見つかった']])}
+  </div>
+  <div class="card">
+    <h3>確認問題</h3>
+    ${quiz("L6-q1", 1, "番号を10で割った余りで箱を決めるとき、308 はどの箱を探せばよい？", [["0の箱",0],["3の箱",0],["8の箱",1],["すべての箱",0]],
+      "308 ÷ 10 の余りは 8。しまったときと同じ計算をするので、8の箱だけを見ればよいのです。")}
+    ${quiz("L6-q2", 2, "ハッシュ探索の「衝突」とは？", [["違うデータが同じ箱に入ること",1],["同じデータが2回しまわれること",0],["箱の番号の計算をまちがえること",0]],
+      "203 と 133 はどちらも余りが3なので、同じ箱に入ります。そのときは箱の中を順に見て探します。")}
+  </div>`;
+}, mount(){
+  const decor=[...Array(10)].map((_,i)=>({c:i,r:1.25,t:`${i}`,k:'bin',h:170}));
+  const P=player($("p6"),{cols:10,rows:4.4,maxW:78,fs:16,dt:850,decor});
+  const it=mkItems(HASHV);const load=t=>P.load(it,fHash(it,t),t);
+  $("tgs").addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;QA($("tgs"),'button').forEach(x=>x.classList.toggle('on',x===b));load(+b.dataset.t);});load(308);
+} });
+
+/* ---------- チャレンジ ---------- */
+lesson({ id:"LX", title:"チャレンジ問題", kicker:"CHALLENGE", no:"★", req:["X-q1","X-q2","X-q3","X-q4","X-q5","X-q6"], render(){ return `
+  <div class="card">
+    <h3>早く終わった人へのチャレンジ</h3>
+    <p>レッスン1〜5の内容を使って解く問題です。答えたあとは、下のアニメーションで確かめよう。</p>
+  </div>
+  <div class="card">
+    <h3>問題A：二分探索</h3>
+    <p>次の整列済みの15個のデータから、二分探索で <b>21</b> を探します。</p>
+    <div class="cells">${[3,7,12,18,21,26,30,35,41,47,52,58,63,70,76].map(v=>`<span>${v}</span>`).join('')}</div>
+    ${quiz("X-q1", 1, "「真ん中」として比べる値を、比べる順に並べたものは？", [["35 → 18 → 21",0],["35 → 18 → 26 → 21",1],["30 → 18 → 21",0],["35 → 26 → 21",0]],
+      "15個の真ん中は8番目の35。21 は 35 より小さいので左の7個にしぼり、その真ん中は4番目の18。21 は 18 より大きいので5〜7番目にしぼり、真ん中は26。最後に5番目の21で見つかります。")}
+    ${quiz("X-q2", 2, "見つかるまでに比べた回数は？", [["3回",0],["4回",1],["5回",0],["15回",0]], "35、18、26、21 の4回です。")}
+    ${quiz("X-q3", 3, "同じデータで、線形探索なら何回比べる？", [["4回",0],["5回",1],["8回",0],["15回",0]], "21 は先頭から5番目なので5回です。この場合は線形探索とあまり変わりませんが、データが多くなるほど二分探索が有利になります。")}
+    <p style="margin-top:12px"><b>解説アニメーション</b></p>
+    <div id="xa"></div>
+  </div>
+  <div class="card">
+    <h3>問題B：並べ方と入れかえ</h3>
+    ${quiz("X-q4", 4, "10件のデータを選択ソートで並べるとき、比べる回数は全部で何回？", [["10回",0],["45回",1],["90回",0],["100回",0]],
+      "1番目を決めるのに9回、2番目に8回、…、9番目に1回。9＋8＋…＋1 ＝ 10×(10−1)÷2 ＝ 45回です。")}
+    <p><b>解説アニメーション</b>（位置が1つ決まるごとに、比べた回数の合計が表示されます）</p>
+    <div id="xb"></div>
+    ${quiz("X-q5", 5, `次のプログラムを実行したあとの a と b の値は？<pre class="code2 qcode">a = 4
+b = 9
+a = b
+b = a</pre>`, [["a = 9、b = 4",0],["a = 9、b = 9",1],["a = 4、b = 4",0],["a = 4、b = 9",0]],
+      "a = b で a は 9 になり、もとの 4 は消えます。そのあと b = a でも 9 が入るので、どちらも 9 です。入れかえるには tmp が必要です。")}
+    ${quiz("X-q6", 6, "すでにほとんど整列済みのデータを並べるとき、比較回数が最も少なくなりやすいのは？", [["選択ソート",0],["挿入ソート",1],["先頭を基準にしたクイックソート",0]],
+      "挿入ソートは、並んだ部分に差し込む位置がすぐ見つかるので、ほぼ整列済みのデータでは比較が少なくて済みます。選択ソートはどんなデータでも同じ回数、先頭を基準にしたクイックソートは整列済みに近いほど遅くなります。レッスン5のやってみよう④で確かめられます。")}
+  </div>`;
+}, mount(){
+  const P=player($("xa"),{cols:15,rows:1.75,maxW:58,dt:1300});const it=mkItems([3,7,12,18,21,26,30,35,41,47,52,58,63,70,76]);P.load(it,fBinary(it,21),21);
+  const P2=player($("xb"),{cols:10,rows:1.75,top:22,maxW:68,dt:500});const it2=mkItems(pick(1,40,10));P2.load(it2,fSelect(it2,true));
+} });
+
+/* ---------- プログラムで書くと ---------- */
+const PCODE = [
+ { t:"線形探索", d:"先頭から順に、探す値と1つずつ比べる。",
+   dn:`Data = [41, 17, 88, 35, 61, 9, 73, 26]
+target = 35
+n = 要素数(Data)
+i を 0 から n - 1 まで 1 ずつ増やしながら繰り返す:
+｜ もし Data[i] == target ならば:
+｜ ｜ 表示する("添字", i, "で見つかりました")`,
+   py:`data = [41, 17, 88, 35, 61, 9, 73, 26]
+target = 35
+n = len(data)
+for i in range(n):
+    if data[i] == target:
+        print("添字", i, "で見つかりました")`,
+   out:"添字 3 で見つかりました",
+   vars:[["Data / data","データの配列（リスト）"],["target","探す値"],["n","データの個数"],["i","いま比べている位置（添字）"]] },
+ { t:"二分探索", d:"整列済みのデータの真ん中と比べ、探す値が無い側の半分を捨てる。",
+   dn:`Data = [3, 7, 12, 18, 21, 26, 30, 35,
+        41, 47, 52, 58, 63, 70, 76]
+target = 21
+left = 0
+right = 要素数(Data) - 1
+found = -1
+left <= right かつ found == -1 の間繰り返す:
+｜ mid = (left + right) ÷ 2
+｜ もし Data[mid] == target ならば:
+｜ ｜ found = mid
+｜ そうでなくもし Data[mid] < target ならば:
+｜ ｜ left = mid + 1
+｜ そうでなければ:
+｜ ｜ right = mid - 1
+表示する(found)`,
+   py:`data = [3, 7, 12, 18, 21, 26, 30, 35,
+        41, 47, 52, 58, 63, 70, 76]
+target = 21
+left = 0
+right = len(data) - 1
+found = -1
+while left <= right and found == -1:
+    mid = (left + right) // 2
+    if data[mid] == target:
+        found = mid
+    elif data[mid] < target:
+        left = mid + 1
+    else:
+        right = mid - 1
+print(found)`,
+   out:"4　（添字4、つまり5番目の 21 で見つかった。見つからなければ −1）",
+   vars:[["left","探す範囲の左端の添字"],["right","探す範囲の右端の添字"],["mid","真ん中の添字"],["found","見つかった添字（まだなら −1）"]],
+   note:"共通テスト用プログラム表記の「÷」は、割り算の商の整数部分です。Python では「//」を使います。" },
+ { t:"バブルソート", d:"となりどうしを比べ、逆なら入れかえる。",
+   dn:`Data = [5, 3, 8, 1, 6]
+n = 要素数(Data)
+i を 0 から n - 2 まで 1 ずつ増やしながら繰り返す:
+｜ j を 0 から n - 2 - i まで 1 ずつ増やしながら繰り返す:
+｜ ｜ もし Data[j] > Data[j + 1] ならば:
+｜ ｜ ｜ tmp = Data[j]
+｜ ｜ ｜ Data[j] = Data[j + 1]
+｜ ｜ ｜ Data[j + 1] = tmp
+表示する(Data)`,
+   py:`data = [5, 3, 8, 1, 6]
+n = len(data)
+for i in range(n - 1):
+    for j in range(n - 1 - i):
+        if data[j] > data[j + 1]:
+            tmp = data[j]
+            data[j] = data[j + 1]
+            data[j + 1] = tmp
+print(data)`,
+   out:"[1, 3, 5, 6, 8]",
+   vars:[["i","何周目か（右から i 個はもう決まっている）"],["j","比べるとなりどうしの左側の添字"],["tmp","入れかえのとき値をあずける変数"]] },
+ { t:"選択ソート", d:"まだ整列していない部分から一番小さいものを選び、その先頭と入れかえる。",
+   dn:`Data = [5, 3, 8, 1, 6]
+n = 要素数(Data)
+i を 0 から n - 2 まで 1 ずつ増やしながら繰り返す:
+｜ min = i
+｜ j を i + 1 から n - 1 まで 1 ずつ増やしながら繰り返す:
+｜ ｜ もし Data[j] < Data[min] ならば:
+｜ ｜ ｜ min = j
+｜ tmp = Data[i]
+｜ Data[i] = Data[min]
+｜ Data[min] = tmp
+表示する(Data)`,
+   py:`data = [5, 3, 8, 1, 6]
+n = len(data)
+for i in range(n - 1):
+    min = i
+    for j in range(i + 1, n):
+        if data[j] < data[min]:
+            min = j
+    tmp = data[i]
+    data[i] = data[min]
+    data[min] = tmp
+print(data)`,
+   out:"[1, 3, 5, 6, 8]",
+   vars:[["i","いま決める位置（整列していない部分の先頭）"],["min","いまのところ一番小さい値の添字"],["j","min と比べる値の添字"],["tmp","入れかえのとき値をあずける変数"]] },
+ { t:"挿入ソート", d:"1枚ずつ取り出し、並んだ部分の正しい位置に差し込む。",
+   dn:`Data = [5, 3, 8, 1, 6]
+n = 要素数(Data)
+i を 1 から n - 1 まで 1 ずつ増やしながら繰り返す:
+｜ card = Data[i]
+｜ j = i - 1
+｜ j >= 0 かつ Data[j] > card の間繰り返す:
+｜ ｜ Data[j + 1] = Data[j]
+｜ ｜ j = j - 1
+｜ Data[j + 1] = card
+表示する(Data)`,
+   py:`data = [5, 3, 8, 1, 6]
+n = len(data)
+for i in range(1, n):
+    card = data[i]
+    j = i - 1
+    while j >= 0 and data[j] > card:
+        data[j + 1] = data[j]
+        j = j - 1
+    data[j + 1] = card
+print(data)`,
+   out:"[1, 3, 5, 6, 8]",
+   vars:[["i","取り出すカードの添字"],["card","取り出したカードの値"],["j","card と比べる値の添字（左へ進む）"]] },
+];
+lesson({ id:"LP", title:"プログラムで書くと", kicker:"PROGRAM", no:"P", req:["P-q1","P-q2","P-q3"], render(){ return `
+  <div class="card">
+    ${talk('h','これまでの探し方と並べ方を、プログラムで書いてみよう。<b>共通テスト用プログラム表記</b>と<b>Python</b>を並べたよ。')}
+    ${talk('t','アニメーションで見た動きと、プログラムの1行1行を見比べると、よくわかるね。')}
+    <p style="margin-top:10px">配列（リスト）の位置は<b>添字</b>で表し、<b>0から数えます</b>。データ [41, 17, 88, 35] の 35 は、4番目ですが添字は3です。</p>
+    <div class="seg" id="ptab" style="margin-top:6px">${PCODE.map((c,i)=>`<button data-i="${i}" class="${i===0?'on':''}">${c.t}</button>`).join('')}</div>
+  </div>
+  ${PCODE.map((c,i)=>`<div class="card pcard" data-i="${i}"${i?' hidden':''}>
+    <h3>${c.t}</h3>
+    <p>${c.d}</p>
+    <div class="grid2">
+      <div><div class="cap">共通テスト用プログラム表記</div><pre class="code2">${esc(c.dn)}</pre></div>
+      <div><div class="cap">Python</div><pre class="code2">${esc(c.py)}</pre></div>
+    </div>
+    <p style="margin-top:8px"><b>実行結果：</b><span class="mono">${c.out}</span></p>
+    <div class="tbl-wrap" style="max-height:none;margin-top:8px"><table class="tt"><thead><tr><th class="l">変数</th><th class="l">意味</th></tr></thead><tbody>
+      ${c.vars.map(([v,m])=>`<tr><td class="l">${v}</td><td class="l" style="font-family:var(--gothic);white-space:normal">${m}</td></tr>`).join('')}</tbody></table></div>
+    ${c.note?`<p style="font-size:13px;color:var(--ink-soft);margin-top:6px">${c.note}</p>`:''}
+  </div>`).join('')}
+  <div class="card">
+    <h3>確認問題</h3>
+    ${quiz("P-q1", 1, "二分探索のプログラムで、Data[mid] < target のときに実行する文は？", [["left = mid + 1",1],["right = mid - 1",0],["found = mid",0],["mid = mid + 1",0]],
+      "真ん中の値が探す値より小さいので、探す値は右側にあります。左端 left を mid の1つ右に動かします。")}
+    ${quiz("P-q2", 2, "選択ソートのプログラムで、変数 min が表しているものは？", [["データの中で一番小さい値そのもの",0],["まだ整列していない部分で、いまのところ一番小さい値の添字",1],["比べた回数",0]],
+      "min には値ではなく<b>添字（位置）</b>が入ります。最後に Data[i] と Data[min] を入れかえます。")}
+    ${quiz("P-q3", 3, "バブルソートのプログラムで、tmp を使う3行がしていることは？", [["Data[j] と Data[j + 1] を入れかえる",1],["Data[j] を tmp に移して消す",0],["大きい方の値を数える",0]],
+      "レッスン3で学んだ<b>配列の要素の入れかえ</b>です。tmp にあずけてから入れかえます。")}
+  </div>`;
+}, mount(){
+  $("ptab").addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+    QA($("ptab"),'button').forEach(x=>x.classList.toggle('on',x===b));
+    QA(document,'.pcard').forEach(c=>c.hidden=c.dataset.i!==b.dataset.i);});
+} });
+
+/* ---------- まとめ ---------- */
+lesson({ id:"L7", title:"まとめ", kicker:"EPILOGUE", req:[], render(){
+  const done = LESSONS.slice(1, 1+MAINN).filter(l => STATE.done[l.id]).length;
+  return `
+  <div class="card">
+    ${talk('t','ありがとう、こむぎ！ 予約票を予約番号の順に整列しておいて、二分探索で探す。予約が増えたら、応用の並べ方で並べ直す。もうレジに行列はできないよ。')}
+    ${talk('h','「困った！」が起きるたびに、新しい方法が生まれてきたんだね。')}
+  </div>
+  <div class="card">
+    <h3>ふりかえり（完了 ${done} / ${MAINN}）</h3>
+    <ol class="summary">
+      <li><b>線形探索</b>：先頭から1つずつ比べる。整列済みでなくてよいが、データが2倍なら手間も2倍。</li>
+      <li><b>二分探索</b>：整列済みのデータの真ん中と比べ、半分を捨てる。データが2倍でも+1回。</li>
+      <li><b>入れかえ</b>：代入はコピーで、前の値は上書きされる。tmp にあずけてから入れかえる。</li>
+      <li><b>基本の並べ方</b>：バブル・選択・挿入。わかりやすいが、10倍で約100倍の手間。</li>
+      <li><b>応用の並べ方</b>：マージ（分けて合わせる）・クイック（基準で2組に分ける）。大量のデータも速い。</li>
+    </ol>
+  </div>`;
+}, mount(){ STATE.done.L7 = true; save(); } });
+
+/* ================= 画面 ================= */
+function checkDone(){
+  const L = LESSONS[CUR];
+  if (L.req.length){
+    STATE.done[L.id] = L.req.every(id => STATE.solved[id]); save();
+    const b = $("donebadge"); if (b) b.classList.toggle("show", STATE.done[L.id]);
+  }
+  renderNav();
+}
+function renderNav(){
+  $("nav").innerHTML = LESSONS.map((L, i) => `<button class="${i === CUR ? "cur" : ""} ${STATE.done[L.id] ? "done" : ""}" data-i="${i}"><span class="no">${STATE.done[L.id] ? "✓" : (L.no || i)}</span>${L.title}</button>`).join("");
+  const n = LESSONS.slice(1, 1+MAINN).filter(l => STATE.done[l.id]).length;
+  $("progtext").textContent = `${n} / ${MAINN}`; $("progbar").style.width = (n/MAINN*100) + "%";
+}
+$("nav").addEventListener("click", e => { const b = e.target.closest("button"); if (b) go(Number(b.dataset.i)); });
+const label = i => (i >= 1 && i <= MAINN ? `レッスン${i}　` : "") + LESSONS[i].title;
+function go(i){
+  PLAYERS.forEach(p => p.stop()); PLAYERS = [];
+  CUR = i; const L = LESSONS[i];
+  $("main").innerHTML = `
+    <div class="lesson-head"><div class="kicker">${L.kicker}</div><h2>${i >= 1 && i <= MAINN ? `レッスン${i}　` : ""}${L.title}</h2></div>
+    ${L.render()}
+    ${L.req.length ? `<div class="done-badge${STATE.done[L.id] ? " show" : ""}" id="donebadge">✓ このレッスンは完了です。次のレッスンへ進みましょう。</div>` : ""}
+    <div class="pager">
+      ${i > 0 ? `<button class="btn" id="prev">← ${label(i-1)}</button>` : "<span></span>"}
+      ${i < LESSONS.length-1 ? `<button class="btn primary" id="next">${label(i+1)} →</button>` : "<span></span>"}
+    </div>`;
+  L.mount && L.mount();
+  if ($("prev")) $("prev").onclick = () => go(i-1);
+  if ($("next")) $("next").onclick = () => go(i+1);
+  renderNav(); window.scrollTo(0, 0);
+}
+
+/* ツールチップ */
+const tip = $("tip");
+document.addEventListener("mousemove", e => {
+  const t = e.target.closest && e.target.closest("svg [data-t]");
+  if (t){ tip.textContent = t.dataset.t; tip.style.left = (e.clientX + 14) + "px"; tip.style.top = (e.clientY - 10) + "px"; tip.style.opacity = 1; }
+  else tip.style.opacity = 0;
+});
+
+/* ================= 保存用ファイル =================
+   形式 "teishutsu/1"（先生用の一覧ツールで読み込める共通形式）
+   { format, appId, appTitle, student:{class, number, name}, savedAt,
+     items:[{id, title, done, score, max}], summary:{done, total, rate}, data:{アプリ固有の記録} } */
+const APP_ID = "sagasu-narabe", APP_TITLE = "さがす・ならべるができるまで（こむぎ堂のケーキ予約）";
+const CLASSES = 7, MEMBERS = 41;
+(() => {
+  const cs = $("sv-class"), ns = $("sv-num");
+  for (let c = 1; c <= CLASSES; c++) cs.appendChild(new Option(`${c}組`, `${c}組`));
+  for (let n = 1; n <= MEMBERS; n++) ns.appendChild(new Option(String(n), n));
+  const st = STATE.student || {};
+  cs.value = st.class || ""; ns.value = st.number || ""; $("sv-name").value = st.name || "";
+  const keep = () => { STATE.student = { class: cs.value, number: Number(ns.value) || "", name: $("sv-name").value.trim() }; save(); };
+  cs.onchange = keep; ns.onchange = keep; $("sv-name").oninput = keep;
+})();
+function svMsg(t, ok){ const m = $("sv-msg"); m.textContent = t; m.className = "msg " + (ok ? "ok" : "ng"); }
+$("sv-save").onclick = () => {
+  const st = { class: $("sv-class").value, number: Number($("sv-num").value), name: $("sv-name").value.trim() };
+  if (!st.class || !st.number || !st.name){ svMsg("クラス・出席番号・名前をすべて入力してください。", false); return; }
+  const toItem = L => ({ id: L.id, title: L.title, done: !!STATE.done[L.id], score: L.req.filter(id => STATE.solved[id]).length, max: L.req.length });
+  const main = LESSONS.slice(1, 1+MAINN).map(toItem), extra = LESSONS.filter(L => ["L6","LX","LP"].includes(L.id)).map(toItem);
+  const items = main.concat(extra);
+  const done = main.filter(x => x.done).length;
+  const out = { format: "teishutsu/1", appId: APP_ID, appTitle: APP_TITLE, student: st, savedAt: new Date().toISOString(),
+    items, summary: { done, total: main.length, rate: Math.round(done / main.length * 1000) / 1000 }, data: { done: STATE.done, solved: STATE.solved, ans: STATE.ans } };
+  const blob = new Blob([JSON.stringify(out, null, 1)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `さがすならべる_${st.class}${String(st.number).padStart(2, "0")}番_${st.name.replace(/[\\/:*?"<>|\s]/g, "")}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  svMsg(`保存しました（完了 ${done} / ${main.length}${extra.filter(x => x.done).length ? "・発展／チャレンジ " + extra.filter(x => x.done).length + "つクリア" : ""}）。`, true);
+};
+
+/* ================= 達成状況を画像で保存 =================
+   キャンバスに達成状況（クラス・番号・名前、各レッスンの完了と正解数）を描いて PNG で保存する */
+function loadSvgImage(svgText){
+  return new Promise(res => {
+    const im = new Image();
+    im.onload = () => res(im); im.onerror = () => res(null);
+    im.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgText.replace("<svg ", '<svg xmlns="http://www.w3.org/2000/svg" '));
+  });
+}
+async function saveAchievementImage(){
+  try { await document.fonts.ready; } catch (e) {}
+  const W = 1200, H = 920, c = document.createElement("canvas");
+  c.width = W; c.height = H;
+  const g = c.getContext("2d");
+  const FONT = '"Zen Maru Gothic","Hiragino Maru Gothic ProN","Kosugi Maru","Yu Gothic","Noto Sans CJK JP",sans-serif';
+  const DARK = "#2B2B2B", INK = "#263046", SOFT = "#7A6F66";
+  const rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x+r, y); g.arcTo(x+w, y, x+w, y+h, r); g.arcTo(x+w, y+h, x, y+h, r); g.arcTo(x, y+h, x, y, r); g.arcTo(x, y, x+w, y, r); g.closePath(); };
+  const txt = (t, x, y, size, color, weight = 700, align = "left") => { g.font = `${weight} ${size}px ${FONT}`; g.fillStyle = color; g.textAlign = align; g.textBaseline = "middle"; g.fillText(t, x, y); };
+
+  /* 背景と、カフェの日よけ */
+  g.fillStyle = "#FFF7E8"; g.fillRect(0, 0, W, H);
+  for (let x = 0; x < W; x += 72){ g.fillStyle = "#E8574C"; g.fillRect(x, 0, 36, 26); g.fillStyle = "#FFF4E0"; g.fillRect(x+36, 0, 36, 26); }
+  g.fillStyle = "#5C3D2E"; g.fillRect(0, 26, W, 104);
+  txt("さがす・ならべるができるまで　達成状況", 40, 66, 36, "#FFF4E0", 900);
+  txt("こむぎ堂のケーキ予約 ― 探索と整列", 42, 106, 18, "#F2D7B6", 700);
+  const av = await loadSvgImage(AV.h.split("<span")[0]);
+  if (av){ g.save(); g.beginPath(); g.arc(W - 86, 78, 44, 0, Math.PI*2); g.fillStyle = "#fff"; g.fill(); g.lineWidth = 4; g.strokeStyle = DARK; g.stroke(); g.clip(); g.drawImage(av, W - 130, 34, 88, 88); g.restore(); }
+
+  /* 本体のカード */
+  rr(40, 160, W - 80, H - 200, 22); g.fillStyle = "#fff"; g.fill(); g.lineWidth = 4; g.strokeStyle = DARK; g.stroke();
+  const st = STATE.student || {};
+  const who = `${st.class || "　組"}　${st.number ? st.number + "番" : "　番"}　${st.name || "（名前未入力）"}`;
+  txt(who, 80, 210, 28, INK, 900);
+  const d = new Date(), p2 = n => String(n).padStart(2, "0");
+  txt(`${d.getFullYear()}/${p2(d.getMonth()+1)}/${p2(d.getDate())} ${p2(d.getHours())}:${p2(d.getMinutes())} 時点`, W - 80, 210, 18, SOFT, 700, "right");
+
+  const main = LESSONS.slice(1, 1+MAINN), extra = LESSONS.filter(L => ["L6","LX","LP"].includes(L.id));
+  const done = main.filter(L => STATE.done[L.id]).length;
+  /* 完了数と進み具合のバー */
+  txt(`レッスン完了　${done} / ${main.length}`, 80, 270, 26, INK, 900);
+  rr(420, 256, W - 500, 28, 14); g.fillStyle = "#F3EADB"; g.fill(); g.lineWidth = 3; g.strokeStyle = DARK; g.stroke();
+  if (done){ rr(420, 256, (W - 500) * done / main.length, 28, 14); g.fillStyle = done === main.length ? "#22A866" : "#FFD23F"; g.fill(); rr(420, 256, W - 500, 28, 14); g.stroke(); }
+
+  /* レッスンごとの行 */
+  const rows = main.concat(extra);
+  rows.forEach((L, k) => {
+    const y = 316 + k * 66, ok = !!STATE.done[L.id];
+    const sc = L.req.filter(id => STATE.solved[id]).length;
+    rr(80, y, W - 160, 54, 14); g.fillStyle = ok ? "#E9F9F0" : "#FAF7F2"; g.fill(); g.lineWidth = 2.5; g.strokeStyle = ok ? "#22A866" : "#D8CFC2"; g.stroke();
+    g.beginPath(); g.arc(118, y + 27, 18, 0, Math.PI*2); g.fillStyle = ok ? "#22A866" : "#fff"; g.fill(); g.lineWidth = 2.5; g.strokeStyle = DARK; g.stroke();
+    txt(ok ? "✓" : (L.no || String(LESSONS.indexOf(L))), 118, y + 28, 18, ok ? "#fff" : DARK, 900, "center");
+    txt((extra.includes(L) ? "" : `レッスン${LESSONS.indexOf(L)}　`) + L.title, 152, y + 28, 22, INK, 700);
+    txt(`正解 ${sc} / ${L.req.length}`, W - 300, y + 28, 20, SOFT, 700, "right");
+    rr(W - 270, y + 11, 160, 32, 16); g.fillStyle = ok ? "#22A866" : "#fff"; g.fill(); g.lineWidth = 2.5; g.strokeStyle = ok ? DARK : "#BDB3A6"; g.stroke();
+    txt(ok ? "完了" : "未完了", W - 190, y + 28, 18, ok ? "#fff" : SOFT, 900, "center");
+  });
+  txt("※ 正解数は、やってみよう・確認問題で、いま正しく答えられている数です。", 80, H - 64, 16, SOFT, 500);
+
+  c.toBlob(blob => {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    const name = (st.name || "").replace(/[\\/:*?"<>|\s]/g, "");
+    a.download = `達成状況_${st.class || ""}${st.number ? String(st.number).padStart(2, "0") + "番" : ""}${name ? "_" + name : ""}.png`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    svMsg("達成状況を画像で保存しました。", true);
+  }, "image/png");
+}
+$("sv-img").onclick = saveAchievementImage;
+$("sv-load").onclick = () => $("sv-file").click();
+$("sv-file").onchange = e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  const fr = new FileReader();
+  fr.onload = () => {
+    try {
+      const j = JSON.parse(fr.result);
+      if (j.format !== "teishutsu/1" || j.appId !== APP_ID) throw new Error("この教材のファイルではありません。");
+      STATE = { done: j.data.done || {}, solved: j.data.solved || {}, ans: j.data.ans || {}, student: j.student };
+      save();
+      $("sv-class").value = j.student.class || ""; $("sv-num").value = j.student.number || ""; $("sv-name").value = j.student.name || "";
+      go(CUR); svMsg(`読み込みました（${j.student.class} ${j.student.number}番 ${j.student.name}）。`, true);
+    } catch (err){ svMsg(err.message.startsWith("この") ? err.message : "ファイルを読み込めませんでした。", false); }
+  };
+  fr.readAsText(f);
+};
+$("sv-reset").onclick = () => {
+  if (!confirm("すべての学習の記録を消しますか？（クラス・番号・名前は残ります）")) return;
+  STATE = { done: {}, solved: {}, ans: {}, student: STATE.student }; save(); go(0);
+};
+
+/* ================= 授業モード（全画面・スライド表示） =================
+   ・#main の中のかたまり（タイトル・カード）を1枚ずつのスライドとして表示する
+   ・スライドの中身（セリフ、表、用語の1項目など）は、→ キーを押すたびに1つずつ現れる
+   ・→ / PageDown / スペース：進む　← / PageUp：戻る　Esc：終了（プレゼン用リモコンも使える） */
+const PV = { on: false, slides: [], si: 0, units: [], step: 0, toEnd: false };
+let PZ = 1.35;
+try { const z = parseFloat(localStorage.getItem(KEY + "-pz")); if (z >= 0.8 && z <= 2.4) PZ = z; } catch (e) {}
+document.body.insertAdjacentHTML("beforeend", `<div class="pv-bar">
+  <button id="pvPrev">◀ 戻る</button><button id="pvNext">進む ▶</button><span class="sep"></span>
+  <select id="pvLesson" aria-label="レッスンを選ぶ"></select>
+  <span class="pv-info" id="pvInfo"></span>
+  <button id="pvAll">このスライドを全部表示</button><span class="sep"></span>
+  <button id="pvMinus" title="文字を小さく">文字 −</button><button id="pvPlus" title="文字を大きく">文字 ＋</button><span class="sep"></span>
+  <button id="pvExit">終了</button></div>`);
+/* グラフ（散布図・箱ひげ図・数値の欄など）は最初から表示する。セリフのイラストや用語の囲みは除く */
+const isGraph = el => !el.classList.contains("talk") && !el.classList.contains("term") &&
+  (el.tagName.toLowerCase() === "svg" || el.classList.contains("stats") || !!el.querySelector("svg"));
+function pvUnits(slide){
+  const units = [];
+  const termUnits = t => {
+    const tb = t.querySelector(".tb"); if (!tb) return;
+    [...tb.children].forEach(c => {
+      if (isGraph(c)) return;
+      if (c.tagName === "DL"){ const k = [...c.children]; for (let i = 0; i < k.length; i += 2) units.push([k[i], k[i+1]].filter(Boolean)); }
+      else units.push([c]);
+    });
+  };
+  if (slide.classList.contains("lesson-head")) return units;
+  if (slide.classList.contains("term")){ termUnits(slide); return units; }
+  const h3 = slide.querySelector(":scope > h3");
+  if (h3 && h3.textContent.trim().startsWith("やってみよう")) return units;   /* 操作する場面は最初から全部見せる */
+  [...slide.children].forEach(c => {
+    if (c.tagName === "H3") return;
+    if (isGraph(c)) return;   /* グラフは最初から表示 */
+    if (c.classList.contains("legend") && units.length){ units[units.length - 1].push(c); return; }   /* 凡例は表・グラフといっしょに */
+    units.push([c]);
+    if (c.classList.contains("term")) termUnits(c);
+  });
+  return units;
+}
+function pvClear(){
+  PV.slides.forEach(sl => { sl.classList.remove("pv-on", "pv-off"); sl.querySelectorAll(".pv-h,.pv-in").forEach(x => x.classList.remove("pv-h", "pv-in")); });
+}
+function pvBuild(){
+  PV.slides = [...$("main").children].filter(el => !el.classList.contains("pager") && !el.classList.contains("done-badge"));
+  $("pvLesson").innerHTML = LESSONS.map((L, i) => `<option value="${i}"${i === CUR ? " selected" : ""}>${label(i)}</option>`).join("");
+}
+function pvShow(si, revealAll){
+  pvClear();
+  PV.slides.forEach(sl => sl.classList.add("pv-off"));
+  PV.si = si;
+  const sl = PV.slides[si];
+  sl.classList.remove("pv-off"); void sl.offsetWidth; sl.classList.add("pv-on");
+  PV.units = pvUnits(sl);
+  PV.step = revealAll ? PV.units.length : Math.min(1, PV.units.length);   /* 1つ目は最初から表示 */
+  PV.units.forEach((u, k) => { if (k >= PV.step) u.forEach(x => x.classList.add("pv-h")); });
+  const m = $("main"); m.style.scrollBehavior = "auto"; m.scrollTop = revealAll ? m.scrollHeight : 0; m.style.scrollBehavior = "";
+  pvInfo();
+}
+function pvInfo(){
+  const n = PV.units.length;
+  $("pvInfo").textContent = `スライド ${PV.si + 1} / ${PV.slides.length}` + (n ? `　・　表示 ${PV.step} / ${n}` : "");
+  $("pvAll").disabled = PV.step >= n;
+}
+function pvNext(){
+  if (PV.step < PV.units.length){
+    const u = PV.units[PV.step++];
+    u.forEach(x => { x.classList.remove("pv-h"); void x.offsetWidth; x.classList.add("pv-in"); });
+    u[u.length - 1].scrollIntoView({ behavior: "smooth", block: "nearest" });
+    pvInfo(); return;
+  }
+  if (PV.si < PV.slides.length - 1) return pvShow(PV.si + 1);
+  if (CUR < LESSONS.length - 1) go(CUR + 1);
+}
+function pvPrev(){
+  if (PV.step > 1){
+    const u = PV.units[--PV.step];
+    u.forEach(x => { x.classList.remove("pv-in"); x.classList.add("pv-h"); });
+    pvInfo(); return;
+  }
+  if (PV.si > 0) return pvShow(PV.si - 1, true);
+  if (CUR > 0){ PV.toEnd = true; go(CUR - 1); }
+}
+function pvAll(){
+  while (PV.step < PV.units.length) PV.units[PV.step++].forEach(x => { x.classList.remove("pv-h"); x.classList.add("pv-in"); });
+  pvInfo();
+}
+function pvZoom(d){
+  PZ = Math.min(2.4, Math.max(0.8, Math.round((PZ + d) * 10) / 10));
+  document.documentElement.style.setProperty("--pz", PZ);
+  try { localStorage.setItem(KEY + "-pz", PZ); } catch (e) {}
+}
+function pvEnter(){
+  PV.on = true;
+  document.documentElement.style.setProperty("--pz", PZ);
+  document.body.classList.add("present");
+  pvBuild(); pvShow(0);
+  const el = document.documentElement;
+  if (el.requestFullscreen && !document.fullscreenElement) el.requestFullscreen().catch(() => {});
+}
+function pvExit(){
+  if (!PV.on) return;
+  PV.on = false;
+  pvClear();
+  document.body.classList.remove("present");
+  if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {});
+  window.scrollTo(0, 0);
+}
+/* レッスンを切りかえたら、スライドを作り直す */
+const goNormal = go;
+go = function(i){
+  goNormal(i);
+  if (PV.on){ pvBuild(); const end = PV.toEnd; PV.toEnd = false; pvShow(end ? PV.slides.length - 1 : 0, end); }
+};
+$("presBtn").onclick = pvEnter;
+$("pvNext").onclick = pvNext; $("pvPrev").onclick = pvPrev; $("pvAll").onclick = pvAll;
+$("pvMinus").onclick = () => pvZoom(-0.1); $("pvPlus").onclick = () => pvZoom(0.1);
+$("pvExit").onclick = pvExit;
+$("pvLesson").onchange = e => go(Number(e.target.value));
+document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement && PV.on) pvExit(); });
+document.addEventListener("keydown", e => {
+  if (!PV.on) return;
+  const t = e.target;
+  if (t && t.matches && t.matches("input, select, textarea")){ if (e.key === "Escape") t.blur(); return; }
+  if (t && t.tagName === "BUTTON") t.blur();
+  if (["ArrowRight", "PageDown", " ", "Spacebar"].includes(e.key)){ e.preventDefault(); pvNext(); }
+  else if (["ArrowLeft", "PageUp"].includes(e.key)){ e.preventDefault(); pvPrev(); }
+  else if (e.key === "Escape") pvExit();
+});
+
+go(0);
+</script>
+</body>
+</html>
